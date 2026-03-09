@@ -1,8 +1,8 @@
 ---
 name: Feature
-about: Fullstack fejlesztési task        # rövid leírás 
-title: '[Sprint 1] Feature: '            # előre kitöltött cím
-labels: sprint-1, docs                   # több label is megadható
+about: Fullstack development task
+title: [Task name]
+labels: sprint-1, area:auth, fullstack, priority:medium
 assignees: ''
 ---
 
