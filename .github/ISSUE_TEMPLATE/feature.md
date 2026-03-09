@@ -1,7 +1,11 @@
 ---
 name: Feature
-labels: fullstack
+about: Fullstack fejlesztési task        # rövid leírás 
+title: '[Sprint 1] Feature: '            # előre kitöltött cím
+labels: sprint-1, docs                   # több label is megadható
+assignees: ''
 ---
+Készült 
 
 
 # 📋 [Task name]
