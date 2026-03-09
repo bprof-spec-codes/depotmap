@@ -10,6 +10,7 @@ assignees: ''
 
 
 **Epic:**
+- [ ] Documentation
 - [ ] UI Base & Layout
 - [ ] Auth & User Management
 - [ ] Warehouse Designer
