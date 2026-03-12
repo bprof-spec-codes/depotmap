@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace DepotMap.Entities.Models
 {
-    internal class Warehouse
+    public class Warehouse
     {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = null!;
+        public int GridWidth { get; set; }
+        public int GridHeight { get; set; }
+
+        // Navigation
+        public ICollection<WarehouseCell> Cells { get; set; } = new List<WarehouseCell>();
     }
 }

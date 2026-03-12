@@ -8,7 +8,6 @@ namespace DepotMap.Entities.Models
 {
 public class User
 {
-    //Itt majd bizonyos propokat ki kell törölni, ha a beépített User kezelést használjuk
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Identifier { get; set; } = null!;
     public string FirstName { get; set; } = null!;
