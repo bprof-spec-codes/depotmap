@@ -8,7 +8,7 @@ namespace DepotMap.Entities.Models
 {
     public class Warehouse
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Id { get; set; } = Guid.NewGuid().ToString(); 
         public string Name { get; set; } = null!;
         public int GridWidth { get; set; }
         public int GridHeight { get; set; }

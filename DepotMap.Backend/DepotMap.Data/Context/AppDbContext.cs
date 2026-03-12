@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 //Beépített Transaction osztály is van, így külön be kell állítani, hogy erre mutasson
 using Transaction = DepotMap.Entities.Models.Transaction;
 
-namespace DepotMap.Data.Context
+namespace DepotMap.Data.Context 
 {
     public class AppDbContext : DbContext
     {
