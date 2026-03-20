@@ -20,12 +20,10 @@
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 
 	</ItemGroup>
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DepotMap.Data\DepotMap.Data.csproj" />
+    <ProjectReference Include="..\DepotMap.Logics\DepotMap.Logics.csproj" />
   </ItemGroup>
 
 </Project>

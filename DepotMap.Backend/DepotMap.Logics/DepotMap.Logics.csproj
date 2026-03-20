@@ -22,5 +22,8 @@
     <Folder Include="Interfaces\" />
     <Folder Include="Logics\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DepotMap.Entities\DepotMap.Entities.csproj" />
+  </ItemGroup>
 
 </Project>

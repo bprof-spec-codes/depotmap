@@ -170,6 +170,7 @@ namespace DepotMap.Data.Context
                 e.HasKey(x => x.Id);
                 e.HasIndex(x => x.Identifier).IsUnique();
             });
+
         }
     }
 
