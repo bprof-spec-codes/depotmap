@@ -1,6 +1,8 @@
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
+using DepotMap.Logics.Interfaces;
+using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -33,6 +35,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddScoped<IAuthLogic, AuthLogic>();
 builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -57,4 +70,5 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
     seeder.Seed();
 }
+app.UseCors("AllowAngular");
 app.Run();

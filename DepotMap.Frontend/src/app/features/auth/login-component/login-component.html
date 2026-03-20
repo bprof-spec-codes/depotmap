@@ -1,0 +1,48 @@
+<!-- Ez a gomb nyitja meg magát a login modalt, ha elhelyezed a navbarban <app-login-component> -ként akkor csak a gomb jelenik meg, kattintás után a modal maga -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
+    Login
+</button>
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow">
+
+            <div class="modal-header border-0 pb-0">
+                <h4 class="modal-title fw-bold" id="loginModalLabel">Login</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bezárás"></button>
+            </div>
+
+            <div class="modal-body px-4 pb-4">
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">ID</label>
+                        <input formControlName="identifier" type="text" class="form-control form-control-lg rounded-3"
+                            placeholder="Felhasználói azonosító" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Password</label>
+                        <input formControlName="password" type="password" class="form-control form-control-lg rounded-3"
+                            placeholder="Jelszó" />
+                    </div>
+                    <!--lényegében *ngIf egy új szintaxisa-->
+                    @if (errorMessage) {
+                    <div class="alert alert-danger d-flex align-items-center rounded-3 py-2" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ errorMessage }}
+                    </div>
+                    }
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-3" [disabled]="loginForm.invalid">
+                            Login
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
