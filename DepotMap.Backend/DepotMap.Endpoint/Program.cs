@@ -1,4 +1,5 @@
 using DepotMap.Data.Context;
+using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
 using DepotMap.Logics.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -32,7 +33,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
-
+builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddControllers();
@@ -51,5 +52,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+    seeder.Seed();
+}
 app.Run();
