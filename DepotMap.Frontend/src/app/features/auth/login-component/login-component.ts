@@ -1,5 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-login-component',
@@ -8,5 +11,18 @@ import { FormGroup } from '@angular/forms';
   styleUrl: './login-component.scss',
 })
 export class LoginComponent {
+  loginForm: FormGroup;
+
+  constructor(private fb: FormBuilder, private authService:AuthService, private router: Router){
+    this.loginForm = this.fb.group({
+      identifier: ['', Validators.required],
+      password: ['', Validators.required]
+    });
+  }
+  onSubmitLogin() {
+    if (this.loginForm.valid){
+      
+    }
+  }
 
 }
