@@ -1,1 +1,21 @@
-<p>login-component works!</p>
+<div class="login-container">
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <h2>Bejelentkezés</h2>
+
+    <div>
+      <label>Azonosító</label>
+      <input formControlName="identifier" type="text" placeholder="Felhasználói azonosító" />
+    </div>
+
+    <div>
+      <label>Jelszó</label>
+      <input formControlName="password" type="password" placeholder="Jelszó" />
+    </div>
+
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <button type="submit" [disabled]="loginForm.invalid">Bejelentkezés</button>
+  </form>
+</div>
