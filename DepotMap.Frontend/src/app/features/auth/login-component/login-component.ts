@@ -26,7 +26,14 @@ export class LoginComponent {
     const { identifier, password } = this.loginForm.value;
 
     this.authService.login(identifier, password).subscribe({
-      next: () => console.log("Sikeres bejelentkezés!"),
+      next: () => {
+        console.log("Sikeres bejelentkezés!")
+        // Majd ha kész lesz valami főoldal:
+        
+        //this.router.navigate(['/dashboard']);
+
+        //Itt lehetséges, hogy a modal-t is külön be kell zárni
+      },
       error: () => {
         this.errorMessage = 'Hibás azonosító vagy jelszó.';
         this.cdr.detectChanges();
