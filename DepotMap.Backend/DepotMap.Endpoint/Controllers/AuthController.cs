@@ -25,7 +25,7 @@ namespace DepotMap.Endpoint.Controllers
         {
             var token = await _authLogic.LoginAsync(dto);
             if (token == null)
-                return Unauthorized("Hibás azonosító vagy jelszó.");
+                return Unauthorized("Incorrect ID or password.");
 
             return Ok(new { token });
         }
