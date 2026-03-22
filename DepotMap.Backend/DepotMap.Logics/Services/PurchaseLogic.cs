@@ -3,6 +3,8 @@ using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using DepotMap.Logics.Interfaces;
+using DepotMap.Logics.Logics;
 
 namespace DepotMap.Logics.Logics
 {
@@ -101,12 +103,12 @@ namespace DepotMap.Logics.Logics
 
                     var movement = new StockMovement
                     {
-                        ProductId = item.ProductId,
-                        CompartmentId = item.ToCompartmentId,
-                        QuantityChange = item.Quantity,
-                        MovementType = "inbound",
-                        Timestamp = DateTime.UtcNow,
-                        UserId = createdByUserId
+                            ProductId = item.ProductId,
+							CompartmentId = item.ToCompartmentId,
+							QuantityChange = item.Quantity,
+							MovementType = "inbound",
+							Timestamp = DateTime.UtcNow,
+							CreatedByUserId = createdByUserId
                     };
 
                     _db.Set<StockMovement>().Add(movement);
