@@ -1,4 +1,7 @@
-﻿using DepotMap.Data.Context;
+﻿using AutoMapper;
+using DepotMap.Data.Context;
+using DepotMap.Entities.Models;
+using DepotMap.Entities.Models.DTOs.Products;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +12,20 @@ namespace DepotMap.Logics.Logics
 {
     public class ProductsLogic
     {
-        private readonly AppDbContext ctx;
-        public ProductsLogic(AppDbContext ctx)
+        private readonly AppDbContext _ctx;
+        private readonly IMapper _mapper;
+        public ProductsLogic(AppDbContext ctx , IMapper mapper) 
         {
-            this.ctx = ctx;
+            this._ctx = ctx;
+            _mapper = mapper;
         }
-        public async Task CreateProductAsync()
+        public async Task CreateProductAsync(CreateProductDto dto)
+        { 
+            var product = _mapper.Map<Product>(dto);
+            _ctx.Products.Add(product);
+            await _ctx.SaveChangesAsync();
+        }
+
     }
 
 }
