@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace DepotMap.Logics.Helpers
 {
-    public class DtoProviders : Profile
+    public class MappingProfile : Profile
     {
-        public DtoProviders()
+        public MappingProfile()
         {
            
             CreateMap<CreateProductDto, Product>()

@@ -30,5 +30,13 @@ namespace DepotMap.Endpoint.Controllers
             await _productsLogic.UpdateProductAsync(id, dto, userId);
             return Ok("Product updated successfully.");
         }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduct(string id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            await _productsLogic.DeleteProductAsync(id, userId);
+            return Ok("Product deleted successfully.");
+        }
     }
 }
