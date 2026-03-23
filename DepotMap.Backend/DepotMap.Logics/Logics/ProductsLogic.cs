@@ -26,6 +26,15 @@ namespace DepotMap.Logics.Logics
             _ctx.Products.Add(product);
             await _ctx.SaveChangesAsync();
         }
+        public async Task<List<ProductsViewDto>> GetAllProductsAsync()
+        {
+            var products = await _ctx.Products
+                .Include(p => p.ProductStocks)
+                    .ThenInclude(ps => ps.Compartment)
+                .ToListAsync();
+
+            return _mapper.Map<List<ProductsViewDto>>(products);
+        }
         public async Task UpdateProductAsync(string id, CreateProductDto dto, string userId)
         {
 
@@ -46,13 +55,13 @@ namespace DepotMap.Logics.Logics
         }
         public async Task DeleteProductAsync(string id, string userId)
         {
-           
+
             var product = await _ctx.Products.FindAsync(id);
             if (product == null) throw new Exception("Product not found");
-           
+
             var historyEntry = _mapper.Map<ProductHistory>(product);
 
-            historyEntry.ActionType = "delete"; 
+            historyEntry.ActionType = "delete";
             historyEntry.Timestamp = DateTime.Now;
             historyEntry.CreatedByUserId = userId;
 
@@ -61,6 +70,20 @@ namespace DepotMap.Logics.Logics
             _ctx.Products.Remove(product);
 
             await _ctx.SaveChangesAsync();
+        }
+        public async Task<List<ProductHistory>> GetProductHistoryAsync(string? productId = null)
+        {
+            var query = _ctx.ProductHistories.AsQueryable();
+
+            // Ha megadunk egy konkrét ProductId-t, csak annak az előzményeit látjuk
+            if (!string.IsNullOrEmpty(productId))
+            {
+                query = query.Where(h => h.ProductId == productId);
+            }
+
+            return await query
+                .OrderByDescending(h => h.Timestamp) // A legújabb legyen legfelül
+                .ToListAsync();
         }
     }
 

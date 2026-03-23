@@ -14,22 +14,20 @@ namespace DepotMap.Logics.Helpers
     {
         public MappingProfile()
         {
-           
-            CreateMap<CreateProductDto, Product>()
-                .ForMember(dest => dest.ProductStocks, opt => opt.MapFrom(src => src.Stocks));
-          
-            CreateMap<InitialStockDto, ProductStock>();
+
+            CreateMap<CreateProductDto, Product>();//rekesz kell majd vissza
+            CreateMap<Product, ProductsViewDto>();
 
             CreateMap<Product, ProductStockInfoDto>();
-           
+
             CreateMap<ProductStock, ProductStockInfoDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
                 .ForMember(dest => dest.SKU, opt => opt.MapFrom(src => src.Product.SKU));
-           
+
             CreateMap<Compartment, CompartmentDto>();
-            
+
             CreateMap<Product, ProductHistory>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore()) 
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id));
         }
     }
