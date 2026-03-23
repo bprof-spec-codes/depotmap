@@ -2,6 +2,7 @@
 using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs.Products;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,25 @@ namespace DepotMap.Logics.Logics
             _ctx.Products.Add(product);
             await _ctx.SaveChangesAsync();
         }
+        public async Task UpdateProductAsync(string id, CreateProductDto dto, string userId)
+        {
+           
+            var product = await _ctx.Products.FindAsync(id);
+            if (product == null) throw new Exception("Product not found");
+            var history = _mapper.Map<ProductHistory>(product);
+
+            history.ActionType = "edit";
+            history.Timestamp = DateTime.Now;
+            history.CreatedByUserId = userId;
+
+            _ctx.ProductHistories.Add(history); 
+
+           
+            _mapper.Map(dto, product);
+            
+            await _ctx.SaveChangesAsync();
+        }
+
 
     }
 
