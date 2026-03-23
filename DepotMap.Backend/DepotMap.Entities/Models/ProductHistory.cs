@@ -9,7 +9,7 @@ namespace DepotMap.Entities.Models
     public class ProductHistory
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string ProductId { get; set; } = null!;
+        public string? ProductId { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string SKU { get; set; } = null!;
         public int Price { get; set; }

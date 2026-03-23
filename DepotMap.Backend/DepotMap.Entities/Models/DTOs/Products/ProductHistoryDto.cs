@@ -9,7 +9,7 @@ namespace DepotMap.Entities.Models.DTOs.Products
     public class ProductHistoryDto
     {
         public string Id { get; set; } = null!;
-        public string ProductId { get; set; } = null!;
+        public string? ProductId { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string SKU { get; set; } = null!;
         public int Price { get; set; }

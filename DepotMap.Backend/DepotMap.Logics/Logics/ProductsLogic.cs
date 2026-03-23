@@ -55,7 +55,6 @@ namespace DepotMap.Logics.Logics
         }
         public async Task DeleteProductAsync(string id, string userId)
         {
-
             var product = await _ctx.Products.FindAsync(id);
             if (product == null) throw new Exception("Product not found");
 
@@ -65,8 +64,10 @@ namespace DepotMap.Logics.Logics
             historyEntry.Timestamp = DateTime.Now;
             historyEntry.CreatedByUserId = userId;
 
-            _ctx.ProductHistories.Add(historyEntry);
+            
+            historyEntry.ProductId = null;
 
+            _ctx.ProductHistories.Add(historyEntry);
             _ctx.Products.Remove(product);
 
             await _ctx.SaveChangesAsync();
