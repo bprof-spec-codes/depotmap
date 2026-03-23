@@ -71,19 +71,20 @@ namespace DepotMap.Logics.Logics
 
             await _ctx.SaveChangesAsync();
         }
-        public async Task<List<ProductHistory>> GetProductHistoryAsync(string? productId = null)
+        public async Task<List<ProductHistoryDto>> GetProductHistoryAsync(string? productId = null)
         {
             var query = _ctx.ProductHistories.AsQueryable();
 
-            // Ha megadunk egy konkrét ProductId-t, csak annak az előzményeit látjuk
             if (!string.IsNullOrEmpty(productId))
             {
                 query = query.Where(h => h.ProductId == productId);
             }
 
-            return await query
-                .OrderByDescending(h => h.Timestamp) // A legújabb legyen legfelül
+            var histories = await query
+                .OrderByDescending(h => h.Timestamp)
                 .ToListAsync();
+
+            return _mapper.Map<List<ProductHistoryDto>>(histories);
         }
     }
 

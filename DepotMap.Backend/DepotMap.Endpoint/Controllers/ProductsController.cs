@@ -28,6 +28,12 @@ namespace DepotMap.Endpoint.Controllers
             var products = await _productsLogic.GetAllProductsAsync();
             return Ok(products);
         }
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory([FromQuery] string? productId)
+        {
+            var historyDtos = await _productsLogic.GetProductHistoryAsync(productId);
+            return Ok(historyDtos);
+        }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(string id, [FromBody] CreateProductDto dto)
         {
@@ -44,5 +50,6 @@ namespace DepotMap.Endpoint.Controllers
             await _productsLogic.DeleteProductAsync(id, userId);
             return Ok("Product deleted successfully.");
         }
+
     }
 }

@@ -17,6 +17,7 @@ namespace DepotMap.Logics.Helpers
 
             CreateMap<CreateProductDto, Product>();//rekesz kell majd vissza
             CreateMap<Product, ProductsViewDto>();
+            CreateMap<ProductHistory, ProductHistoryDto>();
 
             CreateMap<Product, ProductStockInfoDto>();
 
