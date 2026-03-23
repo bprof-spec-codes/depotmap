@@ -22,5 +22,13 @@ namespace DepotMap.Endpoint.Controllers
             return Ok("Product created successfully.");
 
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProduct(string id, [FromBody] CreateProductDto dto)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            await _productsLogic.UpdateProductAsync(id, dto, userId);
+            return Ok("Product updated successfully.");
+        }
     }
 }
