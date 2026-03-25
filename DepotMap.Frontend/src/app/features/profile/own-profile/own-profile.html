@@ -1,0 +1,37 @@
+<div *ngIf="profile">
+  <h2>Profile</h2>
+
+  <p><strong>Identifier:</strong> {{ profile.identifier }}</p>
+  <p><strong>First Name:</strong> {{ profile.firstName }}</p>
+  <p><strong>Last Name:</strong> {{ profile.lastName }}</p>
+  <p><strong>Role:</strong> {{ profile.role }}</p>
+  <p><strong>Position:</strong> {{ profile.position }}</p>
+</div>
+
+
+<h3>Change Password</h3>
+
+<div>
+  <label>Current Password:</label>
+  <input type="password" [(ngModel)]="currentPassword">
+</div>
+
+<div>
+  <label>New Password:</label>
+  <input type="password" [(ngModel)]="newPassword">
+</div>
+
+<div>
+  <label>Confirm New Password:</label>
+  <input type="password" [(ngModel)]="confirmNewPassword">
+</div>
+
+<button (click)="changePassword()">Change Password</button>
+
+<p *ngIf="message" style="color: green;">
+  {{ message }}
+</p>
+
+<p *ngIf="errorMessage" style="color: red;">
+  {{ errorMessage }}
+</p>

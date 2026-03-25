@@ -6,11 +6,13 @@ import { App } from './app';
 import { LoginComponent } from './features/auth/login-component/login-component';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { OwnProfile } from './features/profile/own-profile/own-profile';
 
 @NgModule({
   declarations: [
     App,
-    LoginComponent
+    LoginComponent,
+    OwnProfile
   ],
   imports: [
     BrowserModule,

@@ -88,6 +88,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -97,5 +98,5 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
     seeder.Seed();
 }
-app.UseCors("AllowAngular");
+
 app.Run();
