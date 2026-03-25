@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth-service';
+import * as bootstrap from 'bootstrap';
 
 @Component({
   selector: 'app-login-component',
@@ -13,6 +14,7 @@ import { AuthService } from '../../../core/services/auth-service';
 export class LoginComponent {
   loginForm: FormGroup;
   errorMessage: string = "";
+  @ViewChild('loginModal') loginModal!: ElementRef;
 
   constructor(private fb: FormBuilder, private authService: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.loginForm = this.fb.group({
@@ -29,16 +31,25 @@ export class LoginComponent {
       next: () => {
         console.log("Sikeres bejelentkezés!")
         // Majd ha kész lesz valami főoldal:
-        
         //this.router.navigate(['/dashboard']);
-
-        //Itt lehetséges, hogy a modal-t is külön be kell zárni
+        
+        this.closeModal();
       },
       error: () => {
         this.errorMessage = 'Hibás azonosító vagy jelszó.';
         this.cdr.detectChanges();
       }
     });
+  }
+  private closeModal() {
+    const modal = bootstrap.Modal.getInstance(this.loginModal.nativeElement);
+    modal?.hide();
+
+    // Ha mégsem záródna megfelően, akkor manuálisan
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+    document.querySelector('.modal-backdrop')?.remove();
   }
 
 }

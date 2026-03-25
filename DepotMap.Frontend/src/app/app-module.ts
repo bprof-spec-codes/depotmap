@@ -6,11 +6,13 @@ import { App } from './app';
 import { LoginComponent } from './features/auth/login-component/login-component';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NavbarComponent } from './shared/components/navbar-component/navbar-component';
 
 @NgModule({
   declarations: [
     App,
-    LoginComponent
+    LoginComponent,
+    NavbarComponent
   ],
   imports: [
     BrowserModule,
