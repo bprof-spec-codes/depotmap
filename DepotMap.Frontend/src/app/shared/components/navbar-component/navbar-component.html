@@ -1,1 +1,34 @@
-<p>navbar-component works!</p>
+<nav class="navbar navbar-expand-lg depotmap-navbar">
+  <div class="navbar-inner d-flex align-items-center w-100">
+
+    <!-- Logo -->
+    <a class="navbar-brand depotmap-logo" routerLink="/">depotmap</a>
+
+    <!-- Toggler mobilra -->
+    <button
+      class="navbar-toggler ms-auto"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarMenu"
+      aria-controls="navbarMenu"
+      aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Nav items -->
+    <div class="collapse navbar-collapse" id="navbarMenu">
+      <ul class="navbar-nav ms-auto d-flex align-items-center">
+        <li class="nav-item" *ngFor="let item of navItems">
+          <a
+            class="nav-link depotmap-nav-link"
+            [routerLink]="item.route"
+            routerLinkActive="active">
+            {{ item.label }}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</nav>

@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400&display=swap');
+
+.depotmap-navbar {
+  background-color: #005FA3;
+  height: 96px;
+
+  .navbar-inner {
+    padding-left: 246px;
+    padding-right: 246px;
+  }
+}
+
+.depotmap-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: #FFF8F0 !important;
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.depotmap-nav-link {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  color: #FFF8F0 !important;
+  padding: 0 16px !important;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.75;
+  }
+
+  &.active {
+    font-weight: 600;
+    opacity: 1;
+  }
+}
+
+// Mobil: belső padding csökkentése kis képernyőn
+@media (max-width: 992px) {
+  .depotmap-navbar .navbar-inner {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
