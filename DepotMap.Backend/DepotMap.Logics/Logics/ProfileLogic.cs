@@ -75,6 +75,7 @@ namespace DepotMap.Logics.Logics
             }
             return new OwnProfileDto
             {
+                Id = user.Id,
                 Identifier = user.Identifier,
                 FirstName = user.FirstName,
                 LastName = user.LastName,

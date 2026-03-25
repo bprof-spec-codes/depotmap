@@ -8,6 +8,7 @@ namespace DepotMap.Entities.Models.DTOs
 {
     public class OwnProfileDto
     {
+        public string Id { get; set; } = null!;
         public string Identifier { get; set; } = null!;
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
