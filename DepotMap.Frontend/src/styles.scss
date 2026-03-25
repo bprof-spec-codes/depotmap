@@ -1,1 +1,10 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400;600&display=swap');
+
+// Bootstrap változók felülírása
+$font-family-base: 'Poppins', sans-serif;
+$font-size-base: 1.1rem;
+$primary: #005FA3;
+$body-bg: #FFF8F0;
+$body-color: #1a1a1a;
+
+@import 'bootstrap/scss/bootstrap';

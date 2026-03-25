@@ -1,13 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400&display=swap');
-
 .depotmap-navbar {
   background-color: #005FA3;
-  height: 96px;
-
-  .navbar-inner {
-    padding-left: 246px;
-    padding-right: 246px;
-  }
+  min-height: 96px;
 }
 
 .depotmap-logo {
@@ -26,20 +19,31 @@
   padding: 0 16px !important;
   transition: opacity 0.2s ease;
 
-  &:hover {
-    opacity: 0.75;
-  }
-
-  &.active {
-    font-weight: 600;
-    opacity: 1;
-  }
+  &:hover { opacity: 0.75; }
+  &.active { font-weight: 600; }
 }
 
-// Mobil: belső padding csökkentése kis képernyőn
+// Mobil
 @media (max-width: 992px) {
-  .depotmap-navbar .navbar-inner {
-    padding-left: 24px;
-    padding-right: 24px;
+  .depotmap-logo {
+    font-size: 24px;
+  }
+
+  .navbar-toggler {
+    border-color: rgba(255, 248, 240, 0.6);
+
+    .navbar-toggler-icon {
+      filter: invert(1);
+    }
+  }
+
+  #navbarMenu {
+    background-color: #005FA3;
+    border-top: 1px solid rgba(255, 248, 240, 0.2);
+    padding: 8px 0;
+
+    .depotmap-nav-link {
+      padding: 10px 16px !important;
+    }
   }
 }

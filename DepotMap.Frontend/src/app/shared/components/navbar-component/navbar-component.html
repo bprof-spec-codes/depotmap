@@ -1,30 +1,31 @@
 <nav class="navbar navbar-expand-lg depotmap-navbar">
-    <div class="container-fluid navbar-inner">
+    <div class="container">
 
         <!--Ez funkcionál logoként jelenleg :D-->
         <a class="navbar-brand depotmap-logo" routerLink="/">depotmap</a>
 
         <!--Ez mobilra, reszponzivitásért-->
-        <button *ngIf="isLoggedIn$ | async" class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarMenu" aria-controls="navbarMenu" aria-expanded="false"
-            aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
+            aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!--Ha a felhasználó nincs bejelentkezve-->
-        <div *ngIf="!(isLoggedIn$ | async)" class="ms-auto">
-            <app-login-component></app-login-component>
-        </div>
+        <div class="collapse navbar-collapse" id="navbarMenu">
 
-        <!--Ha a felhasználó bejelentkezett-->
-        <div *ngIf="isLoggedIn$ | async" class="collapse navbar-collapse" id="navbarMenu">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
+            <!--Ha a felhasználó nincs bejelentkezve-->
+            <div *ngIf="!(isLoggedIn$ | async)" class="ms-auto">
+                <app-login-component></app-login-component>
+            </div>
+
+            <!--Ha a felhasználó bejelentkezett-->
+            <ul *ngIf="isLoggedIn$ | async" class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item" *ngFor="let item of navItems">
                     <a class="nav-link depotmap-nav-link" [routerLink]="item.route" routerLinkActive="active">
                         {{ item.label }}
                     </a>
                 </li>
             </ul>
+
         </div>
 
     </div>
