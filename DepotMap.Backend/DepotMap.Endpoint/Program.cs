@@ -1,15 +1,18 @@
+using System;
+using System.Text;
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
+using DepotMap.Logics;
 using DepotMap.Logics.Interfaces;
 using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Text;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,8 +49,11 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IOrderLogic, OrderLogic>();
+builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -60,6 +66,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAngular");
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -70,5 +78,4 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
     seeder.Seed();
 }
-app.UseCors("AllowAngular");
 app.Run();
