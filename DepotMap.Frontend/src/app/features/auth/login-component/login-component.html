@@ -1,9 +1,8 @@
-<!-- Ez a gomb nyitja meg magát a login modalt, ha elhelyezed a navbarban <app-login-component> -ként akkor csak a gomb jelenik meg, kattintás után a modal maga -->
-<button type="button" class="btn depotmap-login-btn" data-bs-toggle="modal" data-bs-target="#loginModal">
+<button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">
     Bejelentkezés
 </button>
 
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+<div #loginModal class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 shadow">
 
@@ -22,7 +21,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Password</label>
+                        <label class="form-label fw-semibold">Jelszó</label>
                         <input formControlName="password" type="password" class="form-control form-control-lg rounded-3"
                             placeholder="Jelszó" />
                     </div>
@@ -36,7 +35,7 @@
 
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary btn-lg rounded-3" [disabled]="loginForm.invalid">
-                            Login
+                            Bejelentkezés
                         </button>
                     </div>
 

@@ -24,6 +24,9 @@ export class NavbarComponent {
   constructor(private authService: AuthService) {
     this.isLoggedIn$ = this.authService.isAuthenticated();
   }
+  onLogout() {
+    this.authService.logout();
+  }
 }
 
 export class NavItem {
