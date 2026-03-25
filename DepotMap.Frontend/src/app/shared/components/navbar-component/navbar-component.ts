@@ -12,14 +12,18 @@ export class NavbarComponent {
   isLoggedIn$!: Observable<boolean>;
 
   navItems: NavItem[] = [
-    new NavItem('Inventory',   '/inventory'),
-    new NavItem('Warehouse',   '/warehouse'),
-    new NavItem('Products',    '/products'),
-    new NavItem('Procurement', '/procurement'),
-    new NavItem('Orders',      '/orders'),
-    new NavItem('Movements',   '/movements'),
-    new NavItem('Users',       '/users'),
+    new NavItem('Készlet', '/inventory'),
+    new NavItem('Raktár', '/warehouse'),
+    new NavItem('Termékek', '/products'),
+    new NavItem('Beszerzések', '/procurement'),
+    new NavItem('Rendelések', '/orders'),
+    new NavItem('Mozgatások', '/movements'),
+    new NavItem('Felhasználók', '/users'),
   ];
+
+  constructor(private authService: AuthService) {
+    this.isLoggedIn$ = this.authService.isAuthenticated();
+  }
 }
 
 export class NavItem {
