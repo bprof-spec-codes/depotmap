@@ -65,5 +65,22 @@ namespace DepotMap.Logics.Logics
 
             return null;
         }
+
+        public async Task<OwnProfileDto?> GetOwnProfileAsync(string userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                return null;
+            }
+            return new OwnProfileDto
+            {
+                Identifier = user.Identifier,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Role = user.Role,
+                Position = user.Position
+            };
+        }
     }
 }

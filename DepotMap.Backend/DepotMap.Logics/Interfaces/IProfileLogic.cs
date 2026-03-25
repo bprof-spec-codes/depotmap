@@ -10,5 +10,6 @@ namespace DepotMap.Logics.Interfaces
     public interface IProfileLogic
     {
         Task<string> ChangePasswordAsync(string userId, ChangePasswordDto dto);
+        Task<OwnProfileDto?> GetOwnProfileAsync(string userId);
     }
 }

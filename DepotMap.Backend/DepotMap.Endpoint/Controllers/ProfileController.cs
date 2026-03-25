@@ -18,7 +18,7 @@ namespace DepotMap.Endpoint.Controllers
             _profileLogic = profileLogic;
         }
 
-        [HttpPut("change-password")]
+        [HttpPut("updatePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -36,6 +36,26 @@ namespace DepotMap.Endpoint.Controllers
             }
 
             return Ok("Password changed successfully!");
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetOwnProfile()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var profile = await _profileLogic.GetOwnProfileAsync(userId);
+
+            if (profile == null)
+            {
+                return NotFound("User not found");
+            }
+
+            return Ok(profile);
         }
     }
 }
