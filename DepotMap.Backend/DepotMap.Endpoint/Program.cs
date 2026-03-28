@@ -53,9 +53,7 @@ builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
 builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
