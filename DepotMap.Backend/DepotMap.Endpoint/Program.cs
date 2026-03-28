@@ -54,6 +54,7 @@ builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IOrderLogic, OrderLogic>();
 builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
+builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
