@@ -6,7 +6,7 @@ Ez a dokumentáció a **DepotMap** raktárkezelő webalkalmazás backend unit te
 
 - **Teszt framework**: xUnit
 - **Adatbázis**: Entity Framework Core InMemory provider
-- **Tesztek száma**: 23 (mind PASSED)
+- **Tesztek száma**: 30 (mind PASSED)
 
 ## Tesztek futtatása
 
@@ -67,6 +67,20 @@ A `ShelfLogic` service polcok CRUD műveleteit és a rekeszek (compartment) keze
 | `DeleteShelfAsync_ShouldRemoveShelf` | Polc törlése és ellenőrzés |
 | `DeleteShelfAsync_ShouldReturnFalseForInvalidId` | Nem létező polc törlése false-t ad vissza |
 
+### 4. WarehouseWorkflowTests (7 teszt)
+
+Integrációs/workflow tesztek, amelyek a teljes raktár létrehozási folyamatot tesztelik: a service-ek közötti adatáramlást (ID-k, DTO-k konzisztenciája) ellenőrzik.
+
+| Teszt | Leírás |
+|-------|--------|
+| `CreateWarehouse_ThenGetCells_ShouldReturnMatchingGrid` | Raktár létrehozása után a visszakapott ID-val lekért cellák száma és koordinátái egyeznek a GridWidth × GridHeight-tel |
+| `CreateWarehouse_GetById_CellIds_ShouldMatchCellLogicIds` | Warehouse detail és CellLogic által visszaadott cella ID-k megegyeznek |
+| `CreateWarehouse_UpdateCell_ThenGetDetail_ShouldReflectChange` | Cella típusváltás után a warehouse detail-ben is tükröződik a változás |
+| `FullWorkflow_CreateWarehouse_SetupCell_AddShelf_AddCompartment` | Teljes workflow: raktár → cellák lekérése → cella típusváltás → polc létrehozás → rekesz hozzáadás → visszaellenőrzés a cella detail-ben |
+| `BatchUpdateCells_ThenCreateShelves_ShouldWorkWithReturnedIds` | Batch update által visszaadott ID-kkal polcok létrehozása mindkét shelf_area cellában |
+| `MultipleShelvesWithCompartments_CodesShouldBeConsistent` | Több polc és rekesz létrehozása, a generált kódok helyessége és egyedisége |
+| `DeleteWarehouse_ShouldCascadeToAllChildren` | Raktár törlés kaszkád: cellák, polcok, rekeszek mind eltűnnek |
+
 ---
 
 ## Összesítés
@@ -76,4 +90,5 @@ A `ShelfLogic` service polcok CRUD műveleteit és a rekeszek (compartment) keze
 | WarehouseLogicTests | 7 | PASSED |
 | WarehouseCellLogicTests | 6 | PASSED |
 | ShelfLogicTests | 10 | PASSED |
-| **Összesen** | **23** | **PASSED** |
+| WarehouseWorkflowTests | 7 | PASSED |
+| **Összesen** | **30** | **PASSED** |
