@@ -14,6 +14,7 @@ export class NavbarComponent {
   // sidebar state
   isCollapsed = false;
   profileMenuOpen = false;
+  readonly appName = 'DepotMap';
 
   navItems: NavItem[] = [
     new NavItem('Készlet', '/inventory', 'bi-box-seam'),
@@ -50,10 +51,7 @@ export class NavbarComponent {
     this.authService.logout();
   }
 
-  // felső név
-  getDisplayName(): string {
-    return 'DepotMap';
-  }
+
 
   // user név tokenből
   getUserDisplayName(): string {
