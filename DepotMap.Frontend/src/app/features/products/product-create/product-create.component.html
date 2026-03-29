@@ -1,0 +1,88 @@
+<div class="create-page">
+  <div class="create-wrapper">
+    <h2>Termék létrehozása</h2>
+    <p class="subtitle">Add meg a termék alapadatait, majd mentsd el.</p>
+
+    <form (ngSubmit)="create()" #createForm="ngForm" class="create-form">
+      <label class="field">
+        <span>Cikkszám</span>
+        <input
+          type="text"
+          name="sku"
+          [(ngModel)]="form.sku"
+          placeholder="Pl. MON-042"
+          required
+        />
+      </label>
+
+      <label class="field">
+        <span>Név</span>
+        <input
+          type="text"
+          name="name"
+          [(ngModel)]="form.name"
+          placeholder="Pl. LG 27 monitor"
+          required
+        />
+      </label>
+
+      <label class="field">
+        <span>Leírás</span>
+        <input
+          type="text"
+          name="description"
+          [(ngModel)]="form.description"
+          placeholder="Rövid leírás"
+          required
+        />
+      </label>
+
+      <div class="row-2">
+        <label class="field">
+          <span>Ár (Ft)</span>
+          <input
+            type="number"
+            name="price"
+            [(ngModel)]="form.price"
+            placeholder="0"
+            required
+            min="0"
+          />
+        </label>
+
+        <label class="field">
+          <span>Alacsony készlet küszöb</span>
+          <input
+            type="number"
+            name="lowStockThreshold"
+            [(ngModel)]="form.lowStockThreshold"
+            placeholder="0"
+            required
+            min="0"
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Elsődleges tárolóhely</span>
+        <input
+          type="text"
+          name="primaryStorageLocation"
+          [(ngModel)]="form.primaryStorageLocation"
+          placeholder="Pl. A.1.2.1"
+        />
+      </label>
+
+      <div class="storage-actions">
+        <button type="button" class="link-btn">+ Plusz tárolóhely hozzáadása</button>
+        <button type="button" class="link-btn">- Plusz tárolóhely törlése</button>
+      </div>
+
+      <div class="error-text" *ngIf="errorText">{{ errorText }}</div>
+
+      <button type="submit" class="create-btn" [disabled]="saving">
+        {{ saving ? 'Létrehozás folyamatban...' : 'Létrehozás' }}
+      </button>
+    </form>
+  </div>
+</div>

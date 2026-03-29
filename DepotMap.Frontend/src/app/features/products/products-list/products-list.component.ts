@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { ProductService, ProductShortDto, ProductHistoryDto } from '../../../core/services/product-service';
-import { finalize, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, combineLatest, defer, of } from 'rxjs';
+import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-products-list',
@@ -8,95 +10,85 @@ import { finalize, Subscription } from 'rxjs';
   templateUrl: './products-list.component.html',
   styleUrls: ['./products-list.component.scss']
 })
-export class ProductsListComponent implements OnInit, OnDestroy {
-  get products$() {
-    return this.productService.products$;
-  }
-  selectedHistory: ProductHistoryDto[] = [];
-  loading = false;
-  loadError = false;
-  historyLoading = false;
+export class ProductsListComponent {
+  productsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
+  historyVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
+  visibleHistory$: Observable<ProductHistoryDto[]>;
+
   historyRequested = false;
-  historyError = false;
   selectedProductName = '';
-  historySearch = '';
-  historySort: 'newest' | 'oldest' = 'newest';
+  highlightedProductId: string | null = null;
+  historySearch = new BehaviorSubject<string>('');
+  historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
 
-  private historySub: Subscription | undefined;
-  private productsSub: Subscription | undefined;
-  private products: ProductShortDto[] = [];
+  private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
 
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService, private router: Router) {
+    this.highlightedProductId = (history.state?.highlightProductId as string | undefined) ?? null;
 
-  private loadProducts(): void {
-    this.loadError = false;
-    this.loading = true;
-    this.productService.loadAll()
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        error: () => { this.loadError = true; }
-      });
-  }
+    this.productsVm$ = defer(() => this.productService.loadAll()).pipe(
+      map(items => ({ items, loading: false, error: false })),
+      startWith({ items: [] as ProductShortDto[], loading: true, error: false }),
+      catchError(() => of({ items: [] as ProductShortDto[], loading: false, error: true })),
+      shareReplay(1)
+    );
 
-  ngOnInit(): void {
-    this.productsSub = this.products$.subscribe(p => {
-      this.products = p;
-    });
-    this.loadProducts();
-  }
-
-  ngOnDestroy(): void {
-    this.productsSub?.unsubscribe();
-    this.historySub?.unsubscribe();
-  }
-
-  showHistory(productId: string): void {
-    const product = this.products.find((p: ProductShortDto) => p.id === productId);
-    this.selectedProductName = product?.name ?? '';
-    this.historyRequested = true;
-    this.historyError = false;
-    this.selectedHistory = [];
-    this.historyLoading = true;
-    // cancel previous history request if any
-    this.historySub?.unsubscribe();
-    this.historySub = this.productService.getHistory(productId)
-      .pipe(finalize(() => (this.historyLoading = false)))
-      .subscribe({
-        next: h => {
-          this.selectedHistory = h;
-        },
-        error: () => {
-          this.historyError = true;
-        }
-      });
-  }
-
-  get visibleHistory(): ProductHistoryDto[] {
-    const q = this.historySearch.trim().toLowerCase();
-    const filtered = q
-      ? this.selectedHistory.filter(h =>
-          `${h.actionType} ${h.name} ${h.sku} ${h.createdByUserId}`.toLowerCase().includes(q)
+    this.historyVm$ = this.historyRequest.pipe(
+      switchMap(({ id }) =>
+        this.productService.getHistory(id).pipe(
+          map(items => ({ items, loading: false, error: false })),
+          startWith({ items: [] as ProductHistoryDto[], loading: true, error: false }),
+          catchError(() => of({ items: [] as ProductHistoryDto[], loading: false, error: true }))
         )
-      : this.selectedHistory;
+      ),
+      startWith({ items: [] as ProductHistoryDto[], loading: false, error: false }),
+      shareReplay(1)
+    );
 
-    return [...filtered].sort((a, b) => {
-      // Robusztus dátumkezelés: ISO string -> Date -> timestamp
-      const ta = new Date(a.timestamp).getTime();
-      const tb = new Date(b.timestamp).getTime();
+    this.visibleHistory$ = combineLatest([
+      this.historyVm$,
+      this.historySearch,
+      this.historySort
+    ]).pipe(
+      map(([historyVm, search, sort]) => {
+        const q = search.trim().toLowerCase();
+        const filtered = q
+          ? historyVm.items.filter(h =>
+              `${h.actionType} ${h.name} ${h.sku} ${h.createdByUserId}`.toLowerCase().includes(q)
+            )
+          : historyVm.items;
 
-      // Ha a dátum feldolgozása hibás, fallback a default sorrendelésre
-      if (isNaN(ta) || isNaN(tb)) {
-        console.warn('Érvénytelen timestamp:', a.timestamp, b.timestamp);
-        return 0;
-      }
+        return [...filtered].sort((a, b) => {
+          const ta = new Date(a.timestamp).getTime();
+          const tb = new Date(b.timestamp).getTime();
+          if (Number.isNaN(ta) || Number.isNaN(tb)) {
+            return 0;
+          }
+          return sort === 'newest' ? tb - ta : ta - tb;
+        });
+      }),
+      shareReplay(1)
+    );
 
-      // Explicit sorrendezés: newest = nagyobból kisebb (legújabb elöl), oldest = kicsibből nagyobb
-      if (this.historySort === 'newest') {
-        return tb - ta; // Újabb dátum lesz előbb
-      } else {
-        return ta - tb; // Régebbi dátum lesz előbb
-      }
-    });
+    if (this.highlightedProductId) {
+      setTimeout(() => {
+        this.highlightedProductId = null;
+      }, 6000);
+    }
+  }
+
+  showHistory(productId: string, productName: string): void {
+    this.selectedProductName = productName;
+    this.historyRequested = true;
+    this.historyRequest.next({ id: productId, name: productName });
+  }
+
+  onHistorySearchChange(value: string): void {
+    this.historySearch.next(value ?? '');
+  }
+
+  onHistorySortChange(value: 'newest' | 'oldest'): void {
+    this.historySort.next(value ?? 'newest');
   }
 
 
@@ -111,8 +103,9 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     this.productService.delete(id).subscribe();
   }
 
-  editProduct(id: string) {
-    // placeholder - navigálni lehet egy edit oldalra
-    console.log('Edit', id);
+  editProduct(product: ProductShortDto) {
+    this.router.navigate(['/products/edit', product.id], {
+      state: { product }
+    });
   }
 }

@@ -1,5 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { ProductService } from './core/services/product-service';
+import { Component, signal } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -7,15 +6,6 @@ import { ProductService } from './core/services/product-service';
   standalone: false,
   styleUrl: './app.scss'
 })
-export class App implements OnInit {
+export class App {
   protected readonly title = signal('DepotMap.Frontend');
-
-  constructor(private productService: ProductService) {}
-
-  ngOnInit(): void {
-    // indításkor betölti a termékeket (nem blokkolja a bootstrapot)
-    this.productService.loadAll().subscribe({
-      error: (err) => console.error('Initial products load failed', err)
-    });
-  }
 }

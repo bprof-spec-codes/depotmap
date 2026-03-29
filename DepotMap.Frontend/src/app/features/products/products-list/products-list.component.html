@@ -1,25 +1,28 @@
 <div class="products-list">
   <div class="header">
     <h2>Termékek</h2>
+    <a routerLink="/products/create" class="btn btn-primary">Új termék</a>
   </div>
 
-  <div *ngIf="loading" class="spinner">Betöltés...</div>
-  <div *ngIf="!loading && loadError" class="error-text">A termékek nem töltődtek be. Ellenőrizd, hogy a backend fut-e.</div>
+  <ng-container *ngIf="productsVm$ | async as productsVm">
+    <div *ngIf="productsVm.loading" class="spinner">Betöltés...</div>
+    <div *ngIf="!productsVm.loading && productsVm.error" class="error-text">A termékek nem töltődtek be. Ellenőrizd, hogy a backend fut-e.</div>
 
-  <div class="list">
-    <div *ngFor="let p of (products$ | async)" class="item">
-      <div class="left">
-        <div class="title">{{p.name}}</div>
-        <div class="meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}}</div>
-      </div>
+    <div class="list">
+      <div *ngFor="let p of productsVm.items" class="item" [class.item-highlight]="p.id === highlightedProductId">
+        <div class="left">
+          <div class="title">{{p.name}} <span *ngIf="p.id === highlightedProductId" class="updated-badge">Frissítve</span></div>
+          <div class="meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}}</div>
+        </div>
 
-      <div class="actions">
-        <button class="btn btn-sm btn-outline-secondary" (click)="showHistory(p.id)">Előzmények</button>
-        <button class="btn btn-sm btn-outline-secondary" (click)="editProduct(p.id)">Szerkeszt</button>
-        <button class="btn btn-sm btn-danger" (click)="deleteProduct(p.id)">Törlés</button>
+        <div class="actions">
+          <button class="btn btn-sm btn-outline-secondary" (click)="showHistory(p.id, p.name)">Előzmények</button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="editProduct(p)">Szerkeszt</button>
+          <button class="btn btn-sm btn-danger" (click)="deleteProduct(p.id)">Törlés</button>
+        </div>
       </div>
     </div>
-  </div>
+  </ng-container>
 
   <div class="history-panel" *ngIf="historyRequested">
     <h3>Termék szerkesztési előzménye {{ selectedProductName ? ('- ' + selectedProductName) : '' }}</h3>
@@ -29,44 +32,51 @@
         type="text"
         class="history-input"
         placeholder="Keresés..."
-        [(ngModel)]="historySearch"
+        [ngModel]="historySearch | async"
+        (ngModelChange)="onHistorySearchChange($event)"
       />
-      <select class="history-select" [(ngModel)]="historySort">
+      <select class="history-select" [ngModel]="historySort | async" (ngModelChange)="onHistorySortChange($event)">
         <option value="newest">Rendezés: Legújabb elöl</option>
         <option value="oldest">Rendezés: Legrégebbi elöl</option>
       </select>
     </div>
 
-   
-    <div *ngIf="!historyLoading && !historyError && !visibleHistory.length" class="empty-text">Nincs előzmény ehhez a termékhez.</div>
+    <ng-container *ngIf="historyVm$ | async as historyVm">
+      <div *ngIf="historyVm.loading" class="spinner">Betöltés...</div>
+      <div *ngIf="!historyVm.loading && historyVm.error" class="error-text">Nem sikerült betölteni az előzményeket.</div>
 
-    <div class="history-table-wrap" *ngIf="visibleHistory.length">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Azonosító</th>
-            <th>Felhasználó</th>
-            <th>Szerkesztés időpontja</th>
-            <th>Cikkszám</th>
-            <th>Név</th>
-            <th>Leírás</th>
-            <th>Ár</th>
-            <th>Művelet</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let h of visibleHistory">
-            <td>{{ h.id }}</td>
-            <td>{{ h.createdByUserId }}</td>
-            <td>{{ h.timestamp | date:'yyyy.MM.dd. HH:mm' }}</td>
-            <td>{{ h.sku }}</td>
-            <td>{{ h.name }}</td>
-            <td>{{ h.description || '-' }}</td>
-            <td>{{ h.price | number:'1.0-0' }} Ft</td>
-            <td>{{ formatAction(h.actionType) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <ng-container *ngIf="visibleHistory$ | async as visibleHistory">
+        <div *ngIf="!historyVm.loading && !historyVm.error && !visibleHistory.length" class="empty-text">Nincs előzmény ehhez a termékhez.</div>
+
+        <div class="history-table-wrap" *ngIf="visibleHistory.length">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Azonosító</th>
+                <th>Felhasználó</th>
+                <th>Szerkesztés időpontja</th>
+                <th>Cikkszám</th>
+                <th>Név</th>
+                <th>Leírás</th>
+                <th>Ár</th>
+                <th>Művelet</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of visibleHistory">
+                <td>{{ h.id }}</td>
+                <td>{{ h.createdByUserId }}</td>
+                <td>{{ h.timestamp | date:'yyyy.MM.dd. HH:mm' }}</td>
+                <td>{{ h.sku }}</td>
+                <td>{{ h.name }}</td>
+                <td>{{ h.description || '-' }}</td>
+                <td>{{ h.price | number:'1.0-0' }} Ft</td>
+                <td>{{ formatAction(h.actionType) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </ng-container>
   </div>
 </div>

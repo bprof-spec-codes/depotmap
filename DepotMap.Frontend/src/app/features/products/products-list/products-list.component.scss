@@ -2,8 +2,24 @@
 .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
 .list { display:flex; flex-direction:column; gap:8px; }
 .item { display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:10px; background:#fff; box-shadow:0 6px 18px rgba(2,6,23,0.06); }
+.item-highlight {
+	border: 1px solid #23a557;
+	box-shadow: 0 0 0 3px rgba(35, 165, 87, 0.18), 0 6px 18px rgba(2, 6, 23, 0.06);
+	background: #f3fff7;
+}
 .item .left { max-width:70%; }
 .title { font-weight:700; font-size:16px; color:#0f172a; }
+.updated-badge {
+	display: inline-block;
+	margin-left: 8px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: #e9f9ef;
+	color: #11753a;
+	font-size: 11px;
+	font-weight: 700;
+	vertical-align: middle;
+}
 .meta { color:#64748b; font-size:12px; margin-top:6px; }
 .actions { display:flex; gap:8px; align-items:center; }
 .history-panel { margin-top:18px; padding:12px; background:#f8fbff; border-radius:10px; box-shadow:0 8px 20px rgba(2,6,23,0.04); border:1px solid #d7e6f8; }

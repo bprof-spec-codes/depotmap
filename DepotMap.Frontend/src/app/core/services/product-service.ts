@@ -7,6 +7,7 @@ export interface ProductShortDto {
   id: string;
   name: string;
   sku?: string;
+  price?: number;
   quantity?: number;
   totalStock?: number;
 }
@@ -26,28 +27,77 @@ export interface ProductHistoryDto {
   timestamp: string;
 }
 
+export interface CreateProductDto {
+  name: string;
+  sku: string;
+  price: number;
+  description: string;
+  lowStockThreshold: number;
+}
+
+export interface UpdateProductDto {
+  name: string;
+  sku: string;
+  price: number;
+  description: string;
+  lowStockThreshold: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private apiBase = `${environment.apiUrl}/products`;
 
   private productsSubject = new BehaviorSubject<ProductShortDto[]>([]);
   public products$ = this.productsSubject.asObservable();
+  private latestHistoryByProductId = new Map<string, ProductHistoryDto>();
 
   constructor(private http: HttpClient) {}
 
+  private normalizeProductsResponse(response: unknown): ProductShortDto[] {
+    if (Array.isArray(response)) {
+      return response as ProductShortDto[];
+    }
+
+    const wrapped = response as ValuesWrapper<ProductShortDto> | null;
+    if (wrapped && Array.isArray(wrapped.$values)) {
+      return wrapped.$values;
+    }
+
+    return [];
+  }
+
   loadAll(): Observable<ProductShortDto[]> {
-  return this.http.get<ProductShortDto[]>(this.apiBase).pipe(
-    timeout(5000), // Vegyük lejjebb 5 mp-re a teszt kedvéért
-    tap(items => {
-      console.log('Adat megérkezett:', items);
-      this.productsSubject.next(items);
-    }),
-    catchError(err => {
-      console.error('API hiba történt:', err);
-      return of([]); // Hiba esetén üres listát adunk vissza, hogy ne ragadjon be a stream
-    })
-  );
-}
+    return this.http.get<unknown>(this.apiBase).pipe(
+      timeout(5000),
+      map(response => this.normalizeProductsResponse(response)),
+      tap(items => {
+        this.productsSubject.next(items);
+        this.warmLatestHistoryCache();
+      }),
+      catchError(() => {
+        this.productsSubject.next([]);
+        return of([]);
+      })
+    );
+  }
+
+  private warmLatestHistoryCache(): void {
+    this.getHistory()
+      .pipe(catchError(() => of([] as ProductHistoryDto[])))
+      .subscribe(items => {
+        const nextMap = new Map<string, ProductHistoryDto>();
+        for (const item of items) {
+          if (item.productId && !nextMap.has(item.productId)) {
+            nextMap.set(item.productId, item);
+          }
+        }
+        this.latestHistoryByProductId = nextMap;
+      });
+  }
+
+  getLatestHistoryForProduct(productId: string): ProductHistoryDto | undefined {
+    return this.latestHistoryByProductId.get(productId);
+  }
 
   getById(id: string): Observable<ProductShortDto> {
     return this.http.get<ProductShortDto>(`${this.apiBase}/${id}`);
@@ -67,26 +117,40 @@ export class ProductService {
     );
   }
 
-  create(dto: Partial<ProductShortDto>): Observable<void> {
-    return this.http.post<void>(this.apiBase, dto).pipe(
-      switchMap(() => this.http.get<ProductShortDto[]>(this.apiBase)),
-      tap(latest => this.productsSubject.next(latest)),
+  create(dto: CreateProductDto): Observable<void> {
+    return this.http.post(this.apiBase, dto, { responseType: 'text' }).pipe(
+      tap(() => {
+        // Fire-and-forget refresh so list page gets fresher cache when available.
+        this.loadAll().subscribe();
+      }),
       map(() => void 0)
     );
   }   
 
-  update(id: string, dto: Partial<ProductShortDto>): Observable<void> {
-    return this.http.put<void>(`${this.apiBase}/${id}`, dto).pipe(
-      switchMap(() => this.http.get<ProductShortDto[]>(this.apiBase)),
-      tap(latest => this.productsSubject.next(latest)),
+  update(id: string, dto: UpdateProductDto): Observable<void> {
+    return this.http.put(`${this.apiBase}/${id}`, dto, { responseType: 'text' }).pipe(
+      tap(() => {
+        const updated = this.productsSubject.value.map(p =>
+          p.id === id
+            ? {
+                ...p,
+                name: dto.name,
+                sku: dto.sku
+              }
+            : p
+        );
+        this.productsSubject.next(updated);
+        this.loadAll().subscribe();
+      }),
       map(() => void 0)
     );
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiBase}/${id}`).pipe(
-      switchMap(() => this.http.get<ProductShortDto[]>(this.apiBase)),
-      tap(latest => this.productsSubject.next(latest)),
+    return this.http.delete(`${this.apiBase}/${id}`, { responseType: 'text' }).pipe(
+      tap(() => {
+        this.loadAll().subscribe();
+      }),
       map(() => void 0)
     );
   }
