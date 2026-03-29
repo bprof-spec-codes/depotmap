@@ -15,8 +15,7 @@ export class ProductsListComponent {
   historyVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
   visibleHistory$: Observable<ProductHistoryDto[]>;
 
-  historyRequested = false;
-  selectedProductName = '';
+  openedHistoryProductId: string | null = null;
   highlightedProductId: string | null = null;
   historySearch = new BehaviorSubject<string>('');
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
@@ -78,9 +77,19 @@ export class ProductsListComponent {
   }
 
   showHistory(productId: string, productName: string): void {
-    this.selectedProductName = productName;
-    this.historyRequested = true;
+    if (this.openedHistoryProductId === productId) {
+      this.openedHistoryProductId = null;
+      return;
+    }
+
+    this.openedHistoryProductId = productId;
+    this.historySearch.next('');
+    this.historySort.next('newest');
     this.historyRequest.next({ id: productId, name: productName });
+  }
+
+  isHistoryOpen(productId: string): boolean {
+    return this.openedHistoryProductId === productId;
   }
 
   onHistorySearchChange(value: string): void {

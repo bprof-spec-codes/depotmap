@@ -101,7 +101,6 @@
 }
 
 .create-btn {
-  margin-top: 4px;
   border: 1px solid var(--ok-2);
   border-radius: 10px;
   background: var(--ok);
@@ -121,6 +120,30 @@
 .create-btn:disabled {
   opacity: 0.72;
   cursor: not-allowed;
+}
+
+.form-actions {
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f4f8ff;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.back-btn:hover {
+  background: #eaf2ff;
 }
 
 .error-text {
@@ -145,5 +168,15 @@
 
   .row-2 {
     grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .back-btn,
+  .create-btn {
+    text-align: center;
   }
 }

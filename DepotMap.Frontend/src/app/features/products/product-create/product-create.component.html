@@ -80,9 +80,12 @@
 
       <div class="error-text" *ngIf="errorText">{{ errorText }}</div>
 
-      <button type="submit" class="create-btn" [disabled]="saving">
-        {{ saving ? 'Létrehozás folyamatban...' : 'Létrehozás' }}
-      </button>
+      <div class="form-actions">
+        <a routerLink="/products" class="back-btn">Vissza</a>
+        <button type="submit" class="create-btn" [disabled]="saving">
+          {{ saving ? 'Létrehozás folyamatban...' : 'Létrehozás' }}
+        </button>
+      </div>
     </form>
   </div>
 </div>
