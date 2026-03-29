@@ -55,7 +55,16 @@ export class ProductService {
 
   getHistory(productId?: string): Observable<ProductHistoryDto[]> {
     const url = `${this.apiBase}/history${productId ? `?productId=${encodeURIComponent(productId)}` : ''}`;
-    return this.http.get<ProductHistoryDto[]>(url).pipe(timeout(10000));
+    return this.http.get<ProductHistoryDto[]>(url).pipe(
+      timeout(10000),
+      map(items => {
+        // Normalizálunk: biztosítjuk, hogy a timestamp ISO formátum
+        return items.map(item => ({
+          ...item,
+          timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString()
+        }));
+      })
+    );
   }
 
   create(dto: Partial<ProductShortDto>): Observable<void> {

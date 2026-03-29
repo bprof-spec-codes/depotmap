@@ -80,11 +80,25 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       : this.selectedHistory;
 
     return [...filtered].sort((a, b) => {
+      // Robusztus dátumkezelés: ISO string -> Date -> timestamp
       const ta = new Date(a.timestamp).getTime();
       const tb = new Date(b.timestamp).getTime();
-      return this.historySort === 'newest' ? tb - ta : ta - tb;
+
+      // Ha a dátum feldolgozása hibás, fallback a default sorrendelésre
+      if (isNaN(ta) || isNaN(tb)) {
+        console.warn('Érvénytelen timestamp:', a.timestamp, b.timestamp);
+        return 0;
+      }
+
+      // Explicit sorrendezés: newest = nagyobból kisebb (legújabb elöl), oldest = kicsibből nagyobb
+      if (this.historySort === 'newest') {
+        return tb - ta; // Újabb dátum lesz előbb
+      } else {
+        return ta - tb; // Régebbi dátum lesz előbb
+      }
     });
   }
+
 
   formatAction(actionType: string): string {
     if (actionType === 'edit') return 'Szerkesztés';

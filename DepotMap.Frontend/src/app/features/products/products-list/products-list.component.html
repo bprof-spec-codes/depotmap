@@ -37,8 +37,7 @@
       </select>
     </div>
 
-    <div *ngIf="historyLoading" class="spinner">Betöltés...</div>
-    <div *ngIf="historyError" class="error-text">Nem sikerült betölteni az előzményeket.</div>
+   
     <div *ngIf="!historyLoading && !historyError && !visibleHistory.length" class="empty-text">Nincs előzmény ehhez a termékhez.</div>
 
     <div class="history-table-wrap" *ngIf="visibleHistory.length">
