@@ -1,0 +1,49 @@
+.depotmap-navbar {
+  background-color: #005FA3;
+  min-height: 96px;
+}
+
+.depotmap-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: #FFF8F0 !important;
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.depotmap-nav-link {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  color: #FFF8F0 !important;
+  padding: 0 16px !important;
+  transition: opacity 0.2s ease;
+
+  &:hover { opacity: 0.75; }
+  &.active { font-weight: 600; }
+}
+
+// Mobil
+@media (max-width: 992px) {
+  .depotmap-logo {
+    font-size: 24px;
+  }
+
+  .navbar-toggler {
+    border-color: rgba(255, 248, 240, 0.6);
+
+    .navbar-toggler-icon {
+      filter: invert(1);
+    }
+  }
+
+  #navbarMenu {
+    background-color: #005FA3;
+    border-top: 1px solid rgba(255, 248, 240, 0.2);
+    padding: 8px 0;
+
+    .depotmap-nav-link {
+      padding: 10px 16px !important;
+    }
+  }
+}

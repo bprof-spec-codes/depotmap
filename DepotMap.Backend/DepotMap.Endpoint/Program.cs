@@ -7,6 +7,7 @@ using DepotMap.Logics;
 using DepotMap.Logics.Interfaces;
 using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
+using DepotMap.Entities.Models.DTOs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -49,15 +50,14 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
+builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
+builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
 builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IOrderLogic, OrderLogic>();
 builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
