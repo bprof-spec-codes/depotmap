@@ -1,37 +1,128 @@
-<nav class="navbar navbar-expand-lg depotmap-navbar">
-    <div class="container">
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-inner">
+    <div class="sidebar-top">
+      <div class="brand-row">
+        <div class="brand" [class.brand-collapsed]="isCollapsed">
+          <div class="brand-logo">
+            <i class="bi bi-grid-1x2-fill"></i>
+          </div>
 
-        <!--Ez funkcionál logoként jelenleg :D-->
-        <a class="navbar-brand depotmap-logo" routerLink="/">depotmap</a>
-
-        <!--Ez mobilra, reszponzivitásért-->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
-            aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarMenu">
-
-            <!--Ha a felhasználó nincs bejelentkezve-->
-            <div *ngIf="!(isLoggedIn$ | async)" class="ms-auto">
-                <app-login-component></app-login-component>
-            </div>
-
-            <!--Ha a felhasználó bejelentkezett-->
-            <ul *ngIf="isLoggedIn$ | async" class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item" *ngFor="let item of navItems">
-                    <a class="nav-link depotmap-nav-link" [routerLink]="item.route" routerLinkActive="active">
-                        {{ item.label }}
-                    </a>
-                </li>
-                <li class="nav-item ms-3 d-flex align-items-center">
-                    <i class="bi bi-box-arrow-right fs-4 text-danger" (click)="onLogout()" role="button" title="Kijelentkezés"
-                        style="cursor: pointer">
-                    </i>
-                </li>
-            </ul>
-
+          <div class="brand-text" *ngIf="!isCollapsed">
+            <div class="brand-title">{{ appName }}</div>
+            <div class="brand-subtitle">Warehouse system</div>
+          </div>
         </div>
 
+        <button class="toggle-btn" type="button" (click)="toggleSidebar()">
+          <i
+            class="bi"
+            [ngClass]="isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"
+          ></i>
+        </button>
+      </div>
     </div>
-</nav>
+
+    <nav class="sidebar-nav" *ngIf="isLoggedIn$ | async">
+      <a
+        *ngFor="let item of navItems"
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        (click)="closeProfileMenu()"
+      >
+        <span class="nav-icon">
+          <i class="bi" [ngClass]="item.icon"></i>
+        </span>
+
+        <span class="nav-label" *ngIf="!isCollapsed">
+          {{ item.label }}
+        </span>
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInBlock">
+        <button
+          type="button"
+          class="bottom-card login-card"
+          data-bs-toggle="modal"
+          data-bs-target="#loginModal"
+        >
+          <div class="bottom-card-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+          </div>
+
+          <div class="bottom-card-content" *ngIf="!isCollapsed">
+            <div class="bottom-card-title">Bejelentkezés</div>
+            <div class="bottom-card-subtitle">Lépj be a rendszerbe</div>
+          </div>
+        </button>
+      </ng-container>
+
+      <ng-template #loggedInBlock>
+        <div class="profile-wrapper">
+          <button class="bottom-card profile-card" type="button" (click)="toggleProfileMenu()">
+            <div class="bottom-card-left">
+              <div class="avatar">
+                <i class="bi bi-person-fill"></i>
+              </div>
+
+              <div class="bottom-card-content" *ngIf="!isCollapsed">
+                <div class="bottom-card-title">{{ getUserDisplayName() }}</div>
+                <div class="bottom-card-subtitle">Bejelentkezve</div>
+              </div>
+            </div>
+
+            <i
+              *ngIf="!isCollapsed"
+              class="bi profile-chevron"
+              [ngClass]="profileMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"
+            ></i>
+          </button>
+
+          <div class="profile-menu" *ngIf="profileMenuOpen && !isCollapsed">
+            <a
+              routerLink="/settings"
+              class="profile-menu-item"
+              (click)="closeProfileMenu()"
+            >
+              <i class="bi bi-gear"></i>
+              <span>Beállítások</span>
+            </a>
+
+            <button
+              class="profile-menu-item danger"
+              type="button"
+              (click)="onLogout()"
+            >
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Kijelentkezés</span>
+            </button>
+          </div>
+
+          <div class="profile-menu collapsed-menu" *ngIf="profileMenuOpen && isCollapsed">
+            <a
+              routerLink="/settings"
+              class="profile-menu-item"
+              (click)="closeProfileMenu()"
+              title="Beállítások"
+            >
+              <i class="bi bi-gear"></i>
+            </a>
+
+            <button
+              class="profile-menu-item danger"
+              type="button"
+              (click)="onLogout()"
+              title="Kijelentkezés"
+            >
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</aside>
+
+<app-login-component></app-login-component>

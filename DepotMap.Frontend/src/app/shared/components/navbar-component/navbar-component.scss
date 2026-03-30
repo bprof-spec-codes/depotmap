@@ -1,49 +1,343 @@
-.depotmap-navbar {
-  background-color: #005FA3;
-  min-height: 96px;
+:host {
+  display: block;
 }
 
-.depotmap-logo {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 36px;
-  font-weight: 600;
-  color: #FFF8F0 !important;
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 272px;
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+  transition:
+    width 0.25s ease,
+    box-shadow 0.25s ease;
+  z-index: 1000;
+
+  &.collapsed {
+    width: 92px;
+  }
+}
+
+.sidebar-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+}
+
+.sidebar-top {
+  margin-bottom: 18px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-collapsed {
+  justify-content: center;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 20px;
+  }
+}
+
+.brand-text {
+  min-width: 0;
+}
+
+.brand-title {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #1e293b;
+}
+
+.brand-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.toggle-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: #eef2f7;
+    color: #1e293b;
+    transform: translateY(-1px);
+  }
+
+  i {
+    font-size: 16px;
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nav-item {
+  min-height: 58px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
   text-decoration: none;
-  letter-spacing: 1px;
-}
+  color: #475569;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 
-.depotmap-nav-link {
-  font-family: 'Poppins', sans-serif;
-  font-size: 18px;
-  color: #FFF8F0 !important;
-  padding: 0 16px !important;
-  transition: opacity 0.2s ease;
-
-  &:hover { opacity: 0.75; }
-  &.active { font-weight: 600; }
-}
-
-// Mobil
-@media (max-width: 992px) {
-  .depotmap-logo {
-    font-size: 24px;
+  &:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+    transform: translateX(2px);
   }
 
-  .navbar-toggler {
-    border-color: rgba(255, 248, 240, 0.6);
+  &.active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+  }
+}
 
-    .navbar-toggler-icon {
-      filter: invert(1);
-    }
+.nav-icon {
+  width: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  i {
+    font-size: 20px;
+  }
+}
+
+.nav-label {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebar.collapsed .brand-row {
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar.collapsed .toggle-btn {
+  position: static;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+.bottom-card {
+  width: 100%;
+  min-height: 62px;
+  border: none;
+  border-radius: 18px;
+  background: #f8fafc;
+  text-decoration: none;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.bottom-card:hover {
+  background: #eef4ff;
+  transform: translateY(-1px);
+}
+
+.login-card {
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+}
+
+.login-card:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.bottom-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bottom-card-icon,
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #e0ecff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 18px;
+  }
+}
+
+.avatar {
+  border-radius: 50%;
+}
+
+.bottom-card-content {
+  text-align: left;
+}
+
+.bottom-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.bottom-card-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-card {
+  cursor: pointer;
+}
+
+.profile-chevron {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.profile-menu {
+  position: absolute;
+  left: 0;
+  bottom: 72px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-menu-item {
+  min-height: 44px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  text-decoration: none;
+  color: #334155;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background: #f8fafc;
   }
 
-  #navbarMenu {
-    background-color: #005FA3;
-    border-top: 1px solid rgba(255, 248, 240, 0.2);
-    padding: 8px 0;
+  &.danger {
+    color: #dc2626;
+  }
+}
 
-    .depotmap-nav-link {
-      padding: 10px 16px !important;
-    }
+.collapsed-menu {
+  width: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  .profile-menu-item {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+.sidebar.collapsed {
+  .bottom-card {
+    justify-content: center;
+    padding: 10px 0;
+  }
+
+  .profile-card {
+    justify-content: center;
+  }
+
+  .bottom-card-left {
+    gap: 0;
   }
 }
