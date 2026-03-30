@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DepotMap.Entities.Models.DTOs.Transaction.Order
+{
+    public class UpdateOrderItemDto
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "A darabszám legalább 1 kell legyen!")]
+        public int Quantity { get; set; }
+
+        public string? FromCompartmentId { get; set; }
+    }
+}
