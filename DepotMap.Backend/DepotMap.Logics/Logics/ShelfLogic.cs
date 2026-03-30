@@ -1,6 +1,7 @@
 using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
+using DepotMap.Entities.Models.DTOs.Products;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

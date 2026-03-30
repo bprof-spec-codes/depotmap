@@ -1,10 +1,8 @@
 using System.Text;
-using AutoMapper;
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
 using DepotMap.Logics;
-using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
@@ -27,7 +25,7 @@ public class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-        
+
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -53,19 +51,19 @@ public class Program
             });
         });
 
-builder.Services.AddScoped<IAuthLogic, AuthLogic>();
-builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
-builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
-builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
-builder.Services.AddScoped<DbSeeder>();
-builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<IOrderLogic, OrderLogic>();
-builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
-builder.Services.AddScoped<ProductsLogic>();
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+        builder.Services.AddScoped<IAuthLogic, AuthLogic>();
+        builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
+        builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
+        builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
+        builder.Services.AddScoped<DbSeeder>();
+        builder.Services.AddScoped<JwtService>();
+        builder.Services.AddScoped<IOrderLogic, OrderLogic>();
+        builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
+        builder.Services.AddScoped<ProductsLogic>();
+        builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+        builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-var app = builder.Build();
+        var app = builder.Build();
 
         if (app.Environment.IsDevelopment())
         {
@@ -73,16 +71,18 @@ var app = builder.Build();
             app.UseSwaggerUI();
         }
 
-app.UseCors("AllowAngular");
+        app.UseCors("AllowAngular");
 
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+        app.UseHttpsRedirection();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.MapControllers();
-using (var scope = app.Services.CreateScope())
-{
-    var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
-    seeder.Seed();
+        app.MapControllers();
+        using (var scope = app.Services.CreateScope())
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+            seeder.Seed();
+        }
+        app.Run();
+    }
 }
-app.Run();
