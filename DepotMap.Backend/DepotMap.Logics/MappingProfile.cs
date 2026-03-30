@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
+using DepotMap.Entities.Models.DTOs.Transaction.Purchasing;
 
 
 
@@ -32,6 +33,22 @@ namespace DepotMap.Logics
             CreateMap<UpdateOrderItemDto, TransactionItem>();
 
             CreateMap<TransactionItem, OrderItemViewDto>();
+
+            CreateMap<CreatePurchasingTransactionDto, Transaction>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Inbound"))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Planning"))
+                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid().ToString()));
+
+            CreateMap<CreatePurchasingTransactionItemDto, TransactionItem>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid().ToString()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Inbound"))
+                .ForMember(dest => dest.FromCompartmentId, opt => opt.Ignore());
+
+            CreateMap<TransactionItem, PurchasingTransactionItemViewDto>()
+                .ForMember(dest => dest.ToCompartmentId, opt => opt.MapFrom(src => src.ToCompartmentId ?? string.Empty));
+
+            CreateMap<Transaction, PurchasingTransactionViewDto>();
         }
     }
 }
