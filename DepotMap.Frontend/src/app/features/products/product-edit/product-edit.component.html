@@ -1,0 +1,43 @@
+<div class="edit-page">
+  <div class="edit-wrapper">
+    <h2>Termék szerkesztése</h2>
+
+    <form class="edit-form" (ngSubmit)="save()">
+      <label class="field">
+        <span>Cikkszám</span>
+        <input type="text" name="sku" [(ngModel)]="form.sku" required />
+      </label>
+
+      <label class="field">
+        <span>Név</span>
+        <input type="text" name="name" [(ngModel)]="form.name" required />
+      </label>
+
+      <label class="field">
+        <span>Leírás</span>
+        <input type="text" name="description" [(ngModel)]="form.description" required />
+      </label>
+
+      <div class="row-2">
+        <label class="field">
+          <span>Ár (Ft)</span>
+          <input type="number" name="price" [(ngModel)]="form.price" min="0" required />
+        </label>
+
+        <label class="field">
+          <span>Alacsony készlet küszöb</span>
+          <input type="number" name="lowStockThreshold" [(ngModel)]="form.lowStockThreshold" min="0" required />
+        </label>
+      </div>
+
+      <div *ngIf="errorText" class="error-text">{{ errorText }}</div>
+
+      <div class="actions">
+        <a routerLink="/products" class="btn btn-outline-secondary">Mégse</a>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          {{ saving ? 'Mentés...' : 'Mentés' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
