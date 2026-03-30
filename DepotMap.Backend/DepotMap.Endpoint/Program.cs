@@ -1,18 +1,19 @@
+using System.Text;
+using AutoMapper;
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
+using DepotMap.Logics;
 using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
+using DepotMap.Entities.Models.DTOs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using AutoMapper;
-using System;
-using System.Text;
 
 public class Program
 {
@@ -52,16 +53,19 @@ public class Program
             });
         });
 
-        builder.Services.AddScoped<IAuthLogic, AuthLogic>();
-        builder.Services.AddAutoMapper(typeof(MappingProfile));
-        builder.Services.AddScoped<DbSeeder>();
-        builder.Services.AddScoped<JwtService>();
-        builder.Services.AddScoped<ProductsLogic>();
-        builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-        builder.Services.AddControllers();
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-        var app = builder.Build();
+builder.Services.AddScoped<IAuthLogic, AuthLogic>();
+builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
+builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
+builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
+builder.Services.AddScoped<DbSeeder>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IOrderLogic, OrderLogic>();
+builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
+builder.Services.AddScoped<ProductsLogic>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+var app = builder.Build();
 
         if (app.Environment.IsDevelopment())
         {
@@ -69,17 +73,16 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
-        app.UseAuthentication();
-        app.UseAuthorization();
+app.UseCors("AllowAngular");
 
-        app.MapControllers();
-        using (var scope = app.Services.CreateScope())
-        {
-            var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
-            seeder.Seed();
-        }
-        app.UseCors("AllowAngular");
-        app.Run();
-    }
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+    seeder.Seed();
 }
+app.Run();
