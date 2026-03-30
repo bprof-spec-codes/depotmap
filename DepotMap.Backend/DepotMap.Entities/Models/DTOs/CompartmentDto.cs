@@ -1,3 +1,5 @@
+using DepotMap.Entities.Models.DTOs.Products;
+
 namespace DepotMap.Entities.Models.DTOs
 {
     public class CompartmentDto

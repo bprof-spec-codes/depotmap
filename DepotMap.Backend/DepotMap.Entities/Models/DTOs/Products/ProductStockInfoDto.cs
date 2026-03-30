@@ -1,4 +1,4 @@
-namespace DepotMap.Entities.Models.DTOs
+namespace DepotMap.Entities.Models.DTOs.Products
 {
     public class ProductStockInfoDto
     {
