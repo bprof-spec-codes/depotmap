@@ -17,7 +17,7 @@ import { NavbarComponent } from './shared/components/navbar-component/navbar-com
     LoginComponent,
     ProductsListComponent,
     ProductCreateComponent,
-    ProductEditComponent
+    ProductEditComponent,
     NavbarComponent
   ],
   imports: [
