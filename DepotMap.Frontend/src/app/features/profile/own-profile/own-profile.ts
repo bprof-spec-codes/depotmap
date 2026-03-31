@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
+import { NgForm } from '@angular/forms';
 import { ProfileService } from '../../../core/services/profile-service';
 import { OwnProfileModel } from '../../../models/own-profile.model';
+import { ChangePasswordModel } from '../../../models/change-password.model';
 
 @Component({
   selector: 'app-own-profile',
@@ -8,53 +11,65 @@ import { OwnProfileModel } from '../../../models/own-profile.model';
   templateUrl: './own-profile.html',
   styleUrl: './own-profile.scss',
 })
-export class OwnProfile implements OnInit {
-
-  profile: OwnProfileModel | null = null;
+export class OwnProfile {
+  profile$: Observable<OwnProfileModel>;
 
   currentPassword: string = '';
   newPassword: string = '';
   confirmNewPassword: string = '';
-  message: string = '';
-  errorMessage: string = '';
 
-  constructor(private profileService: ProfileService) {}
+  isSaving: boolean = false;
+  feedbackMessage: string = '';
+  feedbackType: 'success' | 'error' = 'success';
 
-  ngOnInit(): void {
-    this.profileService.getOwnProfile().subscribe({
-      next: (data) => {
-        this.profile = data;
-        console.log('PROFILE:', data);
-      },
-      error: (err) => {
-        console.error('Hiba történt:', err);
-      }
-    });
+  constructor(private profileService: ProfileService) {
+    this.profile$ = this.profileService.getOwnProfile();
   }
 
-  changePassword() {
-    this.message = '';
-    this.errorMessage = '';
+  changePassword(form: NgForm): void {
+    this.feedbackMessage = '';
 
-    const data = {
+    if (!this.currentPassword.trim() || !this.newPassword.trim() || !this.confirmNewPassword.trim()) {
+      this.feedbackType = 'error';
+      this.feedbackMessage = 'Kérlek, tölts ki minden mezőt!';
+      return;
+    }
+
+    if (this.newPassword !== this.confirmNewPassword) {
+      this.feedbackType = 'error';
+      this.feedbackMessage = 'Az új jelszó és a megerősítés nem egyezik!';
+      return;
+    }
+
+    this.isSaving = true;
+
+    const data: ChangePasswordModel = {
       currentPassword: this.currentPassword,
       newPassword: this.newPassword,
       confirmNewPassword: this.confirmNewPassword
     };
 
     this.profileService.changePassword(data).subscribe({
-      next: (res) => {
-        this.message = 'Password changed successfully!';
+      next: (res: string) => {
+        this.isSaving = false;
+        this.feedbackType = 'success';
+        this.feedbackMessage = res?.trim() || 'A jelszó sikeresen módosítva.';
 
+        form.resetForm();
         this.currentPassword = '';
         this.newPassword = '';
         this.confirmNewPassword = '';
       },
       error: (err) => {
-        this.errorMessage = err.error;
+        this.isSaving = false;
+        this.feedbackType = 'error';
+
+        if (typeof err?.error === 'string' && err.error.trim()) {
+          this.feedbackMessage = err.error;
+        } else {
+          this.feedbackMessage = 'Hiba történt a jelszó módosítása közben.';
+        }
       }
     });
   }
-
-
 }

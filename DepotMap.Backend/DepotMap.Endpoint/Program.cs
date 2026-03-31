@@ -61,6 +61,7 @@ public class Program
         builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
         builder.Services.AddScoped<ProductsLogic>();
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+        builder.Services.AddScoped<IProfileLogic, ProfileLogic>();
         builder.Services.AddAutoMapper(typeof(MappingProfile));
 
         var app = builder.Build();

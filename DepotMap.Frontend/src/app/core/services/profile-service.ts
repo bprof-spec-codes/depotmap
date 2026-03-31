@@ -1,35 +1,37 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient} from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { OwnProfileModel } from '../../models/own-profile.model';
 import { environment } from '../../../environments/environment.development';
-import { AuthService } from './auth-service';
 import { ChangePasswordModel } from '../../models/change-password.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProfileService {
+  private ownProfile$?: Observable<OwnProfileModel>;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient) {}
 
   getOwnProfile(): Observable<OwnProfileModel> {
-    const token = this.authService.getToken();
+    if (!this.ownProfile$) {
+      this.ownProfile$ = this.http
+        .get<OwnProfileModel>(environment.apiUrl + '/profile/me')
+        .pipe(shareReplay(1));
+    }
 
-    const headers = new HttpHeaders({
-      Authorization: 'Bearer ' + token
-    });
-
-    return this.http.get<OwnProfileModel>(environment.apiUrl + '/profile/me', { headers });
+    return this.ownProfile$;
   }
 
-  changePassword(data: ChangePasswordModel) {
-    const token = this.authService.getToken();
+  clearOwnProfileCache(): void {
+    this.ownProfile$ = undefined;
+  }
 
-    const headers = new HttpHeaders({
-      Authorization: 'Bearer ' + token
-    });
-
-    return this.http.put(environment.apiUrl + '/profile/updatePassword', data, { headers});
+  changePassword(data: ChangePasswordModel): Observable<string> {
+    return this.http.put(
+      environment.apiUrl + '/profile/updatePassword',
+      data,
+      { responseType: 'text' }
+    );
   }
 }

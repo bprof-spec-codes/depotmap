@@ -1,37 +1,150 @@
-<div *ngIf="profile">
-  <h2>Profile</h2>
+<ng-container *ngIf="profile$ | async as profile; else loading">
+  <div class="container-fluid py-3">
+    <div class="mb-4">
+      <h1 class="h2 fw-bold mb-1">Profil</h1>
+      <p class="text-secondary mb-0">Személyes adatok és jelszókezelés</p>
+    </div>
 
-  <p><strong>Identifier:</strong> {{ profile.identifier }}</p>
-  <p><strong>First Name:</strong> {{ profile.firstName }}</p>
-  <p><strong>Last Name:</strong> {{ profile.lastName }}</p>
-  <p><strong>Role:</strong> {{ profile.role }}</p>
-  <p><strong>Position:</strong> {{ profile.position }}</p>
-</div>
+    <div class="row g-4">
+      <div class="col-12 col-xl-7">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="profile-avatar">
+                {{ profile.firstName.charAt(0) || '' }}{{ profile.lastName.charAt(0) || '' }}
+              </div>
 
+              <div>
+                <h2 class="h4 fw-bold mb-1">
+                  {{ profile.firstName }} {{ profile.lastName }}
+                </h2>
+                <p class="text-secondary mb-0">{{ profile.identifier }}</p>
+              </div>
+            </div>
 
-<h3>Change Password</h3>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="border rounded-4 p-3 bg-light-subtle h-100">
+                  <div class="small text-secondary mb-1">Azonosító</div>
+                  <div class="fw-semibold">{{ profile.identifier }}</div>
+                </div>
+              </div>
 
-<div>
-  <label>Current Password:</label>
-  <input type="password" [(ngModel)]="currentPassword">
-</div>
+              <div class="col-12 col-md-6">
+                <div class="border rounded-4 p-3 bg-light-subtle h-100">
+                  <div class="small text-secondary mb-1">Keresztnév</div>
+                  <div class="fw-semibold">{{ profile.firstName }}</div>
+                </div>
+              </div>
 
-<div>
-  <label>New Password:</label>
-  <input type="password" [(ngModel)]="newPassword">
-</div>
+              <div class="col-12 col-md-6">
+                <div class="border rounded-4 p-3 bg-light-subtle h-100">
+                  <div class="small text-secondary mb-1">Vezetéknév</div>
+                  <div class="fw-semibold">{{ profile.lastName }}</div>
+                </div>
+              </div>
 
-<div>
-  <label>Confirm New Password:</label>
-  <input type="password" [(ngModel)]="confirmNewPassword">
-</div>
+              <div class="col-12 col-md-6">
+                <div class="border rounded-4 p-3 bg-light-subtle h-100">
+                  <div class="small text-secondary mb-1">Szerepkör</div>
+                  <div class="fw-semibold">{{ profile.role }}</div>
+                </div>
+              </div>
 
-<button (click)="changePassword()">Change Password</button>
+              <div class="col-12">
+                <div class="border rounded-4 p-3 bg-light-subtle h-100">
+                  <div class="small text-secondary mb-1">Pozíció</div>
+                  <div class="fw-semibold">{{ profile.position }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<p *ngIf="message" style="color: green;">
-  {{ message }}
-</p>
+      <div class="col-12 col-xl-5">
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-body p-4">
+            <div class="mb-4">
+              <h2 class="h4 fw-bold mb-1">Jelszó módosítása</h2>
+              <p class="text-secondary mb-0">Add meg a jelenlegi és az új jelszavadat.</p>
+            </div>
 
-<p *ngIf="errorMessage" style="color: red;">
-  {{ errorMessage }}
-</p>
+            <form (ngSubmit)="changePassword(passwordForm)" #passwordForm="ngForm" novalidate>
+              <div class="mb-3">
+                <label for="currentPassword" class="form-label fw-semibold">
+                  Jelenlegi jelszó
+                </label>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  name="currentPassword"
+                  class="form-control form-control-lg rounded-3"
+                  [(ngModel)]="currentPassword"
+                  required
+                  placeholder="Jelenlegi jelszó"
+                  autocomplete="current-password"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="newPassword" class="form-label fw-semibold">
+                  Új jelszó
+                </label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  name="newPassword"
+                  class="form-control form-control-lg rounded-3"
+                  [(ngModel)]="newPassword"
+                  required
+                  placeholder="Új jelszó"
+                  autocomplete="new-password"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="confirmNewPassword" class="form-label fw-semibold">
+                  Új jelszó megerősítése
+                </label>
+                <input
+                  id="confirmNewPassword"
+                  type="password"
+                  name="confirmNewPassword"
+                  class="form-control form-control-lg rounded-3"
+                  [(ngModel)]="confirmNewPassword"
+                  required
+                  placeholder="Új jelszó újra"
+                  autocomplete="new-password"
+                />
+              </div>
+
+              <button
+                class="btn btn-primary btn-lg w-100 rounded-3"
+                type="submit"
+                [disabled]="isSaving"
+              >
+                {{ isSaving ? 'Mentés...' : 'Jelszó módosítása' }}
+              </button>
+            </form>
+
+            <div
+              *ngIf="feedbackMessage"
+              class="alert mt-3 mb-0 rounded-3"
+              [ngClass]="feedbackType === 'success' ? 'alert-success' : 'alert-danger'"
+              role="alert"
+            >
+              {{ feedbackMessage }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #loading>
+  <div class="container-fluid py-3">
+    <p>Betöltés...</p>
+  </div>
+</ng-template>

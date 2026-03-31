@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Output } from '@angular/core';
 import { AuthService } from '../../../core/services/auth-service';
 import { Observable } from 'rxjs';
+import { ProfileService } from '../../../core/services/profile-service';
+import { OwnProfileModel } from '../../../models/own-profile.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar-component',
@@ -15,6 +18,8 @@ export class NavbarComponent {
   isCollapsed = false;
   profileMenuOpen = false;
   readonly appName = 'DepotMap';
+  user: Observable<OwnProfileModel>
+  @Output() collapsedChange = new EventEmitter<boolean>();
 
   navItems: NavItem[] = [
     new NavItem('Készlet', '/inventory', 'bi-box-seam'),
@@ -26,14 +31,18 @@ export class NavbarComponent {
     new NavItem('Felhasználók', '/users', 'bi-people'),
   ];
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private profileService: ProfileService, private router: Router) {
     this.isLoggedIn$ = this.authService.isAuthenticated();
+    this.user = this.profileService.getOwnProfile();
+    this.collapsedChange.emit(this.isCollapsed);
+
   }
 
   // sidebar össze/kinyitás
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
     this.profileMenuOpen = false;
+    this.collapsedChange.emit(this.isCollapsed);
   }
 
   // profil menü toggle
@@ -43,6 +52,7 @@ export class NavbarComponent {
 
   closeProfileMenu(): void {
     this.profileMenuOpen = false;
+
   }
 
   // logout
@@ -51,12 +61,12 @@ export class NavbarComponent {
     this.authService.logout();
   }
 
+  goToSettings(): void {
+    this.profileMenuOpen = false;
+    this.router.navigate(['/settings']);
+  }
 
 
-  // user név tokenből
-  getUserDisplayName(): string {
-  return 'Kiss Éva ';
-}
 }
 
 // NAV ITEM MODEL
