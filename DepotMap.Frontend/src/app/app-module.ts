@@ -10,6 +10,7 @@ import { ProductsListComponent } from './features/products/products-list/product
 import { ProductCreateComponent } from './features/products/product-create/product-create.component';
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { NavbarComponent } from './shared/components/navbar-component/navbar-component';
+import { AdminView } from './features/admin/admin-view/admin-view';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { NavbarComponent } from './shared/components/navbar-component/navbar-com
     ProductsListComponent,
     ProductCreateComponent,
     ProductEditComponent,
-    NavbarComponent
+    NavbarComponent,
+    AdminView
   ],
   imports: [
     BrowserModule,
