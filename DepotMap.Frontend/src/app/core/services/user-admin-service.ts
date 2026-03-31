@@ -15,8 +15,10 @@ export class UserAdminService {
   constructor(private http: HttpClient) { }
 
   getUsers(): Observable<UserAdminDto[]> {
+    console.log('Service getUsers called, URL:', this.url);
     return this.http.get<UserAdminDto[]>(this.url);
   }
+
 
   createUser(dto: UserCreateDto): Observable<UserAdminDto> {
     return this.http.post<UserAdminDto>(this.url, dto);

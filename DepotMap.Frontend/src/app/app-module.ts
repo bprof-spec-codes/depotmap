@@ -25,10 +25,10 @@ import { AdminView } from './features/admin/admin-view/admin-view';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),

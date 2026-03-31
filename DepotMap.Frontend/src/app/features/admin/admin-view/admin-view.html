@@ -1,1 +1,96 @@
-<p>admin-view works!</p>
+
+<div class="admin-page">
+  <div class="admin-wrapper">
+    <div class="admin-header">
+      <div>
+        <h2>Felhasználók kezelése</h2>
+        <p class="subtitle">Felhasználók létrehozása, szerkesztése és jogosultságok kezelése.</p>
+      </div>
+      <button class="create-btn" (click)="openCreateModal()">+ Új felhasználó</button>
+    </div>
+
+    <div class="error-text" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="table-wrapper">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Azonosító</th>
+            <th>Név</th>
+            <th>Jogosultság</th>
+            <th>Pozíció</th>
+            <th>Műveletek</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td><code>{{ user.identifier }}</code></td>
+            <td>{{ user.fullName }}</td>
+            <td><span class="role-badge {{ getRoleBadgeClass(user.role) }}">{{ user.role }}</span></td>
+            <td>{{ user.position }}</td>
+            <td class="actions-cell">
+              <button class="edit-btn" (click)="openEditModal(user)">Szerkesztés</button>
+              <button class="delete-btn" (click)="deleteUser(user.id)">Törlés</button>
+            </td>
+          </tr>
+          <tr *ngIf="users.length === 0">
+            <td colspan="5" class="empty-row">Nincsenek felhasználók</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditMode ? 'Felhasználó szerkesztése' : 'Új felhasználó' }}</h3>
+      <button class="close-btn" (click)="closeModal()">✕</button>
+    </div>
+
+    <form class="modal-form" [formGroup]="userForm" (ngSubmit)="saveUser()">
+      <label class="field">
+        <span>Azonosító</span>
+        <input type="text" formControlName="identifier" placeholder="pl. raktaros001" />
+      </label>
+
+      <div class="row-2">
+        <label class="field">
+          <span>Keresztnév</span>
+          <input type="text" formControlName="firstName" placeholder="pl. János" />
+        </label>
+        <label class="field">
+          <span>Vezetéknév</span>
+          <input type="text" formControlName="lastName" placeholder="pl. Kovács" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Jelszó {{ isEditMode ? '(hagyd üresen ha nem változtatod)' : '' }}</span>
+        <input type="password" formControlName="password" placeholder="••••••••" />
+      </label>
+
+      <div class="row-2">
+        <label class="field">
+          <span>Jogosultság</span>
+          <select formControlName="role" class="field-select">
+            <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Pozíció</span>
+          <input type="text" formControlName="position" placeholder="pl. Raktárvezető" />
+        </label>
+      </div>
+
+      <div class="error-text" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <div class="form-actions">
+        <button type="button" class="back-btn" (click)="closeModal()">Mégse</button>
+        <button type="submit" class="save-btn" [disabled]="userForm.invalid">Mentés</button>
+      </div>
+    </form>
+  </div>
+</div>
