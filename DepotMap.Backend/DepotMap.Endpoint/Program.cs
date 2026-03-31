@@ -1,17 +1,17 @@
-using System.Text;
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
+using DepotMap.Entities.Models.DTOs;
 using DepotMap.Logics;
 using DepotMap.Logics.Interfaces;
 using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
-using DepotMap.Entities.Models.DTOs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 public class Program
 {
@@ -19,12 +19,24 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        builder.Services.AddScoped<IAuthLogic, AuthLogic>();
+        builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
+        builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
+        builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
+        builder.Services.AddScoped<IOrderLogic, OrderLogic>();
+        builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
+        builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();  // A te hozzáadásod
+        builder.Services.AddScoped<ProductsLogic>();
+        builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+        builder.Services.AddScoped<DbSeeder>();
+        builder.Services.AddScoped<JwtService>();
+        builder.Services.AddAutoMapper(typeof(MappingProfile));
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -51,18 +63,6 @@ public class Program
             });
         });
 
-        builder.Services.AddScoped<IAuthLogic, AuthLogic>();
-        builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
-        builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
-        builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
-        builder.Services.AddScoped<DbSeeder>();
-        builder.Services.AddScoped<JwtService>();
-        builder.Services.AddScoped<IOrderLogic, OrderLogic>();
-        builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
-        builder.Services.AddScoped<ProductsLogic>();
-        builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-        builder.Services.AddAutoMapper(typeof(MappingProfile));
-
         var app = builder.Build();
 
         if (app.Environment.IsDevelopment())
@@ -72,7 +72,6 @@ public class Program
         }
 
         app.UseCors("AllowAngular");
-
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
