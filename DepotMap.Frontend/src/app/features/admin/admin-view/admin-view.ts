@@ -27,9 +27,12 @@ export class AdminView {
     position: new FormControl('', Validators.required)
   });
 
-  constructor(private userAdminService: UserAdminService, private cdr: ChangeDetectorRef) { }
+  constructor(
+    private userAdminService: UserAdminService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
   ngOnInit(): void {
-    console.log('AdminView ngOnInit');
     this.loadUsers();
   }
 
@@ -37,9 +40,9 @@ export class AdminView {
     this.userAdminService.getUsers().subscribe({
       next: (users) => {
         this.users = users;
-        this.cdr.detectChanges();  // ← KÉNYSZERÍTETT FRISSÍTÉS
+        this.cdr.detectChanges();
       },
-      error: () => this.errorMessage = 'Hiba'
+      error: () => this.errorMessage = 'Hiba a felhasználók betöltésekor'
     });
   }
 
@@ -47,7 +50,18 @@ export class AdminView {
     this.isEditMode = false;
     this.selectedUser = null;
     this.errorMessage = '';
-    this.userForm.reset({ role: 'Raktáros' });
+
+    this.userForm.reset({
+      identifier: '',
+      firstName: '',
+      lastName: '',
+      password: '',
+      role: 'Raktáros',
+      position: ''
+    });
+
+    this.userForm.markAsPristine();
+    this.userForm.markAsUntouched();
     this.showModal = true;
   }
 
@@ -55,22 +69,31 @@ export class AdminView {
     this.isEditMode = true;
     this.selectedUser = user;
     this.errorMessage = '';
-    const nameParts = user.fullName.split(' ');
-    this.userForm.patchValue({
-      identifier: user.identifier,
+
+    const nameParts = user.fullName?.split(' ') ?? [];
+
+    this.userForm.reset({
+      identifier: user.identifier ?? '',
       firstName: nameParts[0] ?? '',
       lastName: nameParts.slice(1).join(' ') ?? '',
       password: '',
-      role: user.role,
-      position: user.position
+      role: user.role ?? 'Raktáros',
+      position: user.position ?? ''
     });
+
+    this.userForm.markAsPristine();
+    this.userForm.markAsUntouched();
     this.showModal = true;
   }
 
   saveUser(): void {
-    if (this.userForm.invalid) return;
+    if (this.userForm.invalid) {
+      this.userForm.markAllAsTouched();
+      return;
+    }
 
-    const val = this.userForm.value;
+    this.errorMessage = '';
+    const val = this.userForm.getRawValue();
 
     if (this.isEditMode && this.selectedUser) {
       this.userAdminService.updateUser(this.selectedUser.id, {
@@ -81,36 +104,56 @@ export class AdminView {
         role: val.role ?? undefined,
         position: val.position ?? undefined
       }).subscribe({
-        next: () => { this.loadUsers(); this.showModal = false; },
+        next: () => {
+          this.showModal = false;
+          this.loadUsers();
+        },
         error: () => this.errorMessage = 'Hiba a frissítéskor'
       });
     } else {
       this.userAdminService.createUser({
-        identifier: val.identifier!,
-        firstName: val.firstName!,
-        lastName: val.lastName!,
-        password: val.password!,
-        role: val.role!,
-        position: val.position!
+        identifier: val.identifier ?? '',
+        firstName: val.firstName ?? '',
+        lastName: val.lastName ?? '',
+        password: val.password ?? '',
+        role: val.role ?? 'Raktáros',
+        position: val.position ?? ''
       }).subscribe({
-        next: () => { this.loadUsers(); this.showModal = false; },
+        next: () => {
+          this.showModal = false;
+          this.loadUsers();
+        },
         error: () => this.errorMessage = 'Hiba a létrehozáskor'
       });
     }
   }
 
   deleteUser(id: string): void {
-    if (!confirm('Biztosan törlöd ezt a felhasználót?')) return;
+    if (!confirm('Biztosan törli ezt a felhasználót?')) return;
+
     this.userAdminService.deleteUser(id).subscribe({
       next: () => this.loadUsers(),
-      error: () => this.errorMessage = 'Hiba a törlésekor'
+      error: () => this.errorMessage = 'Hiba a törléskor'
     });
   }
 
   closeModal(): void {
     this.showModal = false;
+    this.selectedUser = null;
+    this.isEditMode = false;
     this.errorMessage = '';
-    this.userForm.reset();
+
+    this.userForm.reset({
+      identifier: '',
+      firstName: '',
+      lastName: '',
+      password: '',
+      role: 'Raktáros',
+      position: ''
+    });
+
+    this.userForm.markAsPristine();
+    this.userForm.markAsUntouched();
   }
 
   getRoleBadgeClass(role: string): string {
@@ -119,8 +162,8 @@ export class AdminView {
       'superadmin': 'badge-super',
       'Raktáros': 'badge-raktaros',
       'Beszerző': 'badge-beszerzo',
-      'Olvass': 'badge-olvass'
     };
-    return map[role] ?? 'badge-olvass';
+
+    return map[role] ?? 'badge-raktaros';
   }
 }
