@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
+using DepotMap.Entities.Models.DTOs.StockMovement;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,13 @@ namespace DepotMap.Logics.Logics
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IStockMovementLogic _stockMovementLogic;
 
-        public OrderLogic(AppDbContext context, IMapper mapper)
+        public OrderLogic(AppDbContext context, IMapper mapper, IStockMovementLogic stockMovementLogic)
         {
             _context = context;
             _mapper = mapper;
+            _stockMovementLogic = stockMovementLogic;
         }
 
         public async Task<List<OrderViewDto>> GetAllOrdersAsync()
@@ -131,19 +134,15 @@ namespace DepotMap.Logics.Logics
                         _context.ProductStocks.Remove(stock);
                     }
 
-                    var movement = new StockMovement
+                    await _stockMovementLogic.CreateMovementAsync(new CreateStockMovementDto
                     {
-                        Id = Guid.NewGuid().ToString(),
                         ProductId = item.ProductId,
                         CompartmentId = item.FromCompartmentId,
-                        QuantityChange = -item.Quantity, 
+                        QuantityChange = -item.Quantity,
                         MovementType = "Outbound",
                         TransactionId = order.Id,
-                        CreatedByUserId = order.CreatedByUserId,
-                        Timestamp = DateTime.UtcNow
-                    };
-
-                    _context.StockMovements.Add(movement);
+                        CreatedByUserId = order.CreatedByUserId
+                    });
                 }
             }
 
