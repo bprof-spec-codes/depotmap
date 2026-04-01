@@ -31,12 +31,13 @@ public class Program
         builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
         builder.Services.AddScoped<IOrderLogic, OrderLogic>();
         builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
-        builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();  // A te hozzáadásod
+        builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();
         builder.Services.AddScoped<ProductsLogic>();
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         builder.Services.AddScoped<DbSeeder>();
         builder.Services.AddScoped<JwtService>();
-        builder.Services.AddAutoMapper(typeof(MappingProfile));
+        builder.Services.AddScoped<IProfileLogic, ProfileLogic>();
+        builder.Services.AddAutoMapper(typeof(DepotMap.Logics.Helpers.MappingProfile));
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -53,6 +54,7 @@ public class Program
                         Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                 };
             });
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAngular", policy =>
