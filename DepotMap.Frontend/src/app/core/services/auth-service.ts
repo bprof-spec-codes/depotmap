@@ -17,11 +17,15 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return false;
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const expiry = payload['exp'];
-    const now = Math.floor(Date.now() / 1000);
-
-    return expiry > now;
+    try{
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload['exp'];
+      const now = Math.floor(Date.now() / 1000);
+      return expiry > now;
+    }
+    catch{
+      return false
+    }
   }
 
   login(identifier: string, password: string) {
@@ -30,20 +34,28 @@ export class AuthService {
       { identifier, password }
     ).pipe(
       tap(res => {
-        localStorage.setItem('token', res.token);
+        this.setToken(res.token)
         this.isLoggedIn$.next(true);
       })
     );
   }
 
   logout() {
-    localStorage.removeItem('token');
+    this.clearToken();
     this.isLoggedIn$.next(false);
     this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+  }
+
+  clearToken(): void {
+    localStorage.removeItem('token');
   }
 
   isAuthenticated() {
@@ -53,7 +65,14 @@ export class AuthService {
   getRole(): string | null {
     const token = this.getToken();
     if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? null;
+
+    try{
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? null;
+    }
+    catch{
+      return null;
+    }
+
   }
 }

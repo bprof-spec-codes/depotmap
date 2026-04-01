@@ -32,7 +32,7 @@ export class LoginComponent {
         console.log("Sikeres bejelentkezés!")
         // Majd ha kész lesz valami főoldal:
         //this.router.navigate(['/dashboard']);
-        
+
         this.closeModal();
       },
       error: () => {

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using DepotMap.Entities.Models;
+using DepotMap.Entities.Models.DTOs.StockMovement;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
 
 
@@ -28,10 +29,13 @@ namespace DepotMap.Logics
 
             CreateMap<Transaction, OrderViewDto>();
 
-
             CreateMap<UpdateOrderItemDto, TransactionItem>();
 
             CreateMap<TransactionItem, OrderItemViewDto>();
+
+            CreateMap<StockMovement, StockMovementViewDto>();
+
+            CreateMap<CreateStockMovementDto, StockMovement>();
         }
     }
 }
