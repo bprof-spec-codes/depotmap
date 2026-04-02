@@ -1,1 +1,58 @@
-<p>order-create works!</p>
+<div class="product-create-container">
+  
+  <div class="header">
+    <h2>Új rendelés összeállítása</h2>
+  </div>
+
+  <div *ngIf="isLoading" class="spinner">
+    Rendszer előkészítése (Rendelés ID generálása)...
+  </div>
+
+  <div *ngIf="!isLoading && orderId" class="form-container">
+    <div class="alert alert-info mb-4">
+      Rendelés piszkozat azonosítója: <strong>{{ orderId }}</strong>
+    </div>
+
+    <div class="added-items-list" *ngIf="addedItems.length > 0">
+      <h4 class="mb-3">Mentett tételek</h4>
+      <div class="saved-row" *ngFor="let item of addedItems; let i = index">
+        <div class="row-num">{{ i + 1 }}.</div>
+        <div class="col-data"><strong>Termék ID:</strong> {{ item.productId }}</div>
+        <div class="col-data"><strong>Mennyiség:</strong> {{ item.quantity }} db</div>
+        <div class="col-data"><strong>Forrás rekesz:</strong> {{ item.fromCompartmentId || '-' }}</div>
+      </div>
+      <hr class="my-4">
+    </div>
+
+    <h4>Új tétel hozzáadása</h4>
+    <div class="active-row mt-3">
+      <div class="form-group">
+        <label>Termék ID *</label>
+        <input type="text" class="form-control" placeholder="pl. PROD-1" [(ngModel)]="currentRow.productId">
+      </div>
+      
+      <div class="form-group">
+        <label>Mennyiség *</label>
+        <input type="number" class="form-control" min="1" [(ngModel)]="currentRow.quantity">
+      </div>
+      
+      <div class="form-group">
+        <label>Rekesz ID (Opcionális)</label>
+        <input type="text" class="form-control" placeholder="pl. COMP-1" [(ngModel)]="currentRow.fromCompartmentId">
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <button class="btn btn-outline-primary" [disabled]="isSavingItem" (click)="addNewItem()">
+        <i class="bi bi-plus-circle me-1"></i> 
+        {{ isSavingItem ? 'Mentés...' : 'Új tétel hozzáadása a rendeléshez' }}
+      </button>
+    </div>
+
+    <div class="footer-actions mt-5 pt-3 border-top d-flex gap-3">
+      <button class="btn btn-success" (click)="saveOrder()">Rendelés mentése</button>
+      <button class="btn btn-danger" (click)="discardOrder()">Rendelés elvetése</button>
+    </div>
+  </div>
+
+</div>
