@@ -8,18 +8,19 @@ import { catchError, map, shareReplay, startWith } from 'rxjs/operators';
   selector: 'app-order-list',
   standalone: false,
   templateUrl: './order-list.html',
-  styleUrl: './order-list.scss',
+  styleUrls: ['./order-list.scss']
 })
 export class OrderList {
+  // A ProductsListComponent-hez hasonlóan, inline definiáljuk a típust:
   ordersVm$: Observable<{ items: OrderViewDto[]; loading: boolean; error: boolean }>;
 
   expandedOrderIds = new Set<string>();
 
   constructor(private orderService: OrderService, private router: Router) {
-    // 1. Rendelések betöltése és reaktív állapotkezelés
+    
+    // Pontosan ugyanaz a felépítés, startWith és catchError 'as OrderViewDto[]' castolással
     this.ordersVm$ = defer(() => this.orderService.loadAllOrders()).pipe(
       map(items => {
-        // Alapértelmezetten minden rendelést lenyitunk
         items.forEach(order => this.expandedOrderIds.add(order.id));
         return { items, loading: false, error: false };
       }),
@@ -41,7 +42,6 @@ export class OrderList {
     return this.expandedOrderIds.has(orderId);
   }
 
-
   editOrder(order: OrderViewDto) {
     this.router.navigate(['/orders/edit', order.id], {
       state: { order }
@@ -53,7 +53,7 @@ export class OrderList {
     
     this.orderService.deleteOrder(id).subscribe({
       next: () => console.log(`Order ${id} deleted.`),
-      error: (err) => alert('Nem sikerült törölni a rendelést: ' + (err.error?.message || err.message))
+      error: (err) => alert('Nem sikerült törölni a rendelést.')
     });
   }
 
@@ -70,11 +70,10 @@ export class OrderList {
 
     this.orderService.updateOrderStatus(order.id, { status: nextStatus }).subscribe({
       next: () => console.log(`Order ${order.id} advanced to ${nextStatus}.`),
-      error: (err) => alert('Nem sikerült a státusz frissítése: ' + (err.error?.message || err.message))
+      error: (err) => alert('Nem sikerült a státusz frissítése.')
     });
   }
 
-  // Útvonal készítés gomb -> Átvisz egy másik útvonalra
   createRoute(orderId: string) {
     this.router.navigate(['/routes/create'], { queryParams: { orderId: orderId } });
   }
