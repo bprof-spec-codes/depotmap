@@ -1,1 +1,78 @@
-<p>order-edit works!</p>
+<div class="product-create-container">
+  
+  <div class="header">
+    <h2>Rendelés szerkesztése</h2>
+  </div>
+
+  <div *ngIf="isLoading" class="spinner">
+    Rendelés adatainak betöltése...
+  </div>
+
+  <div *ngIf="!isLoading" class="form-container">
+    <div class="alert alert-info mb-4">
+      Rendelés azonosítója: <strong>{{ orderId }}</strong>
+    </div>
+
+    <div class="added-items-list" *ngIf="editingItems.length > 0">
+      <h4 class="mb-3">Jelenlegi tételek</h4>
+      
+      <div class="active-row mb-2" *ngFor="let item of editingItems; let i = index">
+        <div class="form-group">
+          <label>Termék ID *</label>
+          <input type="text" class="form-control" [(ngModel)]="item.productId">
+        </div>
+        
+        <div class="form-group">
+          <label>Mennyiség *</label>
+          <input type="number" class="form-control" min="1" [(ngModel)]="item.quantity">
+        </div>
+        
+        <div class="form-group">
+          <label>Rekesz ID</label>
+          <input type="text" class="form-control" [(ngModel)]="item.fromCompartmentId">
+        </div>
+
+        <div class="form-group d-flex align-items-end">
+          <button class="btn btn-outline-danger w-100" (click)="removeItem(i)" title="Tétel törlése">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+      <hr class="my-4">
+    </div>
+
+    <h4>Új tétel hozzáadása</h4>
+    <div class="active-row mt-3">
+      <div class="form-group">
+        <label>Termék ID *</label>
+        <input type="text" class="form-control" placeholder="pl. PROD-1" [(ngModel)]="currentRow.productId">
+      </div>
+      
+      <div class="form-group">
+        <label>Mennyiség *</label>
+        <input type="number" class="form-control" min="1" [(ngModel)]="currentRow.quantity">
+      </div>
+      
+      <div class="form-group">
+        <label>Rekesz ID (Opcionális)</label>
+        <input type="text" class="form-control" placeholder="pl. COMP-1" [(ngModel)]="currentRow.fromCompartmentId">
+      </div>
+      
+      <div class="form-group d-flex align-items-end">
+        <button class="btn btn-outline-primary w-100" (click)="addNewItem()">
+          <i class="bi bi-plus-circle"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer-actions mt-5 pt-3 border-top d-flex gap-3 align-items-center">
+      <button class="btn btn-success" [disabled]="isSaving" (click)="saveOrder()">
+        {{ isSaving ? 'Mentés folyamatban...' : 'Szerkesztés mentése' }}
+      </button>
+      <button class="btn btn-danger" [disabled]="isSaving" (click)="discardOrder()">
+        Szerkesztés elvetése
+      </button>
+    </div>
+  </div>
+
+</div>
