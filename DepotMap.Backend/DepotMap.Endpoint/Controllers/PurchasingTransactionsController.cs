@@ -14,14 +14,10 @@ namespace DepotMap.Endpoint.Controllers
     public class PurchasingTransactionsController : ControllerBase
     {
         private readonly IPurchasingTransactionLogic _purchasingTransactionLogic;
-        private readonly IPurchasingTransactionItemLogic _purchasingTransactionItemLogic;
 
-        public PurchasingTransactionsController(
-            IPurchasingTransactionLogic purchasingTransactionLogic,
-            IPurchasingTransactionItemLogic purchasingTransactionItemLogic)
+        public PurchasingTransactionsController(IPurchasingTransactionLogic purchasingTransactionLogic)
         {
             _purchasingTransactionLogic = purchasingTransactionLogic;
-            _purchasingTransactionItemLogic = purchasingTransactionItemLogic;
         }
 
         [HttpGet]
@@ -61,15 +57,15 @@ namespace DepotMap.Endpoint.Controllers
             }
         }
 
-        [HttpPost("{transactionId}/items")]
-        public async Task<IActionResult> AddItem(string transactionId, [FromBody] CreatePurchasingTransactionItemDto dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody] UpdatePurchasingTransactionDto dto)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var updated = await _purchasingTransactionItemLogic.AddItemAsync(transactionId, dto);
+                var updated = await _purchasingTransactionLogic.UpdateAsync(id, dto);
 
                 if (updated == null)
                 {
@@ -83,5 +79,26 @@ namespace DepotMap.Endpoint.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            try
+            {
+                var deleted = await _purchasingTransactionLogic.DeleteAsync(id);
+
+                if (!deleted)
+                {
+                    return NotFound(new { message = "A beszerzés nem található." });
+                }
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }
