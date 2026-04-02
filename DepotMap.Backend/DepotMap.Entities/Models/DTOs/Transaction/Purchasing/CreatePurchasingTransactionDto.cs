@@ -9,5 +9,6 @@ namespace DepotMap.Entities.Models.DTOs.Transaction.Purchasing
 	public class CreatePurchasingTransactionDto
 	{
 		public string CreatedByUserId { get; set; } = string.Empty;
+		public List<CreatePurchasingTransactionItemDto> Items { get; set; } = new List<CreatePurchasingTransactionItemDto>();
 	}
 }

@@ -12,6 +12,8 @@ namespace DepotMap.Logics.Interfaces
 		Task<List<PurchasingTransactionViewDto>> GetAllAsync();
 		Task<PurchasingTransactionViewDto?> GetByIdAsync(string id);
 		Task<PurchasingTransactionViewDto> CreateAsync(CreatePurchasingTransactionDto dto);
+		Task<PurchasingTransactionViewDto?> UpdateAsync(string id, UpdatePurchasingTransactionDto dto);
+		Task<bool> DeleteAsync(string id);
 	}
 }
 
