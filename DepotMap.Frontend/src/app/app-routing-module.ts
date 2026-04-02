@@ -6,7 +6,7 @@ import { ProductCreateComponent } from './features/products/product-create/produ
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { OrderList } from './features/orders/order-list/order-list';
 import { OrderCreate } from './features/orders/order-create/order-create';
-import { OrderEdit } from './features/orders/order-edit/order-edit';
+import { OrderEdit, orderEditGuard } from './features/orders/order-edit/order-edit';
 
 
 const routes: Routes = [
@@ -15,7 +15,7 @@ const routes: Routes = [
   { path: 'products/edit/:id', component: ProductEditComponent },
   { path: 'products', component: ProductsListComponent },
   { path: 'orders/create', component: OrderCreate },
-  { path: 'orders/edit/:id', component: OrderEdit },
+  { path: 'orders/edit/:id', component: OrderEdit, canDeactivate: [orderEditGuard] },
   { path: 'orders', component: OrderList }
 ];
 
