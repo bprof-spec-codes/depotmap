@@ -11,6 +11,8 @@ import { ProductsListComponent } from './features/products/products-list/product
 import { ProductCreateComponent } from './features/products/product-create/product-create.component';
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { NavbarComponent } from './shared/components/navbar-component/navbar-component';
+import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
+import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +21,9 @@ import { NavbarComponent } from './shared/components/navbar-component/navbar-com
     ProductsListComponent,
     ProductCreateComponent,
     ProductEditComponent,
-    NavbarComponent
+    NavbarComponent,
+    WarehouseListComponent,
+    WarehouseGridComponent
   ],
   imports: [
     BrowserModule,

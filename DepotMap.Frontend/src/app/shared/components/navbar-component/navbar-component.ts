@@ -18,7 +18,7 @@ export class NavbarComponent {
 
   navItems: NavItem[] = [
     new NavItem('Készlet', '/inventory', 'bi-box-seam'),
-    new NavItem('Raktár', '/warehouse', 'bi-building'),
+    new NavItem('Raktár', '/warehouses', 'bi-building'),
     new NavItem('Termékek', '/products', 'bi-box'),
     new NavItem('Beszerzések', '/procurement', 'bi-truck'),
     new NavItem('Rendelések', '/orders', 'bi-bag-check'),
