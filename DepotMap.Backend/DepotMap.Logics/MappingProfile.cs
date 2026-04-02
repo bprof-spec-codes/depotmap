@@ -18,7 +18,7 @@ namespace DepotMap.Logics
             CreateMap<CreateOrderDto, Transaction>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Outbound"))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Planning"))
-                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid().ToString()));
 
             CreateMap<CreateOrderItemDto, TransactionItem>()
