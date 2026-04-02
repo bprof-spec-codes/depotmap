@@ -109,7 +109,6 @@ namespace DepotMap.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ProductId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("SKU")
@@ -407,8 +406,7 @@ namespace DepotMap.Data.Migrations
                     b.HasOne("DepotMap.Entities.Models.Product", "Product")
                         .WithMany("History")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CreatedBy");
 

@@ -85,7 +85,7 @@ namespace DepotMap.Data.Context
                 e.HasOne(x => x.Product)
                  .WithMany(x => x.History)
                  .HasForeignKey(x => x.ProductId)
-                 .OnDelete(DeleteBehavior.Restrict);
+                 .OnDelete(DeleteBehavior.SetNull);
                 e.HasOne(x => x.CreatedBy)
                  .WithMany()
                  .HasForeignKey(x => x.CreatedByUserId)
@@ -170,6 +170,7 @@ namespace DepotMap.Data.Context
                 e.HasKey(x => x.Id);
                 e.HasIndex(x => x.Identifier).IsUnique();
             });
+
         }
     }
 

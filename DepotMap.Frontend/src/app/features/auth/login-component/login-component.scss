@@ -1,0 +1,17 @@
+.modal-content {
+  border: none;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  border: none;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}

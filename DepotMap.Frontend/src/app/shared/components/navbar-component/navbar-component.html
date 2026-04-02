@@ -1,0 +1,128 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-inner">
+    <div class="sidebar-top">
+      <div class="brand-row">
+        <div class="brand" [class.brand-collapsed]="isCollapsed">
+          <div class="brand-logo">
+            <i class="bi bi-grid-1x2-fill"></i>
+          </div>
+
+          <div class="brand-text" *ngIf="!isCollapsed">
+            <div class="brand-title">{{ appName }}</div>
+            <div class="brand-subtitle">Warehouse system</div>
+          </div>
+        </div>
+
+        <button class="toggle-btn" type="button" (click)="toggleSidebar()">
+          <i
+            class="bi"
+            [ngClass]="isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"
+          ></i>
+        </button>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" *ngIf="isLoggedIn$ | async">
+      <a
+        *ngFor="let item of navItems"
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        (click)="closeProfileMenu()"
+      >
+        <span class="nav-icon">
+          <i class="bi" [ngClass]="item.icon"></i>
+        </span>
+
+        <span class="nav-label" *ngIf="!isCollapsed">
+          {{ item.label }}
+        </span>
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInBlock">
+        <button
+          type="button"
+          class="bottom-card login-card"
+          data-bs-toggle="modal"
+          data-bs-target="#loginModal"
+        >
+          <div class="bottom-card-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+          </div>
+
+          <div class="bottom-card-content" *ngIf="!isCollapsed">
+            <div class="bottom-card-title">Bejelentkezés</div>
+            <div class="bottom-card-subtitle">Lépj be a rendszerbe</div>
+          </div>
+        </button>
+      </ng-container>
+
+      <ng-template #loggedInBlock>
+        <div class="profile-wrapper">
+          <button class="bottom-card profile-card" type="button" (click)="toggleProfileMenu()">
+            <div class="bottom-card-left">
+              <div class="avatar">
+                <i class="bi bi-person-fill"></i>
+              </div>
+
+              <div class="bottom-card-content" *ngIf="!isCollapsed && (user | async) as profile">
+                <div class="bottom-card-title">{{ profile.firstName }} {{ profile.lastName }}</div>
+                <div class="bottom-card-subtitle">Bejelentkezve</div>
+              </div>
+            </div>
+
+            <i
+              *ngIf="!isCollapsed"
+              class="bi profile-chevron"
+              [ngClass]="profileMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"
+            ></i>
+          </button>
+
+          <div class="profile-menu" *ngIf="profileMenuOpen && !isCollapsed">
+            <button
+              type="button"
+              class="profile-menu-item"
+              (click)="goToSettings()"
+            >
+              <i class="bi bi-gear"></i>
+              <span>Beállítások</span>
+            </button>
+
+            <button
+              class="profile-menu-item danger"
+              type="button"
+              (click)="onLogout()"
+            >
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Kijelentkezés</span>
+            </button>
+          </div>
+
+          <div class="profile-menu collapsed-menu" *ngIf="profileMenuOpen && isCollapsed">
+            <button
+              type="button"
+              class="profile-menu-item"
+              (click)="goToSettings()"
+              title="Beállítások"
+            >
+              <i class="bi bi-gear"></i>
+            </button>
+
+            <button
+              class="profile-menu-item danger"
+              type="button"
+              (click)="onLogout()"
+              title="Kijelentkezés"
+            >
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</aside>
+
+<app-login-component></app-login-component>

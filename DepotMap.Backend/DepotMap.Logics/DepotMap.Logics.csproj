@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="13.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
@@ -19,8 +20,8 @@
 
 	</ItemGroup>
   <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="Logics\" />
+    <ProjectReference Include="..\DepotMap.Data\DepotMap.Data.csproj" />
+    <ProjectReference Include="..\DepotMap.Entities\DepotMap.Entities.csproj" />
   </ItemGroup>
 
 </Project>
