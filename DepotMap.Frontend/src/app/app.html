@@ -1,2 +1,10 @@
-<app-navbar-component></app-navbar-component>
-<router-outlet></router-outlet>
+<app-navbar-component
+  (collapsedChange)="onSidebarCollapsedChange($event)"
+></app-navbar-component>
+
+<div
+  class="app-content"
+  [class.sidebar-collapsed]="isSidebarCollapsed"
+>
+  <router-outlet></router-outlet>
+</div>

@@ -1,15 +1,13 @@
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
 using DepotMap.Entities.Models;
-using DepotMap.Entities.Models.DTOs;
-using DepotMap.Logics;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using DepotMap.Logics.Logics;
 using DepotMap.Logics.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -22,6 +20,7 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -31,11 +30,14 @@ public class Program
         builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
         builder.Services.AddScoped<IOrderLogic, OrderLogic>();
         builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
-        builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();  // A te hozzáadásod
+        builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();
+        builder.Services.AddScoped<IUserAdminLogic, UserAdminLogic>();
+        builder.Services.AddScoped<IProfileLogic, ProfileLogic>();
         builder.Services.AddScoped<ProductsLogic>();
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         builder.Services.AddScoped<DbSeeder>();
         builder.Services.AddScoped<JwtService>();
+
         builder.Services.AddAutoMapper(typeof(MappingProfile));
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -53,6 +55,7 @@ public class Program
                         Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                 };
             });
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAngular", policy =>
@@ -77,11 +80,13 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
         using (var scope = app.Services.CreateScope())
         {
             var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
             seeder.Seed();
         }
+
         app.Run();
     }
 }

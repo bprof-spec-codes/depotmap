@@ -1,0 +1,99 @@
+.admin-page {
+  min-height: calc(100vh - 40px);
+  background: radial-gradient(circle at top right, #e7efff, #f4f8ff 45%);
+}
+
+.admin-card {
+  border-radius: 1rem;
+}
+
+.admin-title {
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-size: 2rem;
+  line-height: 1.15;
+  color: #0f1f35;
+}
+
+.admin-table code {
+  background: #eef4ff;
+  color: #0f5da9;
+  border-radius: 0.4rem;
+  padding: 0.15rem 0.45rem;
+}
+
+.badge-admin {
+  background-color: #4b4b4b;
+  color: #ffffff;
+}
+
+.badge-super {
+  background-color: #1f2937;
+  color: #fff;
+}
+
+.badge-raktaros {
+  background-color: #d4dfec;
+  color: #1d4ed8;
+}
+
+.badge-beszerzo {
+  background-color: #c7fdce;
+  color: #32bb2e;
+}
+
+.badge-olvass {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.app-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1040;
+}
+
+.app-modal-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.app-modal {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 1rem;
+  background: #fff;
+  color: #212529;
+}
+
+.app-modal .form-control,
+.app-modal .form-select {
+  background-color: #fff;
+  color: #212529;
+  border-color: #ced4da;
+}
+
+.app-modal .form-control:focus,
+.app-modal .form-select:focus {
+  background-color: #fff;
+}
+
+.app-modal .btn-close {
+  flex-shrink: 0;
+}
+
+@media (max-width: 767.98px) {
+  .admin-title {
+    font-size: 1.75rem;
+  }
+
+  .app-modal {
+    width: 100%;
+  }
+}
