@@ -1,109 +1,108 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { OrderService, OrderItemViewDto, CreateOrderItemDto } from '../../../core/services/order-service';
+import { OrderService, CreateOrderItemDto } from '../../../core/services/order-service';
+import { AuthService } from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-order-create',
   standalone: false,
   templateUrl: './order-create.html',
-  styleUrl: './order-create.scss',
+  styleUrls: ['./order-create.scss']
 })
-export class OrderCreate {
-  orderId: string | null = null;
-  isLoading = true;
-  isSavingItem = false;
-  
+export class OrderCreate implements OnInit {
+  isSaving = false;
   isSavedOrDiscarded = false;
 
-  addedItems: OrderItemViewDto[] = [];
+  // Itt gyűjtjük a tételeket a memóriában (nem küldjük el rögtön!)
+  addedItems: CreateOrderItemDto[] = [];
 
+  // Az aktuálisan kitöltendő (üres) sor
   currentRow: CreateOrderItemDto = {
     productId: '',
     quantity: 1,
     fromCompartmentId: ''
   };
 
-  constructor(private orderService: OrderService, private router: Router) {}
+  constructor(
+    private orderService: OrderService, 
+    private router: Router,
+    private authService: AuthService 
+  ) {}
 
   ngOnInit(): void {
-    this.orderService.createOrder({ items: [] }).subscribe({
-      next: (res) => {
-        this.orderId = res.id;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        alert('Hiba a rendelés inicializálásakor!');
-        this.router.navigate(['/orders']);
-      }
-    });
+    // Nincs több backend hívás és várakozás betöltéskor! Azonnal használható a felület.
   }
 
+  // Böngésző fül bezárásának/frissítésének blokkolása, ha van már felvitt tétel
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    if (!this.isSavedOrDiscarded) {
+    if (!this.isSavedOrDiscarded && (this.addedItems.length > 0 || this.currentRow.productId)) {
       $event.returnValue = true;
     }
   }
 
+  // --- ÚJ TÉTEL HOZZÁADÁSA (CSAK MEMÓRIÁBA!) ---
   addNewItem() {
     if (!this.currentRow.productId) return alert('Kérlek, add meg a Termék ID-t!');
     if (!this.currentRow.quantity || this.currentRow.quantity < 1) return alert('A darabszám legalább 1 kell legyen!');
-    if (!this.orderId) return;
 
-    this.isSavingItem = true;
+    // Lemásoljuk a sort és betesszük a listába
+    this.addedItems.push({ ...this.currentRow });
+    
+    // Kiürítjük a beviteli mezőket a következő tételnek
+    this.currentRow = { productId: '', quantity: 1, fromCompartmentId: '' };
+  }
 
-    this.orderService.addOrderItem(this.orderId, this.currentRow).subscribe({
-      next: (updatedOrder) => {
-        this.addedItems = updatedOrder.items;
-        
-        // Kiürítjük a sort a következő tételnek
-        this.currentRow = { productId: '', quantity: 1, fromCompartmentId: '' };
-        this.isSavingItem = false;
+  // --- TÉTEL TÖRLÉSE A LISTÁBÓL ---
+  removeItem(index: number) {
+    this.addedItems.splice(index, 1);
+  }
+
+  // --- RENDELÉS MENTÉSE (EGYETLEN HÍVÁSSAL A BACKENDRE!) ---
+  saveOrder() {
+    // Ha az alsó sorba beírt valamit, de elfelejtette megnyomni a "Hozzáadás" gombot, mentsük meg!
+    if (this.currentRow.productId) {
+      this.addNewItem();
+    }
+
+    if (this.addedItems.length === 0) {
+      return alert('Nem menthetsz el egy rendelést tételek nélkül!');
+    }
+
+    const currentUserId = this.authService.getUserId();
+    if (!currentUserId) {
+      return alert('Hiba: Nem található a felhasználó azonosítója. Kérlek jelentkezz be újra!');
+    }
+
+    this.isSaving = true;
+
+    // Összeállítjuk a teljes rendelést
+    const newOrder = {
+      createdByUserId: currentUserId,
+      items: this.addedItems // Itt küldjük el a memóriában összegyűlt listát!
+    };
+
+    // Elküldjük a backendnek
+    this.orderService.createOrder(newOrder).subscribe({
+      next: (res) => {
+        this.isSavedOrDiscarded = true;
+        this.router.navigate(['/orders']);
       },
       error: (err) => {
-        alert('Hiba a tétel hozzáadásakor: ' + (err.error?.message || err.message));
-        this.isSavingItem = false;
+        alert('Hiba a rendelés mentésekor: ' + (err.error?.message || err.message));
+        this.isSaving = false;
       }
     });
   }
 
-  saveOrder() {
-    if (this.currentRow.productId) {
-      this.orderService.addOrderItem(this.orderId!, this.currentRow).subscribe({
-        next: () => this.finalizeAndExit(),
-        error: (err) => alert('Hiba az utolsó tétel mentésekor!')
-      });
-    } else {
-      this.finalizeAndExit();
-    }
-  }
-
+  // --- RENDELÉS ELVETÉSE ---
   discardOrder() {
-    if (!confirm('Biztosan elveted a rendelést? Minden eddig felvitt tétel törlődik!')) return;
-    
-    if (this.orderId) {
-      this.orderService.deleteOrder(this.orderId).subscribe({
-        next: () => {
-          this.isSavedOrDiscarded = true; // Zöld utat adunk a Guard-nak
-          this.router.navigate(['/orders']);
-        },
-        error: (err) => alert('Nem sikerült törölni a piszkozatot.')
-      });
+    if (this.addedItems.length > 0 || this.currentRow.productId) {
+      if (!confirm('Biztosan elveted a rendelést? Minden megadott adat elvész!')) return;
     }
-  }
-
-  private finalizeAndExit() {
-    this.isSavedOrDiscarded = true; // Zöld utat adunk a Guard-nak
+    
+    // Mivel nem hoztunk létre semmit a backendben, csak simán visszalépünk!
+    this.isSavedOrDiscarded = true;
     this.router.navigate(['/orders']);
   }
-}
-
-import { CanDeactivateFn } from '@angular/router';
-
-export const orderCreateGuard: CanDeactivateFn<OrderCreate> = (component) => {
-  if (!component.isSavedOrDiscarded) {
-    alert('Kérlek, mentsd el vagy vesd el a rendelést az oldal alján lévő gombokkal, mielőtt elhagyod a felületet!');
-    return false; // Megakadályozzuk az oldal elhagyását
-  }
-  return true;
 }
