@@ -42,9 +42,16 @@ namespace DepotMap.Endpoint.Controllers
                 return BadRequest(ModelState);
             }
 
-            var createdOrder = await _orderLogic.CreateOrderAsync(dto);
+            try
+            {
+                var createdOrder = await _orderLogic.CreateOrderAsync(dto);
 
-            return CreatedAtAction(nameof(GetOrderById), new { id = createdOrder.Id }, createdOrder);
+                return CreatedAtAction(nameof(GetOrderById), new { id = createdOrder.Id }, createdOrder);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]

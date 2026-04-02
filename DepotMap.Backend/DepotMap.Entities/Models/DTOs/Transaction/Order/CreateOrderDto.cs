@@ -9,5 +9,6 @@ namespace DepotMap.Entities.Models.DTOs.Transaction.Order
     public class CreateOrderDto
     {
         public string CreatedByUserId { get; set; }
+        public List<CreateOrderItemDto> Items { get; set; } = new List<CreateOrderItemDto>();
     }
 }
