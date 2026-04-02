@@ -85,6 +85,11 @@ namespace DepotMap.Logics.Logics
 
             if (order == null) return null;
 
+            if (order.Status == "Closed")
+            {
+                throw new InvalidOperationException("Lezárt rendelés tételei már nem módosíthatók!");
+            }
+
             if (dto.Items != null && dto.Items.Any())
             {
                 foreach (var itemDto in dto.Items)
