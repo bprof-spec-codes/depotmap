@@ -1,1 +1,71 @@
-<p>order-list works!</p>
+<div class="products-list"> <div class="header">
+    <h2>Rendelések</h2>
+    <a routerLink="/orders/create" class="btn btn-primary">Új rendelés</a>
+  </div>
+
+  <ng-container *ngIf="ordersVm$ | async as ordersVm">
+    <div *ngIf="ordersVm.loading" class="spinner">Betöltés...</div>
+    <div *ngIf="!ordersVm.loading && ordersVm.error" class="error-text">A rendelések nem töltődtek be. Ellenőrizd, hogy a backend fut-e.</div>
+
+    <div class="list">
+      <div *ngIf="!ordersVm.loading && !ordersVm.error && !ordersVm.items.length" class="empty-text">
+        Még nincs egyetlen rendelés sem a rendszerben.
+      </div>
+
+      <div *ngFor="let order of ordersVm.items" class="product-block mb-3">
+        
+        <div class="item cursor-pointer" (click)="toggleOrderDetails(order.id)">
+          <div class="left">
+            <div class="title">
+              Rendelés #{{ order.id | slice:0:8 }}... <span class="status-badge" [ngClass]="getStatusBadgeClass(order.status)">
+                {{ translateStatus(order.status) }}
+              </span>
+            </div>
+            <div class="meta">
+              Létrehozva: {{ order.timestamp | date:'yyyy.MM.dd. HH:mm' }} • 
+              Felhasználó: {{ order.createdByUserId || 'Ismeretlen' }} • 
+              Tételek: {{ order.items.length }} db
+            </div>
+          </div>
+
+          <div class="actions" (click)="$event.stopPropagation()">
+            <button *ngIf="order.status === 'Planning'" class="btn btn-sm btn-outline-secondary" (click)="editOrder(order)">Szerkeszt</button>
+            <button *ngIf="order.status === 'Planning'" class="btn btn-sm btn-danger" (click)="deleteOrder(order.id)">Törlés</button>
+            
+            <button *ngIf="order.status !== 'Closed'" class="btn btn-sm btn-success" (click)="advanceStatus(order)">
+              {{ getNextStatusLabel(order.status) }}
+            </button>
+            
+            <button class="btn btn-sm btn-outline-primary" (click)="createRoute(order.id)">Útvonal készítés</button>
+          </div>
+        </div>
+
+        <div class="history-panel" *ngIf="isOrderExpanded(order.id)">
+          <h4>Rendelési Tételek</h4>
+
+          <div *ngIf="!order.items.length" class="empty-text">Nincsenek tételek a rendelésben.</div>
+
+          <div class="history-table-wrap mt-2" *ngIf="order.items.length">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Tétel ID</th>
+                  <th>Termék ID (Név)</th>
+                  <th>Mennyiség</th>
+                  <th>Forrás Rekesz</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of order.items">
+                  <td [title]="item.id">{{ item.id | slice:0:8 }}...</td>
+                  <td [title]="item.productId">{{ item.productId }}</td>
+                  <td><strong>{{ item.quantity }} db</strong></td>
+                  <td>{{ item.fromCompartmentId || 'Nincs megadva' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div> </div> </ng-container>
+</div>
