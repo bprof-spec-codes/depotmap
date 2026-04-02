@@ -62,14 +62,21 @@ namespace DepotMap.Endpoint.Controllers
                 return BadRequest(ModelState);
             }
 
-            var updatedOrder = await _orderLogic.UpdateOrderAsync(id, dto);
-
-            if (updatedOrder == null)
+            try
             {
-                return NotFound(new { message = "A frissíteni kívánt rendelés nem található." });
-            }
+                var updatedOrder = await _orderLogic.UpdateOrderAsync(id, dto);
 
-            return Ok(updatedOrder);
+                if (updatedOrder == null)
+                {
+                    return NotFound(new { message = "A frissíteni kívánt rendelés nem található." });
+                }
+
+                return Ok(updatedOrder);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPatch("{id}/status")]
