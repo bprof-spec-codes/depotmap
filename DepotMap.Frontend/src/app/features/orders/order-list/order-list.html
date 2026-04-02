@@ -29,8 +29,9 @@
           </div>
 
           <div class="actions" (click)="$event.stopPropagation()">
-            <button *ngIf="order.status === 'Planning'" class="btn btn-sm btn-outline-secondary" (click)="editOrder(order)">Szerkeszt</button>
-            <button *ngIf="order.status === 'Planning'" class="btn btn-sm btn-danger" (click)="deleteOrder(order.id)">Törlés</button>
+            <button *ngIf="canEdit(order.status)" class="btn btn-sm btn-outline-secondary" (click)="editOrder(order)">Szerkeszt</button>
+  
+            <button *ngIf="canDelete(order.status)" class="btn btn-sm btn-danger" (click)="deleteOrder(order.id)">Törlés</button>
             
             <button *ngIf="order.status !== 'Closed'" class="btn btn-sm btn-success" (click)="advanceStatus(order)">
               {{ getNextStatusLabel(order.status) }}
@@ -49,7 +50,6 @@
             <table class="history-table">
               <thead>
                 <tr>
-                  <th>Tétel ID</th>
                   <th>Termék ID (Név)</th>
                   <th>Mennyiség</th>
                   <th>Forrás Rekesz</th>
@@ -57,7 +57,6 @@
               </thead>
               <tbody>
                 <tr *ngFor="let item of order.items">
-                  <td [title]="item.id">{{ item.id | slice:0:8 }}...</td>
                   <td [title]="item.productId">{{ item.productId }}</td>
                   <td><strong>{{ item.quantity }} db</strong></td>
                   <td>{{ item.fromCompartmentId || 'Nincs megadva' }}</td>

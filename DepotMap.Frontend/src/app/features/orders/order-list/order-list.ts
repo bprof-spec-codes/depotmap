@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { OrderService, OrderViewDto } from '../../../core/services/order-service';
 import { Observable, defer, of } from 'rxjs';
@@ -10,7 +10,7 @@ import { catchError, map, shareReplay, startWith } from 'rxjs/operators';
   templateUrl: './order-list.html',
   styleUrls: ['./order-list.scss']
 })
-export class OrderList {
+export class OrderList implements OnInit {
   // A ProductsListComponent-hez hasonlóan, inline definiáljuk a típust:
   ordersVm$: Observable<{ items: OrderViewDto[]; loading: boolean; error: boolean }>;
 
@@ -19,15 +19,25 @@ export class OrderList {
   constructor(private orderService: OrderService, private router: Router) {
     
     // Pontosan ugyanaz a felépítés, startWith és catchError 'as OrderViewDto[]' castolással
-    this.ordersVm$ = defer(() => this.orderService.loadAllOrders()).pipe(
-      map(items => {
-        items.forEach(order => this.expandedOrderIds.add(order.id));
-        return { items, loading: false, error: false };
-      }),
+    this.ordersVm$ = this.orderService.orders$.pipe(
+      map(items => ({ items, loading: false, error: false })),
       startWith({ items: [] as OrderViewDto[], loading: true, error: false }),
       catchError(() => of({ items: [] as OrderViewDto[], loading: false, error: true })),
       shareReplay(1)
     );
+  }
+
+  ngOnInit(): void {
+    // Betöltjük az adatokat az oldal megnyitásakor
+    this.orderService.loadAllOrders().subscribe();
+  }
+
+  canEdit(status: string): boolean {
+    return status === 'Planning' || status === 'Processing';
+  }
+
+  canDelete(status: string): boolean {
+    return status === 'Planning';
   }
 
   toggleOrderDetails(orderId: string): void {
