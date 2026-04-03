@@ -10,6 +10,9 @@ import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
+import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
+import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
+
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -19,7 +22,10 @@ const routes: Routes = [
   { path: 'warehouses', component: WarehouseListComponent, canActivate: [authGuard] },
   { path: 'warehouses/:id', component: WarehouseGridComponent, canActivate: [authGuard] },
   { path: 'users', component: AdminView, canActivate: [authGuard, adminGuard] },
-  { path: 'settings', component: OwnProfile, canActivate: [authGuard] }
+  { path: 'settings', component: OwnProfile, canActivate: [authGuard] },
+  { path: 'inventory', component: ProductStockListComponent },
+  { path: 'stock-movements', component: StockMovementListComponent },
+  { path: 'stock-movements/:productId', component: StockMovementListComponent }
 ];
 
 @NgModule({
