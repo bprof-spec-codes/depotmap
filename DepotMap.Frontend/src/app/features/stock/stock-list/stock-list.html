@@ -1,0 +1,61 @@
+<div class="products-list">
+  <div class="header">
+    <h2>Raktárkészlet</h2>
+    <a routerLink="/stock-movements" class="btn btn-primary">Összes készlet mozgás előzmény</a>
+  </div>
+
+  <ng-container *ngIf="stocksVm$ | async as vm">
+    <div *ngIf="vm.loading" class="spinner">Készlet betöltése...</div>
+    <div *ngIf="!vm.loading && vm.error" class="error-text">Hiba történt az adatok lekérésekor.</div>
+
+    <div class="list">
+      <div *ngIf="!vm.loading && !vm.error && !vm.items.length" class="empty-text">
+        Jelenleg üres a raktár.
+      </div>
+
+      <div *ngFor="let stock of vm.items" class="product-block mb-3">
+        
+        <div class="item cursor-pointer" (click)="toggleStockDetails(stock.productId)">
+          <div class="left">
+            <div class="title">
+              {{ stock.productName }} <span class="text-secondary ms-2">({{ stock.sku }})</span>
+            </div>
+            <div class="meta text-success mt-1" style="font-size: 15px; font-weight: 600;">
+              Raktáron összesen: {{ stock.totalQuantity }} db
+            </div>
+          </div>
+          
+          <div class="actions" (click)="$event.stopPropagation()">
+            <button class="btn btn-sm btn-outline-primary" (click)="goToHistory(stock.productId)">
+              Készlet mozgás előzmények
+            </button>
+          </div>
+        </div>
+
+        <div class="history-panel" *ngIf="isStockExpanded(stock.productId)">
+          <h4 class="mb-2 text-secondary" style="font-size: 13px;">Lelőhelyek (Rekeszek)</h4>
+          <div class="history-table-wrap">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Rekesz Kódja</th>
+                  <th>Mennyiség</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let comp of stock.compartments">
+                  <td>
+                    {{ comp.compartmentCode || 'Nincs kód' }}
+                    <small class="text-muted ms-1">({{ comp.compartmentId }})</small>
+                  </td>
+                  <td><strong>{{ comp.quantity }} db</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+</div>

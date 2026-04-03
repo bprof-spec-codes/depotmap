@@ -16,6 +16,8 @@ import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/ware
 import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
+import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
+import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
 
 @NgModule({
   declarations: [
@@ -28,7 +30,9 @@ import { authInterceptor } from './core/interceptors/auth-interceptor';
     ProductEditComponent,
     WarehouseListComponent,
     WarehouseGridComponent,
-    AdminView
+    AdminView,
+    ProductStockListComponent,
+    StockMovementListComponent
   ],
   imports: [
     BrowserModule,
