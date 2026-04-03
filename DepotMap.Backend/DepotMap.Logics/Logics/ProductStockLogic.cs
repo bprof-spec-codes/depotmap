@@ -26,6 +26,7 @@ namespace DepotMap.Logics.Logics
         {
             var stocks = await _context.ProductStocks
                 .Include(ps => ps.Product)
+                .Include(ps => ps.Compartment)
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<ProductStockViewDto>>(stocks);
@@ -35,6 +36,7 @@ namespace DepotMap.Logics.Logics
         {
             var stocks = await _context.ProductStocks
                 .Include(ps => ps.Product)
+                .Include(ps => ps.Compartment)
                 .Where(ps => ps.ProductId == productId)
                 .ToListAsync();
 
@@ -45,6 +47,7 @@ namespace DepotMap.Logics.Logics
         {
             var stocks = await _context.ProductStocks
                 .Include(ps => ps.Product)
+                .Include(ps => ps.Compartment)
                 .Where(ps => ps.CompartmentId == compartmentId)
                 .ToListAsync();
 
