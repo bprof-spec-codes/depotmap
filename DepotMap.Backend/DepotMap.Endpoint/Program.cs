@@ -34,6 +34,7 @@ public class Program
         builder.Services.AddScoped<IUserAdminLogic, UserAdminLogic>();
         builder.Services.AddScoped<IProfileLogic, ProfileLogic>();
         builder.Services.AddScoped<ProductsLogic>();
+        builder.Services.AddScoped<IProductStockLogic, ProductStockLogic>();
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         builder.Services.AddScoped<DbSeeder>();
         builder.Services.AddScoped<JwtService>();
