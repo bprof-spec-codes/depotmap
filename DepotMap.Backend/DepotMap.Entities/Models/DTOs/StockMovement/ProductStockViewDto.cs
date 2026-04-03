@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace DepotMap.Entities.Models.DTOs.StockMovement
 {
-    internal class ProductStockViewDto
+    public class ProductStockViewDto
     {
+        public string SKU { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public string CompartmentCode { get; set; } = string.Empty;
+        public int Quantity { get; set; }
     }
 }
