@@ -34,6 +34,36 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<List<PurchasingTransactionViewDto>>(transactions);
         }
 
+        public async Task<List<PurchasingTransactionTableRowDto>> GetTableRowsAsync(int skip = 0, int take = 500)
+        {
+            if (skip < 0)
+            {
+                skip = 0;
+            }
+
+            if (take <= 0)
+            {
+                take = 500;
+            }
+
+            return await _context.Transactions
+                .AsNoTracking()
+                .Where(t => t.Type == "Inbound")
+                .OrderByDescending(t => t.Timestamp)
+                .SelectMany(t => t.Items.Select(item => new PurchasingTransactionTableRowDto
+                {
+                    TransactionId = t.Id,
+                    Status = t.Status,
+                    CreatedByUserId = t.CreatedByUserId,
+                    Timestamp = t.Timestamp,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity
+                }))
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
+        }
+
         public async Task<PurchasingTransactionViewDto?> GetByIdAsync(string id)
         {
             var transaction = await _context.Transactions
