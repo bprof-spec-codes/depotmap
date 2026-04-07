@@ -59,6 +59,8 @@ public class Program
         builder.Services.AddScoped<JwtService>();
         builder.Services.AddScoped<IOrderLogic, OrderLogic>();
         builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
+        builder.Services.AddScoped<IPurchasingTransactionLogic, PurchasingTransactionLogic>();
+        builder.Services.AddScoped<IPurchasingTransactionItemLogic, PurchasingTransactionItemLogic>();
         builder.Services.AddScoped<ProductsLogic>();
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         builder.Services.AddAutoMapper(typeof(MappingProfile));
