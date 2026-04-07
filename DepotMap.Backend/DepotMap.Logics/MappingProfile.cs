@@ -36,6 +36,12 @@ namespace DepotMap.Logics
             CreateMap<StockMovement, StockMovementViewDto>();
 
             CreateMap<CreateStockMovementDto, StockMovement>();
+
+            CreateMap<ProductStock, ProductStockViewDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+                .ForMember(dest => dest.SKU, opt => opt.MapFrom(src => src.Product.SKU))
+                .ForMember(dest => dest.CompartmentCode, opt => opt.MapFrom(src => src.Compartment.Code));
+
         }
     }
 }
