@@ -16,10 +16,6 @@ import { adminGuard } from './core/guards/admin-guard';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
 
-
-const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'products/create', component: ProductCreateComponent, canActivate: [authGuard] },
