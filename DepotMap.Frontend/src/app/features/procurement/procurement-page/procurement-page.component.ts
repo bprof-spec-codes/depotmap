@@ -25,6 +25,7 @@ interface ProcurementTableTransaction {
   status: string;
   statusLabel: string;
   isClosed: boolean;
+  isDeleteBlocked: boolean;
   createdByUserId: string;
   timestamp: string;
   items: ProcurementTableItem[];
@@ -276,7 +277,7 @@ export class ProcurementPageComponent implements OnInit {
   }
 
   deleteTransaction(transaction: ProcurementTableTransaction): void {
-    if (transaction.isClosed) {
+    if (transaction.isDeleteBlocked) {
       return;
     }
 
@@ -326,6 +327,7 @@ export class ProcurementPageComponent implements OnInit {
         existing.status = tx.status;
         existing.statusLabel = tx.statusLabel;
         existing.isClosed = tx.isClosed;
+        existing.isDeleteBlocked = tx.isDeleteBlocked;
         existing.createdByUserId = tx.createdByUserId;
         existing.timestamp = tx.timestamp;
       } else {
@@ -366,6 +368,7 @@ export class ProcurementPageComponent implements OnInit {
         status,
         statusLabel: this.getStatusLabel(status),
         isClosed: this.isStatusClosed(status),
+        isDeleteBlocked: this.isDeleteBlockedStatus(status),
         createdByUserId,
         timestamp,
         items: [
@@ -421,6 +424,11 @@ export class ProcurementPageComponent implements OnInit {
 
   private isStatusClosed(status: string): boolean {
     return status.toLowerCase() === 'closed';
+  }
+
+  private isDeleteBlockedStatus(status: string): boolean {
+    const s = status.toLowerCase();
+    return s === 'closed' || s === 'active';
   }
 
   private fillFormFromTransaction(transaction: PurchasingTransactionViewDto): void {

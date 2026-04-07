@@ -106,7 +106,7 @@
                   <button
                     type="button"
                     class="icon-btn danger"
-                    [disabled]="transaction.isClosed"
+                    [disabled]="transaction.isDeleteBlocked"
                     (click)="deleteTransaction(transaction)"
                     title="Törlés"
                   >

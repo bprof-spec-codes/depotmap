@@ -258,9 +258,10 @@ namespace DepotMap.Logics.Logics
                 return false;
             }
 
-            if (transaction.Status == "Closed")
+            if (string.Equals(transaction.Status, "Closed", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(transaction.Status, "Active", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Lezárt beszerzés nem törölhető.");
+                throw new InvalidOperationException("Összekészítés alatt vagy lezárt beszerzés nem törölhető.");
             }
 
             _context.Transactions.Remove(transaction);
