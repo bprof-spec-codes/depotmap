@@ -1,0 +1,127 @@
+<div class="procurement-page">
+  <h2>Beszerzések</h2>
+
+  <div class="form-card">
+    <h3>{{ isEditing() ? 'Beszerzés szerkesztése' : 'Új beszerzés' }}</h3>
+
+    <div *ngIf="errorText" class="error-text">{{ errorText }}</div>
+
+    <div class="form-grid">
+      <label class="field">
+        <span>Felhasználó azonosító</span>
+        <input type="text" [ngModel]="form.createdByUserId" disabled />
+      </label>
+
+      <label class="field">
+        <span>Státusz</span>
+        <select [(ngModel)]="form.status">
+          <option value="Planning">Tervezés</option>
+          <option value="Active">Összekészítés alatt</option>
+          <option value="Closed">Lezárva</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="items-head">
+      <span>Tételek</span>
+      <button type="button" class="btn btn-secondary" (click)="addItemRow()">+ Tétel sor</button>
+    </div>
+
+    <div class="item-row" *ngFor="let item of form.items; let i = index">
+      <select [(ngModel)]="item.productId" [disabled]="productsLoading">
+        <option value="">Válassz terméket...</option>
+        <option *ngFor="let product of availableProducts; trackBy: trackByProductId" [value]="product.id">
+          {{ product.sku ? product.sku + ' - ' : '' }}{{ product.name }}
+        </option>
+      </select>
+      <input type="number" min="1" placeholder="Darabszám" [(ngModel)]="item.quantity" />
+     <select [(ngModel)]="item.toCompartmentId">
+	<option value="COMP-1">COMP-1</option>
+	<option value="COMP-2">COMP-2</option>
+	</select>
+      <button type="button" class="btn btn-danger" (click)="removeItemRow(i)">-</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" [disabled]="saving" (click)="submit()">
+        {{ isEditing() ? 'Mentés' : 'Létrehozás' }}
+      </button>
+      <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resetToCreateMode()">
+        Új létrehozása
+      </button>
+    </div>
+  </div>
+
+ <div *ngIf="loading" class="loading-text">Betöltés...</div> 
+  <div class="table-actions">
+    <button type="button" class="btn btn-secondary" [disabled]="loading" (click)="loadTransactions(true)">
+      Adatok újratöltése
+    </button>
+    <button type="button" class="btn btn-secondary" [disabled]="loading || !hasMore" (click)="loadMoreTransactions()">
+      További adatok betöltése
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="procurement-table">
+      <thead>
+        <tr>
+          <th>Azonosító</th>
+          <th>Státusz</th>
+          <th>Felhasználó azonosító</th>
+          <th>Létrehozás időpontja</th>
+          <th>Cikkszám</th>
+          <th>Darabszám</th>
+          <th>Szerkesztés</th>
+          <th>Törlés</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <ng-container *ngIf="transactions$ | async as transactions">
+          <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
+            <ng-container *ngIf="transaction.items as rows">
+              <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.id }}</td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.statusLabel }}</td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}</td>
+
+                <td>{{ row.productId }}</td>
+                <td>{{ row.quantity }}</td>
+
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [disabled]="transaction.isClosed"
+                    (click)="editTransaction(transaction)"
+                    title="Szerkesztés"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </td>
+
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
+                  <button
+                    type="button"
+                    class="icon-btn danger"
+                    [disabled]="transaction.isClosed"
+                    (click)="deleteTransaction(transaction)"
+                    title="Törlés"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </ng-container>
+          </ng-container>
+
+          <tr *ngIf="!loading && !transactions.length">
+            <td colspan="8" class="empty-cell">Nincs még beszerzés.</td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+</div> 
