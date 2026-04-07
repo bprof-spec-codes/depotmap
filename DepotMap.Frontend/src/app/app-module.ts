@@ -3,7 +3,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { LoginComponent } from './features/auth/login-component/login-component';
@@ -11,6 +10,9 @@ import { ProductsListComponent } from './features/products/products-list/product
 import { ProductCreateComponent } from './features/products/product-create/product-create.component';
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { NavbarComponent } from './shared/components/navbar-component/navbar-component';
+import { OrderList } from './features/orders/order-list/order-list';
+import { OrderCreate } from './features/orders/order-create/order-create';
+import { OrderEdit } from './features/orders/order-edit/order-edit';
 import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
 import { AdminView } from './features/admin/admin-view/admin-view';
@@ -28,6 +30,10 @@ import { StockMovementListComponent } from './features/stock/stockmovement/stock
     OwnProfile,
     ProductCreateComponent,
     ProductEditComponent,
+    NavbarComponent,
+    OrderList,
+    OrderCreate,
+    OrderEdit
     WarehouseListComponent,
     WarehouseGridComponent,
     AdminView,

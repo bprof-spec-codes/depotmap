@@ -53,6 +53,25 @@ namespace DepotMap.Logics.Logics
         {
             var order = _mapper.Map<Transaction>(dto);
 
+            if (dto.Items != null && dto.Items.Any())
+            {
+                foreach (var itemDto in dto.Items)
+                {
+                    var stock = await _context.ProductStocks
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == itemDto.FromCompartmentId && ps.ProductId == itemDto.ProductId);
+
+                    if (stock == null)
+                    {
+                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductId}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentId})!");
+                    }
+
+                    if (stock.Quantity < itemDto.Quantity)
+                    {
+                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductId} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                    }
+                }
+            }
+
             _context.Transactions.Add(order);
             await _context.SaveChangesAsync();
 
@@ -68,6 +87,30 @@ namespace DepotMap.Logics.Logics
                 .FirstOrDefaultAsync(t => t.Id == id && t.Type == "Outbound");
 
             if (order == null) return null;
+
+            if (order.Status == "Closed")
+            {
+                throw new InvalidOperationException("Lezárt rendelés tételei már nem módosíthatók!");
+            }
+
+            if (dto.Items != null && dto.Items.Any())
+            {
+                foreach (var itemDto in dto.Items)
+                {
+                    var stock = await _context.ProductStocks
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == itemDto.FromCompartmentId && ps.ProductId == itemDto.ProductId);
+
+                    if (stock == null)
+                    {
+                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductId}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentId})!");
+                    }
+
+                    if (stock.Quantity < itemDto.Quantity)
+                    {
+                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductId} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                    }
+                }
+            }
 
             _context.TransactionItems.RemoveRange(order.Items);
 
