@@ -27,6 +27,13 @@ namespace DepotMap.Endpoint.Controllers
             return Ok(transactions);
         }
 
+        [HttpGet("table")]
+        public async Task<IActionResult> GetTable([FromQuery] int skip = 0, [FromQuery] int take = 500)
+        {
+            var rows = await _purchasingTransactionLogic.GetTableRowsAsync(skip, take);
+            return Ok(rows);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
