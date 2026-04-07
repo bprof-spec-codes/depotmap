@@ -13,6 +13,9 @@ import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
+import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
+import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
+
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -26,9 +29,9 @@ const routes: Routes = [
   { path: 'warehouses/:id', component: WarehouseGridComponent, canActivate: [authGuard] },
   { path: 'users', component: AdminView, canActivate: [authGuard, adminGuard] },
   { path: 'settings', component: OwnProfile, canActivate: [authGuard] },
-  { path: 'products/create', component: ProductCreateComponent },
-  { path: 'products/edit/:id', component: ProductEditComponent },
-  { path: 'products', component: ProductsListComponent },
+  { path: 'inventory', component: ProductStockListComponent },
+  { path: 'stock-movements', component: StockMovementListComponent },
+  { path: 'stock-movements/:productId', component: StockMovementListComponent },
   { path: 'orders/create', component: OrderCreate },
   { path: 'orders/edit/:id', component: OrderEdit, canDeactivate: [orderEditGuard] },
   { path: 'orders', component: OrderList }
