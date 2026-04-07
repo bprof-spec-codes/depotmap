@@ -75,4 +75,20 @@ export class AuthService {
     }
 
   }
+
+  getUserId(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // A .NET általában a 'nameidentifier' kulcs alatt küldi az ID-t
+      return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] 
+          || payload['nameid'] 
+          || payload['sub'] 
+          || null;
+    } catch (e) {
+      return null;
+    }
+  }
 }
