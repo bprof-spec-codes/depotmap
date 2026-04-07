@@ -6,7 +6,7 @@ Ez a dokumentáció a **DepotMap** raktárkezelő webalkalmazás backend unit te
 
 - **Teszt framework**: xUnit
 - **Adatbázis**: Entity Framework Core InMemory provider
-- **Tesztek száma**: 30 (mind PASSED)
+- **Tesztek száma**: 37 (mind PASSED)
 
 ## Tesztek futtatása
 
@@ -18,6 +18,8 @@ dotnet test DepotMap.Tests
 ## TestDbHelper
 
 A `TestDbHelper` segédosztály minden teszthez egyedi InMemory adatbázist hoz létre egy véletlenszerű GUID-alapú névvel. Ez biztosítja, hogy a tesztek teljesen izoláltak egymástól — egyik teszt sem befolyásolja a másik állapotát, és párhuzamosan is futtathatók.
+
+A `UserAdminTestHelper` segédosztály ugyanezt a mintát követi, kiegészítve egy `TestPasswordHasher` mock implementációval, amely elkerüli a valódi bcrypt hash számítást tesztekben.
 
 ---
 
@@ -81,14 +83,29 @@ Integrációs/workflow tesztek, amelyek a teljes raktár létrehozási folyamato
 | `MultipleShelvesWithCompartments_CodesShouldBeConsistent` | Több polc és rekesz létrehozása, a generált kódok helyessége és egyedisége |
 | `DeleteWarehouse_ShouldCascadeToAllChildren` | Raktár törlés kaszkád: cellák, polcok, rekeszek mind eltűnnek |
 
+### 5. UserAdminLogicTests (7 teszt)
+
+A `UserAdminLogic` service felhasználók CRUD műveleteit és jogosultságkezelését teszteli. A `UserAdminTestHelper` minden teszthez friss InMemory DB-t és `TestPasswordHasher` mock-ot használ.
+
+| Teszt | Leírás |
+|-------|--------|
+| `GetUsersAsync_ShouldReturnAllUsers` | 2 user hozzáadása után mind a kettő visszaadása |
+| `CreateUserAsync_ShouldCreateNewUser` | Új user létrehozása, Identifier és Role ellenőrzése |
+| `CreateUserAsync_ShouldReturnNull_IfIdentifierExists` | Már létező Identifier-rel történő létrehozás null-t ad vissza |
+| `UpdateUserAsync_ShouldUpdateUser` | User Role és FirstName frissítése, FullName ellenőrzése |
+| `UpdateUserAsync_ShouldReturnNull_ForInvalidId` | Nem létező ID frissítése null-t ad vissza |
+| `DeleteUserAsync_ShouldDeleteUser` | User törlése és ellenőrzés, hogy eltűnt |
+| `DeleteUserAsync_ShouldReturnFalse_ForInvalidId` | Nem létező user törlése false-t ad vissza |
+
 ---
 
 ## Összesítés
 
 | Tesztosztály | Tesztek száma | Státusz |
 |--------------|:-------------:|:-------:|
-| WarehouseLogicTests | 7 | PASSED |
-| WarehouseCellLogicTests | 6 | PASSED |
-| ShelfLogicTests | 10 | PASSED |
-| WarehouseWorkflowTests | 7 | PASSED |
-| **Összesen** | **30** | **PASSED** |
+| WarehouseLogicTests | 7 | ✅ PASSED |
+| WarehouseCellLogicTests | 6 | ✅ PASSED |
+| ShelfLogicTests | 10 | ✅ PASSED |
+| WarehouseWorkflowTests | 7 | ✅ PASSED |
+| UserAdminLogicTests | 7 | ✅ PASSED |
+| **Összesen** | **37** | **✅ PASSED** |
