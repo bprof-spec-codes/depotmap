@@ -1,0 +1,65 @@
+<div class="warehouse-grid-page">
+  <!-- Header -->
+  <div class="grid-header">
+    <div class="grid-header-left">
+      <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Vissza
+      </button>
+      <h2>{{ warehouseName }}</h2>
+    </div>
+    <div class="grid-header-right">
+      <ng-container *ngIf="!isEditMode">
+        <button class="btn btn-primary" (click)="enterEditMode()" [disabled]="loading || error">
+          <i class="bi bi-pencil"></i> Szerkesztés
+        </button>
+      </ng-container>
+      <ng-container *ngIf="isEditMode">
+        <button class="btn btn-success" (click)="saveEdit()" [disabled]="saving || modifiedCount === 0">
+          {{ saving ? 'Mentés...' : 'Mentés' }}
+          <span *ngIf="modifiedCount > 0" class="badge bg-light text-dark ms-1">{{ modifiedCount }}</span>
+        </button>
+        <button class="btn btn-outline-secondary" (click)="cancelEdit()" [disabled]="saving">
+          Mégse
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Edit toolbar -->
+  <div class="edit-toolbar" *ngIf="isEditMode">
+    <span class="toolbar-label">Típus:</span>
+    <button *ngFor="let type of cellTypes"
+            class="type-btn"
+            [class.type-btn-active]="selectedCellType === type"
+            [style.background-color]="cellColors[type]"
+            [style.color]="type === 'wall' ? '#fff' : '#333'"
+            (click)="selectCellType(type)">
+      {{ cellTypeLabels[type] }}
+    </button>
+  </div>
+
+  <!-- Success message -->
+  <div *ngIf="saveSuccess" class="alert alert-success d-flex align-items-center" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    Változások sikeresen elmentve! Átirányítás...
+  </div>
+
+  <!-- Loading / Error states -->
+  <div *ngIf="loading" class="state-msg">Betöltés...</div>
+  <div *ngIf="error" class="state-msg error-text">
+    A raktár nem tölthető be. Ellenőrizd, hogy a backend fut-e.
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrapper" [hidden]="loading || error">
+    <div #konvaContainer class="konva-container"></div>
+  </div>
+
+  <!-- Info panel -->
+  <div class="info-panel" *ngIf="selectedCellInfo && !isEditMode">
+    <strong>Kiválasztott cella:</strong>
+    X: {{ selectedCellInfo.x }}, Y: {{ selectedCellInfo.y }} —
+    {{ cellTypeLabels[selectedCellInfo.cellType] || selectedCellInfo.cellType }}
+    <small class="text-muted ms-2">(Dupla kattintás a részletekhez)</small>
+  </div>
+</div>

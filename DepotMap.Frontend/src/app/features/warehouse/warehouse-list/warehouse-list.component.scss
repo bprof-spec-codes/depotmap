@@ -1,0 +1,113 @@
+.warehouse-list {
+  padding: 24px;
+  max-width: 960px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+}
+
+.create-form {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+
+  .form-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 140px;
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #495057;
+    }
+  }
+
+  .form-group-sm {
+    flex: 0 0 120px;
+    min-width: 100px;
+  }
+
+  .btn-create {
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+}
+
+.spinner {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.error-text {
+  text-align: center;
+  padding: 40px;
+  color: #dc3545;
+}
+
+.empty-text {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover {
+    border-color: #90caf9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .card-title {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .card-meta {
+    margin: 0 0 12px;
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+  }
+}

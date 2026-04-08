@@ -67,8 +67,8 @@
                 <i class="bi bi-person-fill"></i>
               </div>
 
-              <div class="bottom-card-content" *ngIf="!isCollapsed">
-                <div class="bottom-card-title">{{ getUserDisplayName() }}</div>
+              <div class="bottom-card-content" *ngIf="!isCollapsed && (user | async) as profile">
+                <div class="bottom-card-title">{{ profile.firstName }} {{ profile.lastName }}</div>
                 <div class="bottom-card-subtitle">Bejelentkezve</div>
               </div>
             </div>
@@ -81,14 +81,14 @@
           </button>
 
           <div class="profile-menu" *ngIf="profileMenuOpen && !isCollapsed">
-            <a
-              routerLink="/settings"
+            <button
+              type="button"
               class="profile-menu-item"
-              (click)="closeProfileMenu()"
+              (click)="goToSettings()"
             >
               <i class="bi bi-gear"></i>
               <span>Beállítások</span>
-            </a>
+            </button>
 
             <button
               class="profile-menu-item danger"
@@ -101,14 +101,14 @@
           </div>
 
           <div class="profile-menu collapsed-menu" *ngIf="profileMenuOpen && isCollapsed">
-            <a
-              routerLink="/settings"
+            <button
+              type="button"
               class="profile-menu-item"
-              (click)="closeProfileMenu()"
+              (click)="goToSettings()"
               title="Beállítások"
             >
               <i class="bi bi-gear"></i>
-            </a>
+            </button>
 
             <button
               class="profile-menu-item danger"

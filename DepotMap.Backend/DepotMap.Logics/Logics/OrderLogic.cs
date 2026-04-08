@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
+using DepotMap.Entities.Models.DTOs.StockMovement;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,13 @@ namespace DepotMap.Logics.Logics
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IStockMovementLogic _stockMovementLogic;
 
-        public OrderLogic(AppDbContext context, IMapper mapper)
+        public OrderLogic(AppDbContext context, IMapper mapper, IStockMovementLogic stockMovementLogic)
         {
             _context = context;
             _mapper = mapper;
+            _stockMovementLogic = stockMovementLogic;
         }
 
         public async Task<List<OrderViewDto>> GetAllOrdersAsync()
@@ -50,6 +53,25 @@ namespace DepotMap.Logics.Logics
         {
             var order = _mapper.Map<Transaction>(dto);
 
+            if (dto.Items != null && dto.Items.Any())
+            {
+                foreach (var itemDto in dto.Items)
+                {
+                    var stock = await _context.ProductStocks
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == itemDto.FromCompartmentId && ps.ProductId == itemDto.ProductId);
+
+                    if (stock == null)
+                    {
+                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductId}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentId})!");
+                    }
+
+                    if (stock.Quantity < itemDto.Quantity)
+                    {
+                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductId} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                    }
+                }
+            }
+
             _context.Transactions.Add(order);
             await _context.SaveChangesAsync();
 
@@ -65,6 +87,30 @@ namespace DepotMap.Logics.Logics
                 .FirstOrDefaultAsync(t => t.Id == id && t.Type == "Outbound");
 
             if (order == null) return null;
+
+            if (order.Status == "Closed")
+            {
+                throw new InvalidOperationException("Lezárt rendelés tételei már nem módosíthatók!");
+            }
+
+            if (dto.Items != null && dto.Items.Any())
+            {
+                foreach (var itemDto in dto.Items)
+                {
+                    var stock = await _context.ProductStocks
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == itemDto.FromCompartmentId && ps.ProductId == itemDto.ProductId);
+
+                    if (stock == null)
+                    {
+                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductId}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentId})!");
+                    }
+
+                    if (stock.Quantity < itemDto.Quantity)
+                    {
+                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductId} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                    }
+                }
+            }
 
             _context.TransactionItems.RemoveRange(order.Items);
 
@@ -131,19 +177,15 @@ namespace DepotMap.Logics.Logics
                         _context.ProductStocks.Remove(stock);
                     }
 
-                    var movement = new StockMovement
+                    await _stockMovementLogic.CreateMovementAsync(new CreateStockMovementDto
                     {
-                        Id = Guid.NewGuid().ToString(),
                         ProductId = item.ProductId,
                         CompartmentId = item.FromCompartmentId,
-                        QuantityChange = -item.Quantity, 
+                        QuantityChange = -item.Quantity,
                         MovementType = "Outbound",
                         TransactionId = order.Id,
-                        CreatedByUserId = order.CreatedByUserId,
-                        Timestamp = DateTime.UtcNow
-                    };
-
-                    _context.StockMovements.Add(movement);
+                        CreatedByUserId = order.CreatedByUserId
+                    });
                 }
             }
 

@@ -1,0 +1,58 @@
+<div class="products-list" *ngIf="movementsVm$ | async as vm">
+  
+  <div class="header">
+    <h2>
+      Készletmozgások 
+      <span *ngIf="vm.productId" class="text-secondary fs-5"> ({{ vm.productId }})</span>
+    </h2>
+  </div>
+
+  <div *ngIf="vm.loading" class="spinner">Mozgások betöltése...</div>
+  <div *ngIf="!vm.loading && vm.error" class="error-text">Hiba történt az adatok lekérésekor.</div>
+
+  <div class="form-container" *ngIf="!vm.loading && !vm.error">
+    
+    <div *ngIf="!vm.items.length" class="empty-text mb-4">
+      Nem található készletmozgás ehhez a lekérdezéshez.
+    </div>
+
+    <div class="history-table-wrap mb-4" *ngIf="vm.items.length > 0">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Dátum</th>
+            <th>Termék ID</th>
+            <th>Rekesz ID</th>
+            <th>Típus</th>
+            <th>Változás</th>
+            <th>Tranzakció / Készítő</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let mov of vm.items">
+            <td>{{ mov.timestamp | date:'yyyy.MM.dd. HH:mm:ss' }}</td>
+            <td>{{ mov.productId }}</td>
+            <td>{{ mov.compartmentId || '-' }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="mov.movementType === 'Inbound' ? 'badge-closed' : 'badge-planning'">
+                {{ mov.movementType }}
+              </span>
+            </td>
+            <td [ngClass]="getMovementColor(mov.quantityChange)">
+              <strong>{{ mov.quantityChange > 0 ? '+' : '' }}{{ mov.quantityChange }} db</strong>
+            </td>
+            <td>
+              <small class="text-muted">Tr: {{ mov.transactionId || '-' }}<br>U: {{ mov.createdByUserId || '-' }}</small>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer-actions mt-4 pt-3 border-top">
+      <button class="btn btn-outline-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left me-1"></i> Vissza a készlethez
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 using AutoMapper;
 using DepotMap.Entities.Models;
+using DepotMap.Entities.Models.DTOs.StockMovement;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Entities.Models.DTOs.Transaction.Purchasing;
-
-
 
 namespace DepotMap.Logics
 {
@@ -19,7 +14,7 @@ namespace DepotMap.Logics
             CreateMap<CreateOrderDto, Transaction>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Outbound"))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Planning"))
-                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid().ToString()));
 
             CreateMap<CreateOrderItemDto, TransactionItem>()
@@ -28,7 +23,6 @@ namespace DepotMap.Logics
                 .ForMember(dest => dest.ToCompartmentId, opt => opt.Ignore());
 
             CreateMap<Transaction, OrderViewDto>();
-
 
             CreateMap<UpdateOrderItemDto, TransactionItem>();
 
@@ -49,6 +43,15 @@ namespace DepotMap.Logics
                 .ForMember(dest => dest.ToCompartmentId, opt => opt.MapFrom(src => src.ToCompartmentId ?? string.Empty));
 
             CreateMap<Transaction, PurchasingTransactionViewDto>();
+
+            CreateMap<StockMovement, StockMovementViewDto>();
+
+            CreateMap<CreateStockMovementDto, StockMovement>();
+
+            CreateMap<ProductStock, ProductStockViewDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+                .ForMember(dest => dest.SKU, opt => opt.MapFrom(src => src.Product.SKU))
+                .ForMember(dest => dest.CompartmentCode, opt => opt.MapFrom(src => src.Compartment.Code));
         }
     }
 }

@@ -8,4 +8,10 @@ import { Component, signal } from '@angular/core';
 })
 export class App {
   protected readonly title = signal('DepotMap.Frontend');
+
+  isSidebarCollapsed = false;
+
+  onSidebarCollapsedChange(collapsed: boolean): void {
+    this.isSidebarCollapsed = collapsed;
+  }
 }
