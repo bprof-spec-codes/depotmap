@@ -10,6 +10,7 @@ import { ProductsListComponent } from './features/products/products-list/product
 import { ProductCreateComponent } from './features/products/product-create/product-create.component';
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { NavbarComponent } from './shared/components/navbar-component/navbar-component';
+import { ProcurementPageComponent } from './features/procurement/procurement-page/procurement-page.component';
 import { OrderList } from './features/orders/order-list/order-list';
 import { OrderCreate } from './features/orders/order-create/order-create';
 import { OrderEdit } from './features/orders/order-edit/order-edit';
@@ -30,10 +31,10 @@ import { StockMovementListComponent } from './features/stock/stockmovement/stock
     OwnProfile,
     ProductCreateComponent,
     ProductEditComponent,
-    NavbarComponent,
+    ProcurementPageComponent,
     OrderList,
     OrderCreate,
-    OrderEdit
+    OrderEdit,
     WarehouseListComponent,
     WarehouseGridComponent,
     AdminView,
