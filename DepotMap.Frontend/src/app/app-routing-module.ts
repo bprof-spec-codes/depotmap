@@ -16,6 +16,7 @@ import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
+import { MovementsComponent } from './features/stock/movements/movements';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -33,6 +34,7 @@ const routes: Routes = [
   { path: 'settings', component: OwnProfile, canActivate: [authGuard] },
 
   { path: 'inventory', component: ProductStockListComponent, canActivate: [authGuard] },
+  { path: 'movements', component: MovementsComponent, canActivate: [authGuard] },
   { path: 'stock-movements', component: StockMovementListComponent, canActivate: [authGuard] },
   { path: 'stock-movements/:productId', component: StockMovementListComponent, canActivate: [authGuard] },
 

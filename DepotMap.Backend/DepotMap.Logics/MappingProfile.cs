@@ -2,6 +2,7 @@ using System;
 using AutoMapper;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs.StockMovement;
+using DepotMap.Entities.Models.DTOs.Transaction.Movement;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Entities.Models.DTOs.Transaction.Purchasing;
 
@@ -43,6 +44,22 @@ namespace DepotMap.Logics
                 .ForMember(dest => dest.ToCompartmentId, opt => opt.MapFrom(src => src.ToCompartmentId ?? string.Empty));
 
             CreateMap<Transaction, PurchasingTransactionViewDto>();
+
+            CreateMap<CreateMovementTransactionDto, Transaction>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Transfer"))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Planning"))
+                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid().ToString()));
+
+            CreateMap<CreateMovementTransactionItemDto, TransactionItem>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid().ToString()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Transfer"));
+
+            CreateMap<TransactionItem, MovementTransactionItemViewDto>()
+                .ForMember(dest => dest.FromCompartmentId, opt => opt.MapFrom(src => src.FromCompartmentId ?? string.Empty))
+                .ForMember(dest => dest.ToCompartmentId, opt => opt.MapFrom(src => src.ToCompartmentId ?? string.Empty));
+
+            CreateMap<Transaction, MovementTransactionViewDto>();
 
             CreateMap<StockMovement, StockMovementViewDto>();
 
