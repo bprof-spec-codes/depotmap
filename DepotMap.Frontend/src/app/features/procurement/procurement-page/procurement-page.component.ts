@@ -54,6 +54,7 @@ export class ProcurementPageComponent implements OnInit {
   availableProducts: ProductShortDto[] = [];
   productsLoading = false;
   editingTransactionId: string | null = null;
+  statusUpdatingId: string | null = null;
 
   form = {
     createdByUserId: this.seedUserId,
@@ -149,6 +150,9 @@ export class ProcurementPageComponent implements OnInit {
 
       return;
     }
+
+    // Létrehozáskor a státusz mindig Planning maradjon.
+    this.form.status = 'Planning';
 
     const createDto: CreatePurchasingTransactionDto = {
       createdByUserId: this.form.createdByUserId,
@@ -274,6 +278,60 @@ export class ProcurementPageComponent implements OnInit {
           this.errorText = this.extractErrorMessage(err, 'A szerkesztéshez tartozó adatok nem tölthetők be.');
         }
       });
+  }
+
+  advanceStatus(transaction: ProcurementTableTransaction): void {
+    const nextStatus = this.getNextStatus(transaction.status);
+    if (!nextStatus) {
+      return;
+    }
+
+    this.errorText = '';
+    this.statusUpdatingId = transaction.id;
+
+    this.purchasingService
+      .update(transaction.id, { status: nextStatus })
+      .pipe(finalize(() => (this.statusUpdatingId = null)))
+      .subscribe({
+        next: () => {
+          this.loadTransactions(true);
+        },
+        error: (err: unknown) => {
+          this.errorText = this.extractErrorMessage(err, 'A státusz frissítése sikertelen volt.');
+        }
+      });
+  }
+
+  isStatusArrowVisible(status: string): boolean {
+    return this.getNextStatus(status) !== null;
+  }
+
+  getStatusClass(status: string): string {
+    const value = status.toLowerCase();
+
+    if (value === 'active') {
+      return 'status-active';
+    }
+
+    if (value === 'closed') {
+      return 'status-closed';
+    }
+
+    return 'status-planning';
+  }
+
+  private getNextStatus(status: string): string | null {
+    const value = status.toLowerCase();
+
+    if (value === 'planning') {
+      return 'Active';
+    }
+
+    if (value === 'active') {
+      return 'Closed';
+    }
+
+    return null;
   }
 
   deleteTransaction(transaction: ProcurementTableTransaction): void {
@@ -416,7 +474,7 @@ export class ProcurementPageComponent implements OnInit {
     }
 
     if (status.toLowerCase() === 'active') {
-      return 'Összekészítés alatt';
+      return 'Összekészítés';
     }
 
     return 'Tervezés';
