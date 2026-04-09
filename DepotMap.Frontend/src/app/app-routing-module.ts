@@ -16,7 +16,6 @@ import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
-import { MovementsComponent } from './features/stock/movements/movements';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -30,11 +29,10 @@ const routes: Routes = [
   { path: 'warehouses', component: WarehouseListComponent, canActivate: [authGuard] },
   { path: 'warehouses/:id', component: WarehouseGridComponent, canActivate: [authGuard] },
 
-  { path: 'users', component: AdminView, canActivate: [authGuard, adminGuard] },
+  { path: 'users', component: AdminView, canActivate: [authGuard] },
   { path: 'settings', component: OwnProfile, canActivate: [authGuard] },
 
   { path: 'inventory', component: ProductStockListComponent, canActivate: [authGuard] },
-  { path: 'movements', component: MovementsComponent, canActivate: [authGuard] },
   { path: 'stock-movements', component: StockMovementListComponent, canActivate: [authGuard] },
   { path: 'stock-movements/:productId', component: StockMovementListComponent, canActivate: [authGuard] },
 
@@ -42,8 +40,8 @@ const routes: Routes = [
   { path: 'orders/edit/:id', component: OrderEdit, canActivate: [authGuard], canDeactivate: [orderEditGuard] },
   { path: 'orders', component: OrderList, canActivate: [authGuard] },
 
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: '**', redirectTo: '/login' }
+  { path: '', redirectTo: '/products', pathMatch: 'full' },
+  { path: '**', redirectTo: '/products' }
 ];
 
 @NgModule({
