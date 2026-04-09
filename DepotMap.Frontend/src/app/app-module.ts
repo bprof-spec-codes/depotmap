@@ -21,6 +21,7 @@ import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
+import { MovementsComponent } from './features/stock/movements/movements';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,8 @@ import { StockMovementListComponent } from './features/stock/stockmovement/stock
     WarehouseGridComponent,
     AdminView,
     ProductStockListComponent,
-    StockMovementListComponent
+    StockMovementListComponent,
+    MovementsComponent
   ],
   imports: [
     BrowserModule,
