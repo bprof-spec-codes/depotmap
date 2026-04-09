@@ -40,8 +40,8 @@ const routes: Routes = [
   { path: 'orders/edit/:id', component: OrderEdit, canActivate: [authGuard], canDeactivate: [orderEditGuard] },
   { path: 'orders', component: OrderList, canActivate: [authGuard] },
 
-  { path: '', redirectTo: '/products', pathMatch: 'full' },
-  { path: '**', redirectTo: '/products' }
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '**', redirectTo: '/login' }
 ];
 
 @NgModule({
