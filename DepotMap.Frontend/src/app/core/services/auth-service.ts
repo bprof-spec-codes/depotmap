@@ -9,22 +9,23 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class AuthService {
-  private isLoggedIn$ = new BehaviorSubject<boolean>(this.isTokenValid());
+  private isLoggedIn$ = new BehaviorSubject<boolean>(this.hasValidToken());
 
   constructor(private http: HttpClient, private router: Router) { }
 
-  private isTokenValid(): boolean {
+  hasValidToken(): boolean {
     const token = this.getToken();
     if (!token) return false;
 
-    try{
+    try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const expiry = payload['exp'];
       const now = Math.floor(Date.now() / 1000);
       return expiry > now;
     }
-    catch{
-      return false
+    catch {
+      this.clearToken();
+      return false;
     }
   }
 
@@ -44,6 +45,10 @@ export class AuthService {
     this.clearToken();
     this.isLoggedIn$.next(false);
     this.router.navigate(['/login']);
+  }
+
+  refreshAuthState(): void {
+    this.isLoggedIn$.next(this.hasValidToken());
   }
 
   getToken(): string | null {
