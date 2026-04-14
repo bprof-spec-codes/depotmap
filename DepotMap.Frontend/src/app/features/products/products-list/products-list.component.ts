@@ -100,6 +100,15 @@ export class ProductsListComponent {
     this.historySort.next(value ?? 'newest');
   }
 
+  formatLocations(product: ProductShortDto): string {
+    const ids = (product.productStocks ?? [])
+      .map(stock => stock.compartmentId)
+      .filter(id => !!id && id.trim().length > 0);
+
+    const distinct = Array.from(new Set(ids));
+    return distinct.length ? distinct.join(', ') : '-';
+  }
+
 
   formatAction(actionType: string): string {
     if (actionType === 'edit') return 'Szerkesztés';

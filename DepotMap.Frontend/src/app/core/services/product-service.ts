@@ -10,6 +10,7 @@ export interface ProductShortDto {
   price?: number;
   quantity?: number;
   totalStock?: number;
+  productStocks?: ProductStockPlacementDto[];
 }
 
 export interface ProductStockPlacementDto {

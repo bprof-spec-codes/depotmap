@@ -13,7 +13,7 @@
         <div class="item" [class.item-highlight]="p.id === highlightedProductId">
           <div class="left">
             <div class="title">{{p.name}} <span *ngIf="p.id === highlightedProductId" class="updated-badge">Frissítve</span></div>
-            <div class="meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}}</div>
+            <div class="meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}} • Hely: {{ formatLocations(p) }}</div>
           </div>
 
           <div class="actions">
