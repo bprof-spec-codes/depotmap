@@ -63,7 +63,7 @@
         </label>
       </div>
 
-      <div class="storage-block primary-storage">
+      <div class="storage-block">
         <label class="field">
           <span>Elsődleges tárolóhely</span>
           <select
@@ -72,14 +72,13 @@
             [disabled]="compartmentsLoading"
             required
           >
-            <option value="" *ngIf="compartmentsLoading">Tárolóhelyek betöltése...</option>
             <option value="">-- Válassz tárolóhelyet --</option>
             <option
               *ngFor="let comp of compartments"
               [value]="comp.id"
               [disabled]="isPrimaryCompartmentDisabled(comp.id)"
             >
-              {{ comp.code }} (szint {{ comp.levelIndex }}, hely {{ comp.slotIndex }})
+              {{ comp.id }}
             </option>
           </select>
         </label>
@@ -97,14 +96,13 @@
             [(ngModel)]="secondaryStorageSelections[i]"
             [disabled]="compartmentsLoading"
           >
-            <option value="" *ngIf="compartmentsLoading">Tárolóhelyek betöltése...</option>
             <option value="">-- Válassz tárolóhelyet --</option>
             <option
               *ngFor="let comp of compartments"
               [value]="comp.id"
               [disabled]="isCompartmentUsedInSecondary(comp.id, i)"
             >
-              {{ comp.code }} (szint {{ comp.levelIndex }}, hely {{ comp.slotIndex }})
+              {{ comp.id }}
             </option>
           </select>
         </label>

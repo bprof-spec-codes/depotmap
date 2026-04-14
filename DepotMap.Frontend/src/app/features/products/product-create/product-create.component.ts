@@ -31,10 +31,11 @@ export class ProductCreateComponent implements OnInit {
     private productService: ProductService,
     private compartmentService: CompartmentService,
     private router: Router
-  ) {}
+  ) {
+    this.loadCompartments();
+  }
 
   ngOnInit(): void {
-    this.loadCompartments();
   }
 
   loadCompartments(): void {

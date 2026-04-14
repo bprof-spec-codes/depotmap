@@ -16,6 +16,7 @@ export class ProductEditComponent implements OnInit {
   loading = false;
   errorText = '';
   compartments: CompartmentOptionDto[] = [];
+  compartmentsLoading = true;
   primaryStorageSelection = '';
   secondaryStorageSelections: string[] = [];
 
@@ -32,7 +33,22 @@ export class ProductEditComponent implements OnInit {
     private router: Router,
     private productService: ProductService,
     private compartmentService: CompartmentService
-  ) {}
+  ) {
+    this.loadCompartments();
+  }
+
+  private loadCompartments(): void {
+    this.compartmentsLoading = true;
+    this.compartmentService.getAll().subscribe({
+      next: compartments => {
+        this.compartments = compartments;
+        this.compartmentsLoading = false;
+      },
+      error: () => {
+        this.compartmentsLoading = false;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -59,11 +75,6 @@ export class ProductEditComponent implements OnInit {
     }
 
     this.loading = true;
-    this.compartmentService.getAll().subscribe({
-      next: compartments => {
-        this.compartments = compartments;
-      }
-    });
 
     this.productService.getById(this.id)
       .pipe(finalize(() => (this.loading = false)))
