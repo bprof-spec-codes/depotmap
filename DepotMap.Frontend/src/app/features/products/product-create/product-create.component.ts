@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { Observable, defer, of } from 'rxjs';
+import { catchError, finalize, map, shareReplay, startWith } from 'rxjs/operators';
 import { ProductService } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
 
@@ -10,7 +11,9 @@ import { CompartmentOptionDto, CompartmentService } from '../../../core/services
   templateUrl: './product-create.component.html',
   styleUrls: ['./product-create.component.scss']
 })
-export class ProductCreateComponent implements OnInit {
+export class ProductCreateComponent {
+  compartmentsVm$: Observable<{ items: CompartmentOptionDto[]; loading: boolean; error: boolean }>;
+
   form = {
     sku: '',
     name: '',
@@ -21,8 +24,6 @@ export class ProductCreateComponent implements OnInit {
 
   primaryStorageSelection = '';
   secondaryStorageSelections: string[] = [];
-  compartments: CompartmentOptionDto[] = [];
-  compartmentsLoading = true;
 
   saving = false;
   errorText = '';
@@ -32,24 +33,12 @@ export class ProductCreateComponent implements OnInit {
     private compartmentService: CompartmentService,
     private router: Router
   ) {
-    this.loadCompartments();
-  }
-
-  ngOnInit(): void {
-  }
-
-  loadCompartments(): void {
-    this.compartmentsLoading = true;
-    this.compartmentService.getAll().subscribe({
-      next: compartments => {
-        this.compartments = compartments;
-        this.compartmentsLoading = false;
-      },
-      error: () => {
-        this.errorText = 'A tárolóhelyek betöltése nem sikerült.';
-        this.compartmentsLoading = false;
-      }
-    });
+    this.compartmentsVm$ = defer(() => this.compartmentService.getAll()).pipe(
+      map(items => ({ items, loading: false, error: false })),
+      startWith({ items: [] as CompartmentOptionDto[], loading: true, error: false }),
+      catchError(() => of({ items: [] as CompartmentOptionDto[], loading: false, error: true })),
+      shareReplay(1)
+    );
   }
 
   addStorageSelection(): void {

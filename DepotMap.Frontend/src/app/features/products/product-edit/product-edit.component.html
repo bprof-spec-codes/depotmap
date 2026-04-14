@@ -30,53 +30,57 @@
         </label>
       </div>
 
-      <div class="storage-block">
-        <label class="field">
-          <span>Elsődleges tárolóhely</span>
-          <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection" [disabled]="compartmentsLoading" required>
-            <option value="">-- Válassz tárolóhelyet --</option>
-            <option
-              *ngFor="let comp of compartments"
-              [value]="comp.id"
-              [disabled]="isPrimaryCompartmentDisabled(comp.id)"
-            >
-              {{ comp.id }}
-            </option>
-          </select>
-        </label>
+      <ng-container *ngIf="compartmentsVm$ | async as compartmentsVm">
+        <div class="storage-block">
+          <label class="field">
+            <span>Elsődleges tárolóhely</span>
+            <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection" [disabled]="compartmentsVm.loading" required>
+              <option value="">-- Válassz tárolóhelyet --</option>
+              <option
+                *ngFor="let comp of compartmentsVm.items"
+                [value]="comp.id"
+                [disabled]="isPrimaryCompartmentDisabled(comp.id)"
+              >
+                {{ comp.id }}
+              </option>
+            </select>
+          </label>
 
-        <div class="selected-id" *ngIf="primaryStorageSelection">
-          Kiválasztott azonosító: {{ primaryStorageSelection }}
-        </div>
-      </div>
-
-      <div class="storage-block" *ngFor="let storageId of secondaryStorageSelections; let i = index">
-        <label class="field">
-          <span>Másodlagos tárolóhely {{ i + 1 }}</span>
-          <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]" [disabled]="compartmentsLoading">
-            <option value="">-- Válassz tárolóhelyet --</option>
-            <option
-              *ngFor="let comp of compartments"
-              [value]="comp.id"
-              [disabled]="isCompartmentUsedInSecondary(comp.id, i)"
-            >
-              {{ comp.id }}
-            </option>
-          </select>
-        </label>
-
-        <div class="selected-id" *ngIf="secondaryStorageSelections[i]">
-          Kiválasztott azonosító: {{ secondaryStorageSelections[i] }}
+          <div class="selected-id" *ngIf="primaryStorageSelection">
+            Kiválasztott azonosító: {{ primaryStorageSelection }}
+          </div>
         </div>
 
-        <button
-          type="button"
-          class="link-btn remove-btn danger"
-          (click)="removeStorageSelection(i)"
-        >
-          Tárolóhely törlése
-        </button>
-      </div>
+        <div class="storage-block" *ngFor="let storageId of secondaryStorageSelections; let i = index">
+          <label class="field">
+            <span>Másodlagos tárolóhely {{ i + 1 }}</span>
+            <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]" [disabled]="compartmentsVm.loading">
+              <option value="">-- Válassz tárolóhelyet --</option>
+              <option
+                *ngFor="let comp of compartmentsVm.items"
+                [value]="comp.id"
+                [disabled]="isCompartmentUsedInSecondary(comp.id, i)"
+              >
+                {{ comp.id }}
+              </option>
+            </select>
+          </label>
+
+          <div class="selected-id" *ngIf="secondaryStorageSelections[i]">
+            Kiválasztott azonosító: {{ secondaryStorageSelections[i] }}
+          </div>
+
+          <button
+            type="button"
+            class="link-btn remove-btn danger"
+            (click)="removeStorageSelection(i)"
+          >
+            Tárolóhely törlése
+          </button>
+        </div>
+
+        <div *ngIf="compartmentsVm.error" class="error-text">A tárolóhelyek betöltése nem sikerült.</div>
+      </ng-container>
 
       <div class="storage-actions">
         <button type="button" class="link-btn" (click)="addStorageSelection()">+ Plusz tárolóhely hozzáadása</button>
