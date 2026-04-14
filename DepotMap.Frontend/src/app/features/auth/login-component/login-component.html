@@ -1,20 +1,23 @@
 <section class="login-landing">
-    <div class="bg-orb orb-left"></div>
-    <div class="bg-orb orb-right"></div>
-
     <div class="landing-content">
         <div class="brand-block">
-            <div class="brand-chip">DepotMap</div>
-            <h1>Raktárkezelés egy helyen</h1>
+            <div class="brand-chip">DepotMap | Intelligens raktárkezelés</div>
+            <h1>Valós raktári működés, digitális támogatással</h1>
             <p>
-                Kezeld a készletmozgásokat, beszerzéseket és rendeléseket
-                átláthatóan. Lépj be a rendszerbe a folytatáshoz.
+                Kövesd a termékek útját beérkezéstől kiadásig, kezeld a tárolóhelyeket,
+                és támogasd a napi raktári döntéseket egy átlátható felületen.
             </p>
+
+            <div class="brand-points" aria-label="Fő funkciók">
+                <div class="point-item">Készletmozgások naplózása</div>
+                <div class="point-item">Tárolóhely alapú nyomon követés</div>
+                <div class="point-item">Gyors adminisztráció és visszakereshetőség</div>
+            </div>
         </div>
 
         <div class="login-card">
             <h2>Bejelentkezés</h2>
-            <p class="login-subtitle">Add meg a felhasználói adataidat.</p>
+            <p class="login-subtitle">Add meg az adataidat a raktári modul eléréséhez.</p>
 
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
                 <div class="field-group">
