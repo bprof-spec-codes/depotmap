@@ -37,13 +37,58 @@
   color: #0f1f35;
 }
 
-.field input {
+.field input,
+.field select {
   border: 1px solid #c8d8f0;
   border-radius: 10px;
   background: #f9fbff;
   color: #0f1f35;
   font-size: 15px;
   padding: 11px 12px;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: #1a73c8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 200, 0.16);
+  background: #ffffff;
+}
+
+.storage-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.remove-btn {
+  width: fit-content;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.storage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.storage-actions .link-btn {
+  border: 1px solid rgba(26, 115, 200, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
+  color: #0f5da9;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  font-weight: 700;
+}
+
+.storage-actions .link-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(26, 115, 200, 0.34);
+  box-shadow: 0 10px 20px rgba(18, 54, 97, 0.09);
 }
 
 .row-2 {

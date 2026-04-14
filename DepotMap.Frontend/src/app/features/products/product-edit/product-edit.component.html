@@ -30,6 +30,35 @@
         </label>
       </div>
 
+      <div class="storage-block" *ngFor="let storageId of storageSelections; let i = index">
+        <label class="field">
+          <span>{{ i === 0 ? 'Elsődleges tárolóhely' : 'Másodlagos tárolóhely ' + i }}</span>
+          <select [name]="'editStorageSelection' + i" [(ngModel)]="storageSelections[i]" required>
+            <option value="">-- Válassz tárolóhelyet --</option>
+            <option
+              *ngFor="let comp of compartments"
+              [value]="comp.id"
+              [disabled]="isCompartmentUsed(comp.id, i)"
+            >
+              {{ comp.code }} (szint {{ comp.levelIndex }}, hely {{ comp.slotIndex }})
+            </option>
+          </select>
+        </label>
+
+        <button
+          type="button"
+          class="link-btn remove-btn"
+          *ngIf="i > 0"
+          (click)="removeStorageSelection(i)"
+        >
+          - Másodlagos tárolóhely törlése
+        </button>
+      </div>
+
+      <div class="storage-actions">
+        <button type="button" class="link-btn" (click)="addStorageSelection()">+ Plusz tárolóhely hozzáadása</button>
+      </div>
+
       <div *ngIf="errorText" class="error-text">{{ errorText }}</div>
 
       <div class="actions">

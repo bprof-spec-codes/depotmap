@@ -28,6 +28,16 @@ namespace DepotMap.Endpoint.Controllers
             var products = await _productsLogic.GetAllProductsAsync();
             return Ok(products);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProductById(string id)
+        {
+            var product = await _productsLogic.GetProductByIdAsync(id);
+            if (product == null)
+                return NotFound();
+
+            return Ok(product);
+        }
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromQuery] string? productId)
         {

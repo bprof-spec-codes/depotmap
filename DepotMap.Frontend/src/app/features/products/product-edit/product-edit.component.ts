@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, finalize, of, timeout } from 'rxjs';
-import { ProductService, ProductShortDto } from '../../../core/services/product-service';
+import { finalize } from 'rxjs';
+import { ProductService, ProductDetailDto } from '../../../core/services/product-service';
+import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
 
 @Component({
   selector: 'app-product-edit',
@@ -14,6 +15,8 @@ export class ProductEditComponent implements OnInit {
   saving = false;
   loading = false;
   errorText = '';
+  compartments: CompartmentOptionDto[] = [];
+  storageSelections: string[] = [''];
 
   form = {
     sku: '',
@@ -26,56 +29,76 @@ export class ProductEditComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
+    private compartmentService: CompartmentService
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
-    const product = (history.state?.product ?? null) as ProductShortDto | null;
+    const productFromState = history.state?.product as ProductDetailDto | undefined;
 
     if (!this.id) {
       this.errorText = 'Hiányzó termék azonosító.';
       return;
     }
 
-    if (product) {
-      this.form.name = product.name ?? '';
-      this.form.sku = product.sku ?? '';
-      this.form.price = typeof product.price === 'number' ? product.price : null;
-    }
+    if (productFromState) {
+      this.form.name = productFromState.name ?? '';
+      this.form.sku = productFromState.sku ?? '';
+      this.form.price = typeof productFromState.price === 'number' ? productFromState.price : 0;
+      this.form.lowStockThreshold = typeof productFromState.lowStockThreshold === 'number' ? productFromState.lowStockThreshold : 0;
+      this.form.description = productFromState.description ?? '';
 
-    this.form.price = this.form.price ?? 0;
-    this.form.lowStockThreshold = 0;
-    this.form.description = '';
+      const storageIds = (productFromState.productStocks ?? [])
+        .map(stock => stock.compartmentId)
+        .filter(Boolean);
 
-    const cached = this.productService.getLatestHistoryForProduct(this.id);
-    if (cached) {
-      this.form.description = cached.description ?? this.form.description;
-      this.form.price = typeof cached.price === 'number' ? cached.price : this.form.price;
-      this.form.lowStockThreshold =
-        typeof cached.lowStockThreshold === 'number' ? cached.lowStockThreshold : this.form.lowStockThreshold;
+      this.storageSelections = storageIds.length > 0 ? [...storageIds] : [''];
     }
 
     this.loading = true;
-    this.productService.getHistory(this.id)
-      .pipe(
-        timeout(5000),
-        catchError(() => of([])),
-        finalize(() => (this.loading = false))
-      )
+    this.compartmentService.getAll().subscribe({
+      next: compartments => {
+        this.compartments = compartments;
+      }
+    });
+
+    this.productService.getById(this.id)
+      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: h => {
-          if (h.length > 0) {
-            const latest = h[0];
-            this.form.description = latest.description ?? '';
-            this.form.price = typeof latest.price === 'number' ? latest.price : 0;
-            this.form.lowStockThreshold = typeof latest.lowStockThreshold === 'number' ? latest.lowStockThreshold : 0;
-          }
+        next: (product: ProductDetailDto) => {
+          this.form.name = product.name ?? '';
+          this.form.sku = product.sku ?? '';
+          this.form.price = typeof product.price === 'number' ? product.price : 0;
+          this.form.lowStockThreshold = typeof product.lowStockThreshold === 'number' ? product.lowStockThreshold : 0;
+          this.form.description = product.description ?? '';
+
+          const storageIds = (product.productStocks ?? [])
+            .map(stock => stock.compartmentId)
+            .filter(Boolean);
+
+          this.storageSelections = storageIds.length > 0 ? [...storageIds] : [''];
         },
         error: () => {
-          // Keep defaults; editing can still continue.
+          this.errorText = 'Nem sikerült betölteni a termék adatait.';
         }
       });
+  }
+
+  addStorageSelection(): void {
+    this.storageSelections.push('');
+  }
+
+  removeStorageSelection(index: number): void {
+    if (index === 0 || this.storageSelections.length === 1) {
+      return;
+    }
+
+    this.storageSelections.splice(index, 1);
+  }
+
+  isCompartmentUsed(compartmentId: string, currentIndex: number): boolean {
+    return this.storageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
   }
 
   save(): void {
@@ -86,13 +109,23 @@ export class ProductEditComponent implements OnInit {
       return;
     }
 
+    const initialStocks = this.storageSelections
+      .filter(compartmentId => compartmentId.trim().length > 0)
+      .map(compartmentId => ({ compartmentId, quantity: 0 }));
+
+    if (initialStocks.length === 0) {
+      this.errorText = 'Válassz legalább egy tárolóhelyet.';
+      return;
+    }
+
     this.saving = true;
     this.productService.update(this.id, {
       sku: this.form.sku,
       name: this.form.name,
       description: this.form.description,
       price: this.form.price,
-      lowStockThreshold: this.form.lowStockThreshold
+      lowStockThreshold: this.form.lowStockThreshold,
+      initialStocks
     })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe({
