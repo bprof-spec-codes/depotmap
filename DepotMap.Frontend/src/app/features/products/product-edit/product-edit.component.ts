@@ -16,7 +16,8 @@ export class ProductEditComponent implements OnInit {
   loading = false;
   errorText = '';
   compartments: CompartmentOptionDto[] = [];
-  storageSelections: string[] = [''];
+  primaryStorageSelection = '';
+  secondaryStorageSelections: string[] = [];
 
   form = {
     sku: '',
@@ -53,7 +54,8 @@ export class ProductEditComponent implements OnInit {
         .map(stock => stock.compartmentId)
         .filter(Boolean);
 
-      this.storageSelections = storageIds.length > 0 ? [...storageIds] : [''];
+      this.primaryStorageSelection = storageIds[0] ?? '';
+      this.secondaryStorageSelections = storageIds.slice(1);
     }
 
     this.loading = true;
@@ -77,7 +79,8 @@ export class ProductEditComponent implements OnInit {
             .map(stock => stock.compartmentId)
             .filter(Boolean);
 
-          this.storageSelections = storageIds.length > 0 ? [...storageIds] : [''];
+          this.primaryStorageSelection = storageIds[0] ?? '';
+          this.secondaryStorageSelections = storageIds.slice(1);
         },
         error: () => {
           this.errorText = 'Nem sikerült betölteni a termék adatait.';
@@ -86,19 +89,27 @@ export class ProductEditComponent implements OnInit {
   }
 
   addStorageSelection(): void {
-    this.storageSelections.push('');
+    this.secondaryStorageSelections.push('');
   }
 
   removeStorageSelection(index: number): void {
-    if (index === 0 || this.storageSelections.length === 1) {
+    if (index < 0 || index >= this.secondaryStorageSelections.length) {
       return;
     }
 
-    this.storageSelections.splice(index, 1);
+    this.secondaryStorageSelections.splice(index, 1);
   }
 
-  isCompartmentUsed(compartmentId: string, currentIndex: number): boolean {
-    return this.storageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
+  isCompartmentUsedInSecondary(compartmentId: string, currentIndex: number): boolean {
+    if (this.primaryStorageSelection === compartmentId) {
+      return true;
+    }
+
+    return this.secondaryStorageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
+  }
+
+  isPrimaryCompartmentDisabled(compartmentId: string): boolean {
+    return this.secondaryStorageSelections.includes(compartmentId);
   }
 
   save(): void {
@@ -109,7 +120,7 @@ export class ProductEditComponent implements OnInit {
       return;
     }
 
-    const initialStocks = this.storageSelections
+    const initialStocks = [this.primaryStorageSelection, ...this.secondaryStorageSelections]
       .filter(compartmentId => compartmentId.trim().length > 0)
       .map(compartmentId => ({ compartmentId, quantity: 0 }));
 

@@ -30,15 +30,31 @@
         </label>
       </div>
 
-      <div class="storage-block" *ngFor="let storageId of storageSelections; let i = index">
+      <div class="storage-block primary-storage">
         <label class="field">
-          <span>{{ i === 0 ? 'Elsődleges tárolóhely' : 'Másodlagos tárolóhely ' + i }}</span>
-          <select [name]="'editStorageSelection' + i" [(ngModel)]="storageSelections[i]" required>
+          <span>Elsődleges tárolóhely</span>
+          <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection" required>
             <option value="">-- Válassz tárolóhelyet --</option>
             <option
               *ngFor="let comp of compartments"
               [value]="comp.id"
-              [disabled]="isCompartmentUsed(comp.id, i)"
+              [disabled]="isPrimaryCompartmentDisabled(comp.id)"
+            >
+              {{ comp.code }} (szint {{ comp.levelIndex }}, hely {{ comp.slotIndex }})
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div class="storage-block" *ngFor="let storageId of secondaryStorageSelections; let i = index">
+        <label class="field">
+          <span>Másodlagos tárolóhely {{ i + 1 }}</span>
+          <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]">
+            <option value="">-- Válassz tárolóhelyet --</option>
+            <option
+              *ngFor="let comp of compartments"
+              [value]="comp.id"
+              [disabled]="isCompartmentUsedInSecondary(comp.id, i)"
             >
               {{ comp.code }} (szint {{ comp.levelIndex }}, hely {{ comp.slotIndex }})
             </option>
@@ -47,11 +63,10 @@
 
         <button
           type="button"
-          class="link-btn remove-btn"
-          *ngIf="i > 0"
+          class="link-btn remove-btn danger"
           (click)="removeStorageSelection(i)"
         >
-          - Másodlagos tárolóhely törlése
+          Tárolóhely törlése
         </button>
       </div>
 

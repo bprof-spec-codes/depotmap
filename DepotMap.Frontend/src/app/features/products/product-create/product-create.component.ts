@@ -19,8 +19,10 @@ export class ProductCreateComponent implements OnInit {
     lowStockThreshold: null as number | null,
   };
 
-  storageSelections: string[] = [''];
+  primaryStorageSelection = '';
+  secondaryStorageSelections: string[] = [];
   compartments: CompartmentOptionDto[] = [];
+  compartmentsLoading = true;
 
   saving = false;
   errorText = '';
@@ -36,30 +38,41 @@ export class ProductCreateComponent implements OnInit {
   }
 
   loadCompartments(): void {
+    this.compartmentsLoading = true;
     this.compartmentService.getAll().subscribe({
       next: compartments => {
         this.compartments = compartments;
+        this.compartmentsLoading = false;
       },
       error: () => {
         this.errorText = 'A tárolóhelyek betöltése nem sikerült.';
+        this.compartmentsLoading = false;
       }
     });
   }
 
   addStorageSelection(): void {
-    this.storageSelections.push('');
+    this.secondaryStorageSelections.push('');
   }
 
   removeStorageSelection(index: number): void {
-    if (index === 0 || this.storageSelections.length === 1) {
+    if (index < 0 || index >= this.secondaryStorageSelections.length) {
       return;
     }
 
-    this.storageSelections.splice(index, 1);
+    this.secondaryStorageSelections.splice(index, 1);
   }
 
-  isCompartmentUsed(compartmentId: string, currentIndex: number): boolean {
-    return this.storageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
+  isCompartmentUsedInSecondary(compartmentId: string, currentIndex: number): boolean {
+    if (this.primaryStorageSelection === compartmentId) {
+      return true;
+    }
+
+    return this.secondaryStorageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
+  }
+
+  isPrimaryCompartmentDisabled(compartmentId: string): boolean {
+    return this.secondaryStorageSelections.includes(compartmentId);
   }
 
   create(): void {
@@ -70,7 +83,7 @@ export class ProductCreateComponent implements OnInit {
       return;
     }
 
-    const initialStocks = this.storageSelections
+    const initialStocks = [this.primaryStorageSelection, ...this.secondaryStorageSelections]
       .filter(compartmentId => compartmentId.trim().length > 0)
       .map(compartmentId => ({ compartmentId, quantity: 0 }));
 

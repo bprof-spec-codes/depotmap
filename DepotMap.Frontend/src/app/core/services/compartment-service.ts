@@ -14,7 +14,7 @@ export interface CompartmentOptionDto {
   providedIn: 'root'
 })
 export class CompartmentService {
-  private readonly apiBase = `${environment.apiUrl}/compartments`;
+  private readonly apiBase = `${environment.apiUrl}/compartment`;
 
   constructor(private http: HttpClient) {}
 

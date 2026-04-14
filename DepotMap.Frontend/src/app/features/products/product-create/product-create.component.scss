@@ -82,6 +82,22 @@
   gap: 6px;
 }
 
+.selected-id {
+  font-size: 12px;
+  color: #33567a;
+  background: #f2f7ff;
+  border: 1px solid rgba(51, 86, 122, 0.15);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.primary-storage {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(26, 115, 200, 0.14);
+  background: linear-gradient(180deg, rgba(238, 246, 255, 0.45) 0%, rgba(255, 255, 255, 0.85) 100%);
+}
+
 .row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -130,6 +146,13 @@
   background: #fff7f7;
   color: #a12d2d;
   border-color: rgba(161, 45, 45, 0.18);
+}
+
+.remove-btn.danger {
+  background: linear-gradient(180deg, #fff4f4 0%, #ffe8e8 100%);
+  color: #9f2323;
+  border-color: rgba(160, 35, 35, 0.24);
+  font-weight: 700;
 }
 
 .create-btn {

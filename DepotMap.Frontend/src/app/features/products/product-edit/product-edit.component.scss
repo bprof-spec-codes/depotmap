@@ -61,10 +61,24 @@
   gap: 6px;
 }
 
+.primary-storage {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(26, 115, 200, 0.14);
+  background: linear-gradient(180deg, rgba(238, 246, 255, 0.45) 0%, rgba(255, 255, 255, 0.85) 100%);
+}
+
 .remove-btn {
   width: fit-content;
   padding: 8px 10px;
   font-size: 12px;
+}
+
+.remove-btn.danger {
+  background: linear-gradient(180deg, #fff4f4 0%, #ffe8e8 100%);
+  color: #9f2323;
+  border-color: rgba(160, 35, 35, 0.24);
+  font-weight: 700;
 }
 
 .storage-actions {
