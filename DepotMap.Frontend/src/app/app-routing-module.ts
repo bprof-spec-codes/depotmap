@@ -17,9 +17,10 @@ import { adminGuard } from './core/guards/admin-guard';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
 import { MovementsComponent } from './features/stock/movements/movements';
+import { guestGuard } from './core/guards/guest-guard';
 
 const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
 
   { path: 'products/create', component: ProductCreateComponent, canActivate: [authGuard] },
   { path: 'products/edit/:id', component: ProductEditComponent, canActivate: [authGuard] },
@@ -42,8 +43,8 @@ const routes: Routes = [
   { path: 'orders/edit/:id', component: OrderEdit, canActivate: [authGuard], canDeactivate: [orderEditGuard] },
   { path: 'orders', component: OrderList, canActivate: [authGuard] },
 
-  { path: '', redirectTo: '/products', pathMatch: 'full' },
-  { path: '**', redirectTo: '/products' }
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '**', redirectTo: '/login' }
 ];
 
 @NgModule({

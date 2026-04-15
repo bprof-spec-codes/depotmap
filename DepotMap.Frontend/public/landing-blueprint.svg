@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FBFF"/>
+      <stop offset="1" stop-color="#EAF2FA"/>
+    </linearGradient>
+    <pattern id="smallGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" stroke="#C7D9EA" stroke-width="1"/>
+    </pattern>
+    <pattern id="majorGrid" width="120" height="120" patternUnits="userSpaceOnUse">
+      <path d="M 120 0 L 0 0 0 120" stroke="#9FBFDA" stroke-width="1.2"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#smallGrid)" opacity="0.45"/>
+  <rect width="1600" height="900" fill="url(#majorGrid)" opacity="0.35"/>
+
+  <g opacity="0.22" stroke="#6F9BC0" stroke-width="2">
+    <rect x="1040" y="120" width="430" height="290" rx="8"/>
+    <rect x="1020" y="100" width="470" height="330" rx="10"/>
+    <line x1="1040" y1="265" x2="1470" y2="265"/>
+    <line x1="1255" y1="120" x2="1255" y2="410"/>
+  </g>
+
+  <g opacity="0.18" stroke="#6F9BC0" stroke-width="2">
+    <rect x="120" y="560" width="360" height="220" rx="8"/>
+    <line x1="120" y1="670" x2="480" y2="670"/>
+    <line x1="300" y1="560" x2="300" y2="780"/>
+  </g>
+</svg>

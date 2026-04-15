@@ -40,26 +40,7 @@
       </a>
     </nav>
 
-    <div class="sidebar-bottom">
-      <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInBlock">
-        <button
-          type="button"
-          class="bottom-card login-card"
-          data-bs-toggle="modal"
-          data-bs-target="#loginModal"
-        >
-          <div class="bottom-card-icon">
-            <i class="bi bi-box-arrow-in-right"></i>
-          </div>
-
-          <div class="bottom-card-content" *ngIf="!isCollapsed">
-            <div class="bottom-card-title">Bejelentkezés</div>
-            <div class="bottom-card-subtitle">Lépj be a rendszerbe</div>
-          </div>
-        </button>
-      </ng-container>
-
-      <ng-template #loggedInBlock>
+    <div class="sidebar-bottom" *ngIf="isLoggedIn$ | async">
         <div class="profile-wrapper">
           <button class="bottom-card profile-card" type="button" (click)="toggleProfileMenu()">
             <div class="bottom-card-left">
@@ -120,9 +101,6 @@
             </button>
           </div>
         </div>
-      </ng-template>
     </div>
   </div>
 </aside>
-
-<app-login-component></app-login-component>
