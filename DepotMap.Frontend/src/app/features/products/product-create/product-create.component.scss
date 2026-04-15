@@ -57,7 +57,8 @@
   font-weight: 600;
 }
 
-.field input {
+.field input,
+.field select {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #f9fbff;
@@ -67,11 +68,27 @@
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
-.field input:focus {
+.field input:focus,
+.field select:focus {
   outline: none;
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(26, 115, 200, 0.16);
   background: #ffffff;
+}
+
+.storage-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selected-id {
+  font-size: 12px;
+  color: #33567a;
+  background: #f2f7ff;
+  border: 1px solid rgba(51, 86, 122, 0.15);
+  border-radius: 8px;
+  padding: 6px 8px;
 }
 
 .row-2 {
@@ -83,21 +100,52 @@
 .storage-actions {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .link-btn {
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(26, 115, 200, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
   color: var(--brand-2);
   font-size: 13px;
   text-align: left;
-  padding: 2px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
 .link-btn:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  transform: translateY(-1px);
+  border-color: rgba(26, 115, 200, 0.34);
+  box-shadow: 0 10px 20px rgba(18, 54, 97, 0.09);
+}
+
+.link-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 115, 200, 0.18), 0 10px 20px rgba(18, 54, 97, 0.09);
+}
+
+.storage-actions .link-btn {
+  font-weight: 700;
+}
+
+.remove-btn {
+  width: fit-content;
+  padding: 8px 10px;
+  font-size: 12px;
+  background: #fff7f7;
+  color: #a12d2d;
+  border-color: rgba(161, 45, 45, 0.18);
+}
+
+.remove-btn.danger {
+  background: linear-gradient(180deg, #fff4f4 0%, #ffe8e8 100%);
+  color: #9f2323;
+  border-color: rgba(160, 35, 35, 0.24);
+  font-weight: 700;
 }
 
 .create-btn {

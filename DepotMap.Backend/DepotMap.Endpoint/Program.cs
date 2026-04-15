@@ -28,6 +28,7 @@ public class Program
         builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
         builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
         builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
+        builder.Services.AddScoped<ICompartmentLogic, CompartmentLogic>();
         builder.Services.AddScoped<IOrderLogic, OrderLogic>();
         builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
         builder.Services.AddScoped<IStockMovementLogic, StockMovementLogic>();

@@ -10,6 +10,18 @@ export interface ProductShortDto {
   price?: number;
   quantity?: number;
   totalStock?: number;
+  productStocks?: ProductStockPlacementDto[];
+}
+
+export interface ProductStockPlacementDto {
+  compartmentId: string;
+  quantity: number;
+}
+
+export interface ProductDetailDto extends ProductShortDto {
+  description?: string;
+  lowStockThreshold?: number;
+  productStocks?: ProductStockPlacementDto[];
 }
 interface ValuesWrapper<T> {
   $values?: T[];
@@ -33,6 +45,7 @@ export interface CreateProductDto {
   price: number;
   description: string;
   lowStockThreshold: number;
+  initialStocks: ProductStockPlacementDto[];
 }
 
 export interface UpdateProductDto {
@@ -41,6 +54,7 @@ export interface UpdateProductDto {
   price: number;
   description: string;
   lowStockThreshold: number;
+  initialStocks: ProductStockPlacementDto[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -99,8 +113,8 @@ export class ProductService {
     return this.latestHistoryByProductId.get(productId);
   }
 
-  getById(id: string): Observable<ProductShortDto> {
-    return this.http.get<ProductShortDto>(`${this.apiBase}/${id}`);
+  getById(id: string): Observable<ProductDetailDto> {
+    return this.http.get<ProductDetailDto>(`${this.apiBase}/${id}`);
   }
 
   getHistory(productId?: string): Observable<ProductHistoryDto[]> {

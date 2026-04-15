@@ -14,9 +14,7 @@ namespace DepotMap.Entities.Models.DTOs.Products
 
         public string Description { get; set; } = null!;
         public int LowStockThreshold { get; set; }
-        //rekesz kell majd vissza amig nincs meg a rekesz létrehozás
-
-
+        public List<InitialStockDto> InitialStocks { get; set; } = new();
 
 
     }

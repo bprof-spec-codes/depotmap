@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProductService, ProductShortDto, ProductHistoryDto } from '../../../core/services/product-service';
-import { BehaviorSubject, Observable, ReplaySubject, combineLatest, defer, of } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, Subject, combineLatest, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -21,14 +21,20 @@ export class ProductsListComponent {
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
 
   private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
+  private productsReload = new Subject<void>();
 
   constructor(private productService: ProductService, private router: Router) {
     this.highlightedProductId = (history.state?.highlightProductId as string | undefined) ?? null;
 
-    this.productsVm$ = defer(() => this.productService.loadAll()).pipe(
-      map(items => ({ items, loading: false, error: false })),
-      startWith({ items: [] as ProductShortDto[], loading: true, error: false }),
-      catchError(() => of({ items: [] as ProductShortDto[], loading: false, error: true })),
+    this.productsVm$ = this.productsReload.pipe(
+      startWith(void 0),
+      switchMap(() =>
+        this.productService.loadAll().pipe(
+          map(items => ({ items, loading: false, error: false })),
+          startWith({ items: [] as ProductShortDto[], loading: true, error: false }),
+          catchError(() => of({ items: [] as ProductShortDto[], loading: false, error: true }))
+        )
+      ),
       shareReplay(1)
     );
 
@@ -100,6 +106,15 @@ export class ProductsListComponent {
     this.historySort.next(value ?? 'newest');
   }
 
+  formatLocations(product: ProductShortDto): string {
+    const ids = (product.productStocks ?? [])
+      .map(stock => stock.compartmentId)
+      .filter(id => !!id && id.trim().length > 0);
+
+    const distinct = Array.from(new Set(ids));
+    return distinct.length ? distinct.join(', ') : '-';
+  }
+
 
   formatAction(actionType: string): string {
     if (actionType === 'edit') return 'Szerkesztés';
@@ -109,7 +124,12 @@ export class ProductsListComponent {
 
   deleteProduct(id: string) {
     if (!confirm('Biztosan törölni szeretnéd a terméket?')) return;
-    this.productService.delete(id).subscribe();
+    this.productService.delete(id).subscribe({
+      next: () => this.productsReload.next(),
+      error: () => {
+        // Error state is already represented by the list VM on reload attempt.
+      }
+    });
   }
 
   editProduct(product: ProductShortDto) {
