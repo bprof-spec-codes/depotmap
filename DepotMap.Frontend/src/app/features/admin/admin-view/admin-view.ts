@@ -27,23 +27,48 @@ export class AdminView {
     position: new FormControl('', Validators.required)
   });
 
+  searchTerm: string = '';
+  sortBy: string = 'fullname';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private userAdminService: UserAdminService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadUsers();
   }
 
   loadUsers(): void {
-    this.userAdminService.getUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-        this.cdr.detectChanges();
-      },
-      error: () => this.errorMessage = 'Hiba a felhasználók betöltésekor'
+    this.userAdminService.getUsers({
+      search: this.searchTerm || undefined,
+      sortBy: this.sortBy,
+      sortDirection: this.sortDirection,
+    }).subscribe({
+      next: users => { this.users = users; this.cdr.detectChanges(); },
+      error: () => { this.errorMessage = 'Hiba a felhasználók betöltésekor'; }
     });
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm = term;
+    this.loadUsers();
+  }
+
+  onSort(column: string): void {
+    if (this.sortBy === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = column;
+      this.sortDirection = 'asc';
+    }
+    this.loadUsers();
+  }
+  
+   getSortIcon(column: string): string {
+    if (this.sortBy !== column) return '↕';
+    return this.sortDirection === 'asc' ? '↑' : '↓';
   }
 
   openCreateModal(): void {
