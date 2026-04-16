@@ -32,15 +32,17 @@ export class AdminView {
   sortBy$ = new BehaviorSubject<string>('fullname');
   sortDirection$ = new BehaviorSubject<'asc' | 'desc'>('asc');
 
+  private refresh$ = new BehaviorSubject<void>(undefined);
   private destroy$ = new Subject<void>();
 
   constructor(private userAdminService: UserAdminService) { }
 
   ngOnInit(): void {
     this.users$ = combineLatest([
-      this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()), //azért, hogy ne küldjön folyamatosan kérést, illetve kétszer ugyanazt sem
+      this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()),
       this.sortBy$,
       this.sortDirection$,
+      this.refresh$,
     ]).pipe(
       switchMap(([search, sortBy, sortDirection]) =>
         this.userAdminService.getUsers({
@@ -50,6 +52,10 @@ export class AdminView {
         })
       )
     );
+  }
+
+  private refreshUsers(): void {
+    this.refresh$.next();
   }
 
   ngOnDestroy(): void {
@@ -75,9 +81,6 @@ export class AdminView {
     return this.sortDirection$.value === 'asc' ? '↑' : '↓';
   }
 
-  private refreshUsers(): void {
-    this.searchTerm$.next(this.searchTerm$.value);
-  }
 
   openCreateModal(): void {
     this.isEditMode = false;
@@ -152,7 +155,7 @@ export class AdminView {
     ).subscribe();
   }
 
- deleteUser(id: string): void {
+  deleteUser(id: string): void {
     if (!confirm('Biztosan törli ezt a felhasználót?')) return;
 
     this.userAdminService.deleteUser(id).pipe(
