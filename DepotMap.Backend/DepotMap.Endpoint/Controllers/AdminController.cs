@@ -1,5 +1,6 @@
 ﻿using DepotMap.Entities.Models.DTOs.Admin;
 using DepotMap.Logics.Interfaces;
+using DepotMap.Logics.Logics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,9 +19,9 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<UserAdminDto>>> GetUsers()
+        public async Task<ActionResult<List<UserAdminDto>>> GetUsers([FromQuery] UserQueryParameters queryParams)
         {
-            var users = await _userAdminLogic.GetUsersAsync();
+            var users = await _userAdminLogic.GetUsersAsync(queryParams);
             return Ok(users);
         }
 
