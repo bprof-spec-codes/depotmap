@@ -7,11 +7,15 @@
         <p class="text-muted mb-0">Felhasználók létrehozása, szerkesztése és jogosultságok kezelése.</p>
       </div>
 
-      <!-- Keresés, új felhasználó gomb -->
       <div class="row align-items-center mb-4">
         <div class="col-md-4">
-          <input type="text" class="form-control" placeholder="Keresés"
-            [ngModel]="searchTerm" (ngModelChange)="onSearch($event)" />
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Keresés"
+            [ngModel]="searchTerm$.value"
+            (ngModelChange)="onSearch($event)"
+          />
         </div>
         <div class="col d-flex justify-content-end">
           <button type="button" class="btn btn-primary text-nowrap" (click)="openCreateModal()">
@@ -24,53 +28,56 @@
         {{ errorMessage }}
       </div>
 
-      <div *ngIf="users.length === 0" class="text-center text-muted py-4 border rounded bg-light">
-        Nincsenek felhasználók.
-      </div>
+      <ng-container *ngIf="users$ | async as users">
+        <div *ngIf="users.length === 0" class="text-center text-muted py-4 border rounded bg-light">
+          Nincsenek felhasználók.
+        </div>
 
-      <div *ngIf="users.length > 0" class="table-responsive">
-        <table class="table align-middle admin-table">
-          <thead class="table-light">
-            <tr>
-              <th (click)="onSort('identifier')" style="cursor: pointer; user-select: none;">
-                Azonosító {{ getSortIcon('identifier') }}
-              </th>
-              <th (click)="onSort('fullname')" style="cursor: pointer; user-select: none;">
-                Név {{ getSortIcon('fullname') }}
-              </th>
-              <th (click)="onSort('role')" style="cursor: pointer; user-select: none;">
-                Jogosultság {{ getSortIcon('role') }}
-              </th>
-              <th (click)="onSort('position')" style="cursor: pointer; user-select: none;">
-                Pozíció {{ getSortIcon('position') }}
-              </th>
-              <th class="text-end">Műveletek</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let user of users">
-              <td><code>{{ user.identifier }}</code></td>
-              <td>{{ user.fullName }}</td>
-              <td>
-                <span class="badge rounded-pill" [ngClass]="getRoleBadgeClass(user.role)">
-                  {{ user.role }}
-                </span>
-              </td>
-              <td>{{ user.position || '-' }}</td>
-              <td class="text-end">
-                <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
-                  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="openEditModal(user)">
-                    Szerkesztés
-                  </button>
-                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteUser(user.id)">
-                    Törlés
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div *ngIf="users.length > 0" class="table-responsive">
+          <table class="table align-middle admin-table">
+            <thead class="table-light">
+              <tr>
+                <th (click)="onSort('identifier')" style="cursor: pointer; user-select: none;">
+                  Azonosító {{ getSortIcon('identifier') }}
+                </th>
+                <th (click)="onSort('fullname')" style="cursor: pointer; user-select: none;">
+                  Név {{ getSortIcon('fullname') }}
+                </th>
+                <th (click)="onSort('role')" style="cursor: pointer; user-select: none;">
+                  Jogosultság {{ getSortIcon('role') }}
+                </th>
+                <th (click)="onSort('position')" style="cursor: pointer; user-select: none;">
+                  Pozíció {{ getSortIcon('position') }}
+                </th>
+                <th class="text-end">Műveletek</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users">
+                <td><code>{{ user.identifier }}</code></td>
+                <td>{{ user.fullName }}</td>
+                <td>
+                  <span class="badge rounded-pill" [ngClass]="getRoleBadgeClass(user.role)">
+                    {{ user.role }}
+                  </span>
+                </td>
+                <td>{{ user.position || '-' }}</td>
+                <td class="text-end">
+                  <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="openEditModal(user)">
+                      Szerkesztés
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteUser(user.id)">
+                      Törlés
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
     </div>
   </div>
 </div>
