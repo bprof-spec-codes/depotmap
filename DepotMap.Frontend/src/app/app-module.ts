@@ -1,4 +1,4 @@
-import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { NgModule, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -16,6 +16,7 @@ import { OrderCreate } from './features/orders/order-create/order-create';
 import { OrderEdit } from './features/orders/order-edit/order-edit';
 import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
+import { CellDetailComponent } from './features/warehouse/cell-detail/cell-detail.component';
 import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
@@ -38,6 +39,7 @@ import { MovementsComponent } from './features/stock/movements/movements';
     OrderEdit,
     WarehouseListComponent,
     WarehouseGridComponent,
+    CellDetailComponent,
     AdminView,
     ProductStockListComponent,
     StockMovementListComponent,
@@ -52,6 +54,7 @@ import { MovementsComponent } from './features/stock/movements/movements';
     AppRoutingModule
   ],
   providers: [
+    provideZoneChangeDetection(),
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(
       withInterceptors([authInterceptor])

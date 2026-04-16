@@ -10,6 +10,7 @@ import { OrderCreate } from './features/orders/order-create/order-create';
 import { OrderEdit, orderEditGuard } from './features/orders/order-edit/order-edit';
 import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
+import { CellDetailComponent } from './features/warehouse/cell-detail/cell-detail.component';
 import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authGuard } from './core/guards/auth-guard';
@@ -29,6 +30,7 @@ const routes: Routes = [
 
   { path: 'warehouses', component: WarehouseListComponent, canActivate: [authGuard] },
   { path: 'warehouses/:id', component: WarehouseGridComponent, canActivate: [authGuard] },
+  { path: 'warehouses/:warehouseId/cells/:cellId', component: CellDetailComponent, canActivate: [authGuard] },
 
   { path: 'users', component: AdminView, canActivate: [authGuard] },
   { path: 'settings', component: OwnProfile, canActivate: [authGuard] },

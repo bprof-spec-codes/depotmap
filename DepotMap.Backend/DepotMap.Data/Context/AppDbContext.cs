@@ -56,7 +56,11 @@ namespace DepotMap.Data.Context
             modelBuilder.Entity<Shelf>(e =>
             {
                 e.HasKey(x => x.Id);
-                e.HasIndex(x => x.Code).IsUnique();
+                e.HasIndex(x => new { x.WarehouseId, x.Code }).IsUnique();
+                e.HasOne(x => x.Warehouse)
+                 .WithMany()
+                 .HasForeignKey(x => x.WarehouseId)
+                 .OnDelete(DeleteBehavior.Restrict);
                 e.HasMany(x => x.Compartments)
                  .WithOne(x => x.Shelf)
                  .HasForeignKey(x => x.ShelfId)

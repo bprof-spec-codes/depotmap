@@ -418,14 +418,15 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
       });
     });
 
-    // dblclick → cell detail navigation (disabled until F3 CellDetail route exists)
-    // rect.on('dblclick', () => {
-    //   if (this.isEditMode) return;
-    //   const cell = this.cellMap.get(`${x},${y}`);
-    //   if (cell?.id) {
-    //     this.router.navigate(['/warehouses', this.warehouseId, 'cells', cell.id]);
-    //   }
-    // });
+    rect.on('dblclick', () => {
+      if (this.isEditMode) return;
+      const cell = this.cellMap.get(`${x},${y}`);
+      if (cell?.id && cell.cellType === 'shelf_area') {
+        this.zone.run(() => {
+          this.router.navigate(['/warehouses', this.warehouseId, 'cells', cell.id]);
+        });
+      }
+    });
   }
 
   private onCellClickEdit(x: number, y: number, rect: Konva.Rect): void {
