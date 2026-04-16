@@ -9,7 +9,7 @@ namespace DepotMap.Logics.Interfaces
 {
     public interface IUserAdminLogic
     {
-        Task<List<UserAdminDto>> GetUsersAsync();
+        Task<List<UserAdminDto>> GetUsersAsync(UserQueryParameters queryParameters);
         Task<UserAdminDto?> CreateUserAsync(UserCreateDto dto);
         Task<UserAdminDto?> UpdateUserAsync(string id, UserUpdateDto dto);
         Task<bool> DeleteUserAsync(string id);
