@@ -23,17 +23,39 @@ namespace DepotMap.Logics.Logics
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<List<UserAdminDto>> GetUsersAsync()
+        public async Task<List<UserAdminDto>> GetUsersAsync(UserQueryParameters queryParams)
         {
-            return await _context.Users
-                .Select(u => new UserAdminDto
-                {
-                    Id = u.Id,
-                    FullName = u.FirstName + " " + u.LastName,
-                    Identifier = u.Identifier,
-                    Role = u.Role,
-                    Position = u.Position
-                }).ToListAsync();
+            IQueryable<User> query = _context.Users;
+            if (!string.IsNullOrWhiteSpace(queryParams.Search))
+            {
+                var search = queryParams.Search.ToLower();
+                query = query.Where(u =>
+                    u.Identifier.ToLower().Contains(search) ||
+                    (u.FirstName + " " + u.LastName).ToLower().Contains(search));
+            }
+
+            query = (queryParams.SortBy?.ToLower(), queryParams.SortDirection?.ToLower()) switch
+            {
+                ("identifier", "desc") => query.OrderByDescending(u => u.Identifier),
+                ("identifier", _) => query.OrderBy(u => u.Identifier),
+                ("role", "desc") => query.OrderByDescending(u => u.Role),
+                ("role", _) => query.OrderBy(u => u.Role),
+                ("position", "desc") => query.OrderByDescending(u => u.Position),
+                ("position", _) => query.OrderBy(u => u.Position),
+                ("fullname", "desc") => query.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName),
+                _ => query.OrderBy(u => u.LastName).ThenBy(u => u.FirstName),
+            };
+
+            return await query
+            .Select(u => new UserAdminDto
+            {
+                Id = u.Id,
+                FullName = u.FirstName + " " + u.LastName,
+                Identifier = u.Identifier,
+                Role = u.Role,
+                Position = u.Position
+            })
+            .ToListAsync();
         }
 
         public async Task<UserAdminDto?> CreateUserAsync(UserCreateDto dto)
