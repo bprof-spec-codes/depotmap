@@ -9,6 +9,7 @@ namespace DepotMap.Entities.Models
     public class Shelf
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string WarehouseId { get; set; } = null!;
         public string WarehouseCellId { get; set; } = null!;
         public int X { get; set; }
         public int Y { get; set; }
@@ -18,6 +19,7 @@ namespace DepotMap.Entities.Models
         public string Code { get; set; } = null!;
 
         // Navigation
+        public Warehouse Warehouse { get; set; } = null!;
         public WarehouseCell WarehouseCell { get; set; } = null!;
         public ICollection<Compartment> Compartments { get; set; } = new List<Compartment>();
     }
