@@ -14,7 +14,7 @@ import { CellDetailComponent } from './features/warehouse/cell-detail/cell-detai
 import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authGuard } from './core/guards/auth-guard';
-import { adminGuard } from './core/guards/admin-guard';
+import { managerGuard } from './core/guards/manager-guard';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
 import { MovementsComponent } from './features/stock/movements/movements';
@@ -33,7 +33,7 @@ const routes: Routes = [
   { path: 'warehouses/:id', component: WarehouseGridComponent, canActivate: [authGuard] },
   { path: 'warehouses/:warehouseId/cells/:cellId', component: CellDetailComponent, canActivate: [authGuard] },
 
-  { path: 'users', component: AdminView, canActivate: [authGuard] },
+  { path: 'users', component: AdminView, canActivate: [authGuard, managerGuard] },
   { path: 'settings', component: OwnProfile, canActivate: [authGuard] },
 
   { path: 'inventory', component: ProductStockListComponent, canActivate: [authGuard] },
