@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { UserAdminDto } from '../../../core/models/dtos/admin/user-admin-dto';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserAdminService } from '../../../core/services/user-admin-service';
@@ -19,6 +19,18 @@ export class AdminView {
 
   roles = ['Raktárvezető', 'Irodista', 'Raktáros'];
 
+  private readonly roleToBackend: Record<string, string> = {
+    'Raktárvezető': 'Manager',
+    'Irodista': 'Officer',
+    'Raktáros': 'Operator'
+  };
+
+  private readonly roleToDisplay: Record<string, string> = {
+    'Manager': 'Raktárvezető',
+    'Officer': 'Irodista',
+    'Operator': 'Raktáros'
+  };
+
   userForm = new FormGroup({
     identifier: new FormControl('', Validators.required),
     firstName: new FormControl('', Validators.required),
@@ -35,7 +47,7 @@ export class AdminView {
   private refresh$ = new BehaviorSubject<void>(undefined);
   private destroy$ = new Subject<void>();
 
-  constructor(private userAdminService: UserAdminService) { }
+  constructor(private userAdminService: UserAdminService) {}
 
   ngOnInit(): void {
     this.users$ = combineLatest([
@@ -54,13 +66,21 @@ export class AdminView {
     );
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private refreshUsers(): void {
     this.refresh$.next();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  displayRole(apiRole: string): string {
+    return this.roleToDisplay[apiRole] ?? apiRole;
+  }
+
+  private toApiRole(displayRole: string | null): string | undefined {
+    return displayRole ? (this.roleToBackend[displayRole] ?? displayRole) : undefined;
   }
 
   onSearch(term: string): void {
@@ -80,7 +100,6 @@ export class AdminView {
     if (this.sortBy$.value !== column) return '↕';
     return this.sortDirection$.value === 'asc' ? '↑' : '↓';
   }
-
 
   openCreateModal(): void {
     this.isEditMode = false;
@@ -113,7 +132,7 @@ export class AdminView {
       firstName: nameParts[0] ?? '',
       lastName: nameParts.slice(1).join(' ') ?? '',
       password: '',
-      role: user.role ?? 'Raktáros',
+      role: this.displayRole(user.role ?? ''),
       position: user.position ?? ''
     });
 
@@ -129,21 +148,21 @@ export class AdminView {
 
     const request$ = this.isEditMode && this.selectedUser
       ? this.userAdminService.updateUser(this.selectedUser.id, {
-        identifier: val.identifier ?? undefined,
-        firstName: val.firstName ?? undefined,
-        lastName: val.lastName ?? undefined,
-        password: val.password || undefined,
-        role: val.role ?? undefined,
-        position: val.position ?? undefined,
-      })
+          identifier: val.identifier ?? undefined,
+          firstName: val.firstName ?? undefined,
+          lastName: val.lastName ?? undefined,
+          password: val.password || undefined,
+          role: this.toApiRole(val.role),
+          position: val.position ?? undefined,
+        })
       : this.userAdminService.createUser({
-        identifier: val.identifier ?? '',
-        firstName: val.firstName ?? '',
-        lastName: val.lastName ?? '',
-        password: val.password ?? '',
-        role: val.role ?? 'Raktáros',
-        position: val.position ?? '',
-      });
+          identifier: val.identifier ?? '',
+          firstName: val.firstName ?? '',
+          lastName: val.lastName ?? '',
+          password: val.password ?? '',
+          role: this.toApiRole(val.role) ?? 'Operator',
+          position: val.position ?? '',
+        });
 
     request$.pipe(
       tap(() => { this.showModal = false; this.refreshUsers(); }),
@@ -187,10 +206,10 @@ export class AdminView {
   getRoleBadgeClass(role: string): string {
     const map: Record<string, string> = {
       'Manager': 'badge-manager',
-      'Irodista': 'badge-officer',
-      'Raktáros': 'badge-operator'
+      'Officer': 'badge-officer',
+      'Operator': 'badge-operator'
     };
 
-    return map[role];
+    return map[role] ?? '';
   }
 }
