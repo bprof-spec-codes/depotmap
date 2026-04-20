@@ -4,5 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
-   
+    [ApiController]
+    [Route("api/warehouses/pathfinding")]
+    public class WarehousePathFinding : ControllerBase
+    {
+        private readonly IWarehousePathFinding _pickingLogic;
+        [HttpPost("calculate-route")]
+        public ActionResult<List<WarehouseCellDto>> CalculateRoute([FromBody] List<WarehouseCellDto> cellsToVisit)
+        {
+            var optimized = _pickingLogic.GetOptimizedRoute(cellsToVisit);
+            return Ok(optimized);
+        }
+    }
 }
