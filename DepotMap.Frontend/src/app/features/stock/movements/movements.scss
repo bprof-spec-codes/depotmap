@@ -98,12 +98,39 @@
 .movements-table td {
   border: 1px solid #9ca3af;
   padding: 6px 8px;
-  text-align: left;
+  text-align: center;
   vertical-align: top;
 }
 
 .action-cell {
   text-align: center;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-planning {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #22c55e;
+}
+
+.status-closed {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #9ca3af;
 }
 
 .icon-btn {
@@ -118,6 +145,11 @@
 .icon-btn.danger {
   border-color: #b91c1c;
   background: #dc2626;
+}
+
+.icon-btn.next-status {
+  border-color: #0f766e;
+  background: #14b8a6;
 }
 
 .icon-btn:disabled {

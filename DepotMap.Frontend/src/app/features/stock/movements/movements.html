@@ -15,10 +15,12 @@
 
       <label class="field">
         <span>Státusz</span>
-        <select [(ngModel)]="form.status">
+        <select [(ngModel)]="form.status" [disabled]="!isEditing()">
           <option value="Planning">Tervezés</option>
-          <option value="Active">Összekészítés alatt</option>
-          <option value="Closed">Lezárva</option>
+          <ng-container *ngIf="isEditing()">
+            <option value="Active">Összekészítés</option>
+            <option value="Closed">Lezárva</option>
+          </ng-container>
         </select>
       </label>
     </div>
@@ -55,7 +57,7 @@
       <button type="button" class="btn btn-primary" [disabled]="saving" (click)="submit()">
         {{ isEditing() ? 'Mentés' : 'Létrehozás' }}
       </button>
-      <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resetForm()">Új létrehozása</button>
+      <button type="button" class="btn btn-secondary" *ngIf="isEditing()" (click)="resetForm()">Új létrehozása</button>
     </div>
   </div>
 
@@ -74,16 +76,15 @@
     <table class="movements-table">
       <thead>
         <tr>
-          <th>Azonosító</th>
-          <th>Státusz</th>
-          <th>Felhasználó azonosító</th>
           <th>Létrehozás időpontja</th>
+          <th colspan="2">Státusz</th>
+          <th>Felhasználó azonosító</th>
           <th>Termék</th>
           <th>Darabszám</th>
           <th>Forrás rekesz</th>
           <th>Cél rekesz</th>
-          <th>Szerkesztés</th>
-          <th>Törlés</th>
+          <th><i class="bi bi-pencil"></i></th>
+          <th><i class="bi bi-trash"></i></th>
         </tr>
       </thead>
 
@@ -92,10 +93,25 @@
           <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
             <ng-container *ngIf="transaction.items as rows">
               <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.id }}</td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.statusLabel }}</td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}</td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">
+                  <span class="status-chip" [ngClass]="getStatusClass(transaction.status)">
+                    {{ transaction.statusLabel }}
+                  </span>
+                </td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
+                  <button
+                    *ngIf="isStatusArrowVisible(transaction.status)"
+                    type="button"
+                    class="icon-btn next-status"
+                    [disabled]="statusUpdatingId === transaction.id"
+                    (click)="advanceStatus(transaction)"
+                    title="Következő státusz"
+                  >
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
+                </td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
 
                 <td>{{ row.productId }}</td>
                 <td>{{ row.quantity }}</td>
