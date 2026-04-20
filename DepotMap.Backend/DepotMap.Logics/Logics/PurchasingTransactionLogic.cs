@@ -57,6 +57,7 @@ namespace DepotMap.Logics.Logics
                     CreatedByUserId = t.CreatedByUserId,
                     Timestamp = t.Timestamp,
                     ProductId = item.Product.SKU ?? item.ProductId,
+                    ToCompartmentId = item.ToCompartmentId ?? string.Empty,
                     Quantity = item.Quantity
                 }))
                 .Skip(skip)

@@ -69,6 +69,7 @@
           <th colspan="2">Státusz</th>
           <th>Felhasználó azonosító</th>
           <th>Cikkszám</th>
+          <th>Rekesz</th>
           <th>Darabszám</th>
           <th><i class="bi bi-pencil"></i></th>
           <th><i class="bi bi-trash"></i></th>
@@ -101,6 +102,7 @@
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
 
                 <td>{{ row.productId }}</td>
+                <td>{{ row.toCompartmentId || '-' }}</td>
                 <td>{{ row.quantity }}</td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
@@ -131,7 +133,7 @@
           </ng-container>
 
           <tr *ngIf="!loading && !transactions.length">
-            <td colspan="8" class="empty-cell">Nincs még beszerzés.</td>
+            <td colspan="9" class="empty-cell">Nincs még beszerzés.</td>
           </tr>
         </ng-container>
       </tbody>
