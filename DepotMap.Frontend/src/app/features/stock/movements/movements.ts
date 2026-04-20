@@ -52,6 +52,7 @@ export class MovementsComponent implements OnInit {
   errorText = '';
   successText = '';
   editingTransactionId: string | null = null;
+  statusUpdatingId: string | null = null;
 
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
@@ -159,6 +160,9 @@ export class MovementsComponent implements OnInit {
       return;
     }
 
+    // Létrehozáskor a státusz mindig Planning maradjon.
+    this.form.status = 'Planning';
+
     const dto: CreateMovementTransactionDto = {
       createdByUserId: this.form.createdByUserId,
       items: itemsResult.items
@@ -262,6 +266,46 @@ export class MovementsComponent implements OnInit {
           this.errorText = this.extractErrorMessage(err, 'A szerkesztéshez tartozó adatok nem tölthetők be.');
         }
       });
+  }
+
+  advanceStatus(transaction: MovementTableTransaction): void {
+    const nextStatus = this.getNextStatus(transaction.status);
+    if (!nextStatus) {
+      return;
+    }
+
+    this.errorText = '';
+    this.statusUpdatingId = transaction.id;
+
+    this.movementsService
+      .update(transaction.id, { status: nextStatus })
+      .pipe(finalize(() => (this.statusUpdatingId = null)))
+      .subscribe({
+        next: () => {
+          this.loadTransactions(true);
+        },
+        error: (err: unknown) => {
+          this.errorText = this.extractErrorMessage(err, 'A státusz frissítése sikertelen volt.');
+        }
+      });
+  }
+
+  isStatusArrowVisible(status: string): boolean {
+    return this.getNextStatus(status) !== null;
+  }
+
+  getStatusClass(status: string): string {
+    const value = status.toLowerCase();
+
+    if (value === 'active') {
+      return 'status-active';
+    }
+
+    if (value === 'closed') {
+      return 'status-closed';
+    }
+
+    return 'status-planning';
   }
 
   deleteTransaction(transaction: MovementTableTransaction): void {
@@ -411,7 +455,7 @@ export class MovementsComponent implements OnInit {
     }
 
     if (status.toLowerCase() === 'active') {
-      return 'Összekészítés alatt';
+      return 'Összekészítés';
     }
 
     return 'Tervezés';
@@ -424,6 +468,20 @@ export class MovementsComponent implements OnInit {
   private isDeleteBlockedStatus(status: string): boolean {
     const s = status.toLowerCase();
     return s === 'closed' || s === 'active';
+  }
+
+  private getNextStatus(status: string): string | null {
+    const value = status.toLowerCase();
+
+    if (value === 'planning') {
+      return 'Active';
+    }
+
+    if (value === 'active') {
+      return 'Closed';
+    }
+
+    return null;
   }
 
   private fillFormFromTransaction(transaction: MovementTransactionViewDto): void {
