@@ -11,6 +11,7 @@ import { OrderEdit, orderEditGuard } from './features/orders/order-edit/order-ed
 import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
 import { CellDetailComponent } from './features/warehouse/cell-detail/cell-detail.component';
+import { ShelfDetailComponent } from './features/warehouse/shelf-detail/shelf-detail.component';
 import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authGuard } from './core/guards/auth-guard';
@@ -31,6 +32,7 @@ const routes: Routes = [
 
   { path: 'warehouses', component: WarehouseListComponent, canActivate: [authGuard] },
   { path: 'warehouses/:id', component: WarehouseGridComponent, canActivate: [authGuard] },
+  { path: 'warehouses/:warehouseId/cells/:cellId/shelves/:shelfId', component: ShelfDetailComponent, canActivate: [authGuard] },
   { path: 'warehouses/:warehouseId/cells/:cellId', component: CellDetailComponent, canActivate: [authGuard] },
 
   { path: 'users', component: AdminView, canActivate: [authGuard] },

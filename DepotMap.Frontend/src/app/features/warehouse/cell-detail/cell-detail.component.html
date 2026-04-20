@@ -36,6 +36,9 @@
             <span class="shelf-code">{{ shelf.code }}</span>
             <span class="shelf-info">{{ shelf.levels }} szint</span>
             <span class="shelf-info" *ngIf="shelf.accessibleFromBothSides">kétoldalas</span>
+            <button class="shelf-open-btn" (click)="onShelfDblClick(shelf); $event.stopPropagation()" title="Polc megnyitása">
+              <i class="bi bi-eye"></i> Megnyitás
+            </button>
           </div>
         </ng-container>
         <ng-container *ngIf="!getShelfAt(pos.x, pos.y)">
