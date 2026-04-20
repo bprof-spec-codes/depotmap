@@ -1,24 +1,32 @@
 ﻿using DepotMap.Entities.Models.DTOs;
 using DepotMap.Logics.Interfaces;
+using DepotMap.Logics.Logics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
     [ApiController]
-    [Route("api/warehouses/pathfinding")]
-    public class WarehousePathFinding : ControllerBase
+    [Route("api/[controller]")]
+    public class WarehousePathFindingController : ControllerBase
     {
-        private readonly IWarehousePathFinding _pickingLogic;
-        public WarehousePathFinding(IWarehousePathFinding pickingLogic)
+        private readonly IWarehousePathFinding _pathFindingLogic;
+
+        public WarehousePathFindingController(IWarehousePathFinding pathFindingLogic)
         {
-            _pickingLogic = pickingLogic;
+            _pathFindingLogic = pathFindingLogic;
         }
 
-        [HttpPost("calculate-route")]
-        public ActionResult<List<WarehouseCellDto>> CalculateRoute([FromBody] List<WarehouseCellDto> cellsToVisit)
+        [HttpGet("optimize/{transactionId}")]
+        public async Task<ActionResult<List<PickingTaskDto>>> GetOptimizedRoute(string transactionId)
         {
-            var optimized = _pickingLogic.GetOptimizedRoute(cellsToVisit);
-            return Ok(optimized);
+            var result = await _pathFindingLogic.GetOrderPickingRouteAsync(transactionId);
+
+            if (result == null || result.Count == 0)
+            {
+                return NotFound(new { Message = "Nem található kiszedhető tétel ehhez a tranzakcióhoz." });
+            }
+
+            return Ok(result);
         }
     }
 }

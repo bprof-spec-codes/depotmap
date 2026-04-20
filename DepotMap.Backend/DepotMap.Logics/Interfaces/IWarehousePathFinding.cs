@@ -1,4 +1,5 @@
 ﻿using DepotMap.Entities.Models.DTOs;
+using DepotMap.Logics.Logics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace DepotMap.Logics.Interfaces
 {
     public interface IWarehousePathFinding
     {
-        List<WarehouseCellDto> GetOptimizedRoute(List<WarehouseCellDto> items);
+        Task<List<PickingTaskDto>> GetOrderPickingRouteAsync(string orderId);
     }
 }
