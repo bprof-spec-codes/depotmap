@@ -9,6 +9,11 @@ namespace DepotMap.Endpoint.Controllers
     public class WarehousePathFinding : ControllerBase
     {
         private readonly IWarehousePathFinding _pickingLogic;
+        public WarehousePathFinding(IWarehousePathFinding pickingLogic)
+        {
+            _pickingLogic = pickingLogic;
+        }
+
         [HttpPost("calculate-route")]
         public ActionResult<List<WarehouseCellDto>> CalculateRoute([FromBody] List<WarehouseCellDto> cellsToVisit)
         {
