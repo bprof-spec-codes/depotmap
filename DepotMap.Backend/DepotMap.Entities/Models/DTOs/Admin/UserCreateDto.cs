@@ -12,7 +12,7 @@ namespace DepotMap.Entities.Models.DTOs.Admin
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = "Raktáros";
+        public string Role { get; set; } = "Operator";
         public string Position { get; set; } = string.Empty;
     }
 }

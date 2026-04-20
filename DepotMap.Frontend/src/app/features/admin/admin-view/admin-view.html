@@ -58,7 +58,7 @@
                 <td>{{ user.fullName }}</td>
                 <td>
                   <span class="badge rounded-pill" [ngClass]="getRoleBadgeClass(user.role)">
-                    {{ user.role }}
+                    {{ displayRole(user.role) }}
                   </span>
                 </td>
                 <td>{{ user.position || '-' }}</td>
@@ -96,7 +96,6 @@
             {{ isEditMode ? 'Módosítsd az adatokat, majd mentsd el.' : 'Add meg az új felhasználó adatait.' }}
           </p>
         </div>
-
         <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
       </div>
 
@@ -111,7 +110,6 @@
             <label class="form-label">Keresztnév</label>
             <input type="text" class="form-control" formControlName="firstName" placeholder="pl. János" />
           </div>
-
           <div class="col-md-6">
             <label class="form-label">Vezetéknév</label>
             <input type="text" class="form-control" formControlName="lastName" placeholder="pl. Kovács" />
@@ -132,10 +130,9 @@
               <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
             </select>
           </div>
-
           <div class="col-md-6">
             <label class="form-label">Pozíció</label>
-            <input type="text" class="form-control" formControlName="position" placeholder="pl. Raktárvezető" />
+            <input type="text" class="form-control" formControlName="position" placeholder="pl. Raktáros" />
           </div>
         </div>
 
@@ -147,7 +144,6 @@
           <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
             Mégse
           </button>
-
           <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
             {{ isEditMode ? 'Mentés' : 'Létrehozás' }}
           </button>

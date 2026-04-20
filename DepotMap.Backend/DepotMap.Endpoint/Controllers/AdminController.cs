@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Manager")]
     [ApiController]
     [Route("api/admin/users")]
     public class AdminController : ControllerBase
