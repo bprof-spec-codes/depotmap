@@ -17,7 +17,7 @@ export class AdminView {
   showModal = false;
   errorMessage = '';
 
-  roles = ['Szuperadmin', 'Admin', 'Raktáros', 'Beszerző'];
+  roles = ['Raktárvezető', 'Irodista', 'Raktáros'];
 
   userForm = new FormGroup({
     identifier: new FormControl('', Validators.required),
@@ -186,10 +186,9 @@ export class AdminView {
 
   getRoleBadgeClass(role: string): string {
     const map: Record<string, string> = {
-      'Admin': 'badge-admin',
-      'Szuperadmin': 'badge-super',
-      'Raktáros': 'badge-raktaros',
-      'Beszerző': 'badge-beszerzo',
+      'Manager': 'badge-manager',
+      'Irodista': 'badge-officer',
+      'Raktáros': 'badge-operator'
     };
 
     return map[role];
