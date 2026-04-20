@@ -14,10 +14,12 @@
 
       <label class="field">
         <span>Státusz</span>
-        <select [(ngModel)]="form.status">
+        <select [(ngModel)]="form.status" [disabled]="!isEditing()">
           <option value="Planning">Tervezés</option>
-          <option value="Active">Összekészítés alatt</option>
-          <option value="Closed">Lezárva</option>
+          <ng-container *ngIf="isEditing()">
+            <option value="Active">Összekészítés</option>
+            <option value="Closed">Lezárva</option>
+          </ng-container>
         </select>
       </label>
     </div>
@@ -46,7 +48,7 @@
       <button type="button" class="btn btn-primary" [disabled]="saving" (click)="submit()">
         {{ isEditing() ? 'Mentés' : 'Létrehozás' }}
       </button>
-      <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resetToCreateMode()">
+      <button type="button" class="btn btn-secondary" *ngIf="isEditing()" (click)="resetToCreateMode()">
         Új létrehozása
       </button>
     </div>
@@ -57,23 +59,20 @@
     <button type="button" class="btn btn-secondary" [disabled]="loading" (click)="loadTransactions(true)">
       Adatok újratöltése
     </button>
-    <button type="button" class="btn btn-secondary" [disabled]="loading || !hasMore" (click)="loadMoreTransactions()">
-      További adatok betöltése
-    </button>
   </div>
 
   <div class="table-wrap">
     <table class="procurement-table">
       <thead>
         <tr>
-          <th>Azonosító</th>
-          <th>Státusz</th>
-          <th>Felhasználó azonosító</th>
           <th>Létrehozás időpontja</th>
+          <th colspan="2">Státusz</th>
+          <th>Felhasználó azonosító</th>
           <th>Cikkszám</th>
+          <th>Rekesz</th>
           <th>Darabszám</th>
-          <th>Szerkesztés</th>
-          <th>Törlés</th>
+          <th><i class="bi bi-pencil"></i></th>
+          <th><i class="bi bi-trash"></i></th>
         </tr>
       </thead>
 
@@ -82,12 +81,28 @@
           <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
             <ng-container *ngIf="transaction.items as rows">
               <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.id }}</td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.statusLabel }}</td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}</td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">
+                  <span class="status-chip" [ngClass]="getStatusClass(transaction.status)">
+                    {{ transaction.statusLabel }}
+                  </span>
+                </td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
+                  <button
+                    *ngIf="isStatusArrowVisible(transaction.status)"
+                    type="button"
+                    class="icon-btn next-status"
+                    [disabled]="statusUpdatingId === transaction.id"
+                    (click)="advanceStatus(transaction)"
+                    title="Következő státusz"
+                  >
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
+                </td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
 
                 <td>{{ row.productId }}</td>
+                <td>{{ row.toCompartmentId || '-' }}</td>
                 <td>{{ row.quantity }}</td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
@@ -118,7 +133,7 @@
           </ng-container>
 
           <tr *ngIf="!loading && !transactions.length">
-            <td colspan="8" class="empty-cell">Nincs még beszerzés.</td>
+            <td colspan="9" class="empty-cell">Nincs még beszerzés.</td>
           </tr>
         </ng-container>
       </tbody>

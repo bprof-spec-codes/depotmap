@@ -13,6 +13,7 @@ namespace DepotMap.Entities.Models.DTOs.Transaction.Purchasing
         public string CreatedByUserId { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
         public string ProductId { get; set; } = string.Empty;
+        public string ToCompartmentId { get; set; } = string.Empty;
         public int Quantity { get; set; }
     }
 }
