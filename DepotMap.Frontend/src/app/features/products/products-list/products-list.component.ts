@@ -12,11 +12,13 @@ import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operato
 })
 export class ProductsListComponent {
   productsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
+  visibleProductsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
   historyVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
   visibleHistory$: Observable<ProductHistoryDto[]>;
 
   openedHistoryProductId: string | null = null;
   highlightedProductId: string | null = null;
+  productSearch = new BehaviorSubject<string>('');
   historySearch = new BehaviorSubject<string>('');
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
 
@@ -47,6 +49,26 @@ export class ProductsListComponent {
         )
       ),
       startWith({ items: [] as ProductHistoryDto[], loading: false, error: false }),
+      shareReplay(1)
+    );
+
+    this.visibleProductsVm$ = combineLatest([
+      this.productsVm$,
+      this.productSearch
+    ]).pipe(
+      map(([productsVm, search]) => {
+        const q = search.trim().toLowerCase();
+        if (!q) {
+          return productsVm;
+        }
+
+        return {
+          ...productsVm,
+          items: productsVm.items.filter(product =>
+            (product.name ?? '').toLowerCase().includes(q)
+          )
+        };
+      }),
       shareReplay(1)
     );
 
@@ -100,6 +122,10 @@ export class ProductsListComponent {
 
   onHistorySearchChange(value: string): void {
     this.historySearch.next(value ?? '');
+  }
+
+  onProductSearchChange(value: string): void {
+    this.productSearch.next(value ?? '');
   }
 
   onHistorySortChange(value: 'newest' | 'oldest'): void {
