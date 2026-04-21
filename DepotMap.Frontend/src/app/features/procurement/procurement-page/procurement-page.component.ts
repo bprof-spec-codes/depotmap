@@ -3,6 +3,7 @@ import { BehaviorSubject, finalize } from 'rxjs';
 import {
 	CreatePurchasingTransactionDto,
 	CreatePurchasingTransactionItemDto,
+	PurchasingTransactionTableFilters,
 	PurchasingTransactionTableRowDto,
 	PurchasingTransactionViewDto,
 	PurchasingTransactionsService
@@ -59,6 +60,14 @@ export class ProcurementPageComponent implements OnInit {
 	productsLoading = false;
 	editingTransactionId: string | null = null;
 	statusUpdatingId: string | null = null;
+	tableFilters = {
+		date: '',
+		status: '',
+		createdByUserId: '',
+		productId: '',
+		toCompartmentId: '',
+		quantity: null as number | null
+	};
 
 	form = {
 		createdByUserId: this.seedUserId,
@@ -226,6 +235,37 @@ export class ProcurementPageComponent implements OnInit {
 		this.currentPage += 1;
 	}
 
+	applyTableFilters(): void {
+		this.currentPage = 1;
+		this.loadTransactions(true);
+	}
+
+	clearTableFilters(): void {
+		this.tableFilters = {
+			date: '',
+			status: '',
+			createdByUserId: '',
+			productId: '',
+			toCompartmentId: '',
+			quantity: null
+		};
+
+		this.currentPage = 1;
+		this.loadTransactions(true);
+	}
+
+	private buildTableFilters(): PurchasingTransactionTableFilters {
+		const quantity = this.tableFilters.quantity;
+		return {
+			date: this.tableFilters.date.trim() || undefined,
+			status: this.tableFilters.status.trim() || undefined,
+			createdByUserId: this.tableFilters.createdByUserId.trim() || undefined,
+			productId: this.tableFilters.productId.trim() || undefined,
+			toCompartmentId: this.tableFilters.toCompartmentId.trim() || undefined,
+			quantity: typeof quantity === 'number' && Number.isFinite(quantity) ? quantity : undefined
+		};
+	}
+
 	private ensureCurrentPageInRange(): void {
 		if (this.currentPage > this.totalPages) {
 			this.currentPage = this.totalPages;
@@ -261,7 +301,7 @@ export class ProcurementPageComponent implements OnInit {
 		this.errorText = '';
 
 		this.purchasingService
-			.getTableRows(this.currentSkip, this.pageSize)
+			.getTableRows(this.currentSkip, this.pageSize, this.buildTableFilters())
 			.pipe(finalize(() => (this.loading = false)))
 			.subscribe({
 				next: rows => {
