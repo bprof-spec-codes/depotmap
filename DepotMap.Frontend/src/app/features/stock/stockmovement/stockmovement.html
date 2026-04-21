@@ -21,8 +21,8 @@
         <thead>
           <tr>
             <th>Dátum</th>
-            <th>Termék ID</th>
-            <th>Rekesz ID</th>
+            <th>Cikkszám (SKU)</th>
+            <th>Rekesz Kód</th>
             <th>Típus</th>
             <th>Változás</th>
             <th>Tranzakció / Készítő</th>
@@ -31,8 +31,8 @@
         <tbody>
           <tr *ngFor="let mov of vm.items">
             <td>{{ mov.timestamp | date:'yyyy.MM.dd. HH:mm:ss' }}</td>
-            <td>{{ mov.productId }}</td>
-            <td>{{ mov.compartmentId || '-' }}</td>
+            <td [title]="'ID: ' + mov.productId">{{ mov.productSKU }}</td>
+            <td [title]="'ID: ' + mov.compartmentId">{{ mov.compartmentCode || '-' }}</td>
             <td>
               <span class="status-badge" [ngClass]="mov.movementType === 'Inbound' ? 'badge-closed' : 'badge-planning'">
                 {{ mov.movementType }}
@@ -42,7 +42,10 @@
               <strong>{{ mov.quantityChange > 0 ? '+' : '' }}{{ mov.quantityChange }} db</strong>
             </td>
             <td>
-              <small class="text-muted">Tr: {{ mov.transactionId || '-' }}<br>U: {{ mov.createdByUserId || '-' }}</small>
+              <div class="text-muted small">
+                Tr: {{ mov.transactionId || '-' }}<br>
+                Készítő: {{ mov.userName }} ({{ mov.userIdentifier}})
+              </div>
             </td>
           </tr>
         </tbody>
