@@ -8,8 +8,8 @@ namespace DepotMap.Entities.Models.DTOs.Transaction.Order
 {
     public class OrderItemViewDto
     {
-        public string ProductId { get; set; }
+        public string ProductSKU { get; set; } = string.Empty;
         public int Quantity { get; set; }
-        public string FromCompartmentId { get; set; }
+        public string FromCompartmentCode { get; set; } = string.Empty;
     }
 }
