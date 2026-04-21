@@ -65,6 +65,16 @@
     <table class="procurement-table">
       <thead>
         <tr>
+          <th colspan="9" style="text-align:right;">
+            <label class="field" style="display:inline-flex; align-items:center; gap:6px; margin:0;">
+              <span>Megjelenítés</span>
+              <select [ngModel]="tablePageSize" (ngModelChange)="onTablePageSizeChange($event)">
+                <option *ngFor="let size of tablePageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </th>
+        </tr>
+        <tr>
           <th>Létrehozás időpontja</th>
           <th colspan="2">Státusz</th>
           <th>Felhasználó azonosító</th>
@@ -77,7 +87,7 @@
       </thead>
 
       <tbody>
-        <ng-container *ngIf="transactions$ | async as transactions">
+        <ng-container *ngIf="pagedTransactions as transactions">
           <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
             <ng-container *ngIf="transaction.items as rows">
               <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
@@ -137,6 +147,20 @@
           </tr>
         </ng-container>
       </tbody>
+
+      <tfoot *ngIf="(transactions$ | async)?.length">
+        <tr>
+          <td colspan="9" style="text-align:right;">
+            <button type="button" class="btn btn-secondary" [disabled]="!canGoPrevPage" (click)="goToPrevPage()">
+              Előző
+            </button>
+            <span style="margin: 0 8px;">{{ currentPage }} / {{ totalPages }}</span>
+            <button type="button" class="btn btn-secondary" [disabled]="!canGoNextPage" (click)="goToNextPage()">
+              Következő
+            </button>
+          </td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 </div> 
