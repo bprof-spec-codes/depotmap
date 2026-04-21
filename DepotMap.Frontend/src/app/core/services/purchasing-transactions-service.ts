@@ -48,6 +48,15 @@ export interface PurchasingTransactionTableRowDto {
 	quantity: number;
 }
 
+export interface PurchasingTransactionTableFilters {
+	date?: string;
+	status?: string;
+	createdByUserId?: string;
+	productId?: string;
+	toCompartmentId?: string;
+	quantity?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PurchasingTransactionsService {
 	private apiBase = `${environment.apiUrl}/purchasing/transactions`;
@@ -71,13 +80,24 @@ export class PurchasingTransactionsService {
 		return this.http.post<PurchasingTransactionViewDto>(this.apiBase, dto).pipe(timeout(7000));
 	}
 
-	getTableRows(skip = 0, take = 500): Observable<PurchasingTransactionTableRowDto[]> {
+	getTableRows(skip = 0, take = 500, filters?: PurchasingTransactionTableFilters): Observable<PurchasingTransactionTableRowDto[]> {
 		return defer(() => {
 			const startedAt = performance.now();
 			console.log(`[Purchasing] GET /table started (skip=${skip}, take=${take})`);
+			const query = new URLSearchParams({
+				skip: String(skip),
+				take: String(take)
+			});
+
+			if (filters?.date) query.set('date', filters.date);
+			if (filters?.status) query.set('status', filters.status);
+			if (filters?.createdByUserId) query.set('createdByUserId', filters.createdByUserId);
+			if (filters?.productId) query.set('productId', filters.productId);
+			if (filters?.toCompartmentId) query.set('toCompartmentId', filters.toCompartmentId);
+			if (typeof filters?.quantity === 'number') query.set('quantity', String(filters.quantity));
 
 			return this.http
-				.get<unknown>(`${this.apiBase}/table?skip=${skip}&take=${take}`)
+				.get<unknown>(`${this.apiBase}/table?${query.toString()}`)
 				.pipe(
 					timeout(15000),
 					retry({ count: 1, delay: 800 }),
