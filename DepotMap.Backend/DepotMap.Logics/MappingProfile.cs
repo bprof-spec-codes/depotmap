@@ -23,11 +23,15 @@ namespace DepotMap.Logics
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Outbound"))
                 .ForMember(dest => dest.ToCompartmentId, opt => opt.Ignore());
 
-            CreateMap<Transaction, OrderViewDto>();
+            CreateMap<Transaction, OrderViewDto>()
+                .ForMember(dest => dest.UserIdentifier, opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedBy.Identifier : string.Empty))
+    .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedBy.LastName + " " + src.CreatedBy.FirstName : string.Empty));
 
             CreateMap<UpdateOrderItemDto, TransactionItem>();
 
-            CreateMap<TransactionItem, OrderItemViewDto>();
+            CreateMap<TransactionItem, OrderItemViewDto>()
+                .ForMember(dest => dest.ProductSKU, opt => opt.MapFrom(src => src.Product.SKU))
+                .ForMember(dest => dest.FromCompartmentCode, opt => opt.MapFrom(src => src.FromCompartment != null ? src.FromCompartment.Code : string.Empty));
 
             CreateMap<CreatePurchasingTransactionDto, Transaction>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "Inbound"))
