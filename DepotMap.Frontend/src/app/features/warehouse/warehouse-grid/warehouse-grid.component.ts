@@ -26,7 +26,7 @@ const DEFAULT_COLOR = '#f5f5f5';
 
 const CELL_TYPE_LABELS: Record<string, string> = {
   corridor: 'Folyosó',
-  shelf_area: 'Polcterület',
+  shelf_area: 'Szekrény',
   wall: 'Fal',
   entrance: 'Bejárat',
 };
