@@ -1,64 +1,106 @@
-<div class="products-list"> <div class="header">
-    <h2>Rendelések</h2>
-    <a routerLink="/orders/create" class="btn btn-primary">Új rendelés</a>
+<div class="orders-list">
+  
+  <div class="header d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <h2>Kimenő Rendelések</h2>
+    <a routerLink="/orders/create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Új Rendelés</a>
   </div>
 
-  <ng-container *ngIf="ordersVm$ | async as ordersVm">
-    <div *ngIf="ordersVm.loading" class="spinner">Betöltés...</div>
-    <div *ngIf="!ordersVm.loading && ordersVm.error" class="error-text">A rendelések nem töltődtek be. Ellenőrizd, hogy a backend fut-e.</div>
+  <div class="row align-items-center mb-4 bg-white p-3 rounded shadow-sm border">
+    <div class="col-md-5 mb-2 mb-md-0">
+      <div class="input-group">
+        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Keresés azonosító, státusz, név vagy cikkszám alapján..."
+          [ngModel]="searchTerm$ | async"
+          (ngModelChange)="onSearch($event)">
+      </div>
+    </div>
+    
+    <div class="col-md-7 d-flex justify-content-md-end gap-2 flex-wrap">
+      <span class="text-muted d-flex align-items-center me-2">Rendezés:</span>
+      <button class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'timestamp'" (click)="onSortChange('timestamp')">
+        Dátum {{ getSortIcon('timestamp') }}
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'status'" (click)="onSortChange('status')">
+        Státusz {{ getSortIcon('status') }}
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'userName'" (click)="onSortChange('userName')">
+        Felhasználó {{ getSortIcon('userName') }}
+      </button>
+    </div>
+  </div>
 
-    <div class="list">
-      <div *ngIf="!ordersVm.loading && !ordersVm.error && !ordersVm.items.length" class="empty-text">
-        Még nincs egyetlen rendelés sem a rendszerben.
+  <ng-container *ngIf="ordersVm$ | async as vm">
+    <div *ngIf="vm.loading" class="spinner my-4">Rendelések betöltése...</div>
+    <div *ngIf="!vm.loading && vm.error" class="alert alert-danger">Hiba történt az adatok lekérésekor.</div>
+      
+    <div class="list" *ngIf="!vm.loading && !vm.error">
+      
+      <div *ngIf="!vm.items.length" class="empty-text mb-4 p-4 text-center bg-white border rounded text-muted">
+        Nem található a keresésnek megfelelő rendelés.
       </div>
 
-      <div *ngFor="let order of ordersVm.items" class="product-block mb-3">
+      <div *ngFor="let order of vm.items" class="product-block mb-3 bg-white border rounded shadow-sm">
         
-        <div class="item cursor-pointer" (click)="toggleOrderDetails(order.id)">
-          <div class="left">
-            <div class="title">
-              Rendelés #{{ order.id | slice:0:8 }}... <span class="status-badge" [ngClass]="getStatusBadgeClass(order.status)">
-                {{ translateStatus(order.status) }}
-              </span>
+        <div class="item cursor-pointer p-3 d-flex flex-wrap justify-content-between align-items-center" 
+             (click)="toggleOrderDetails(order.id)">
+          
+          <div class="left mb-2 mb-lg-0">
+            <div class="title fw-bold" style="font-size: 1.1rem;">
+              <i class="bi bi-box-seam me-2 text-secondary"></i> Rendelés: <span class="text-primary">#{{ order.id | slice:0:8 }}...</span>
             </div>
-            <div class="meta">
-              Létrehozva: {{ order.timestamp | date:'yyyy.MM.dd. HH:mm' }} • 
-              Felhasználó: {{ order.userName }} ({{ order.userIdentifier || 'Ismeretlen' }}) • 
-              Tételek: {{ order.items.length }} db
+            <div class="meta text-muted mt-2" style="font-size: 14px;">
+              <i class="bi bi-clock me-1"></i> {{ order.timestamp | date:'yyyy.MM.dd. HH:mm' }} &nbsp;|&nbsp;
+              <i class="bi bi-person me-1"></i> {{ order.userName || order.createdByUserId || 'Ismeretlen' }} &nbsp;|&nbsp;
+              <i class="bi bi-list-ul me-1"></i> {{ order.items.length }} tétel
             </div>
           </div>
+          
+          <div class="actions d-flex flex-wrap align-items-center gap-2 mt-2 mt-sm-0" (click)="$event.stopPropagation()">
+            
+            <button *ngIf="canEdit(order.status)" class="btn btn-sm btn-outline-secondary" (click)="editOrder(order)">
+              <i class="bi bi-pencil"></i> Szerkeszt
+            </button>
 
-          <div class="actions" (click)="$event.stopPropagation()">
-            <button *ngIf="canEdit(order.status)" class="btn btn-sm btn-outline-secondary" (click)="editOrder(order)">Szerkeszt</button>
-  
-            <button *ngIf="canDelete(order.status)" class="btn btn-sm btn-danger" (click)="deleteOrder(order.id)">Törlés</button>
+            <button *ngIf="canDelete(order.status)" class="btn btn-sm btn-danger" (click)="deleteOrder(order.id)">
+              <i class="bi bi-trash"></i> Törlés
+            </button>
+
+            <span class="badge px-3 py-2 me-2" [ngClass]="getStatusBadgeClass(order.status)" style="font-size: 0.9rem;">
+              {{ translateStatus(order.status) }}
+            </span>
             
             <button *ngIf="order.status !== 'Closed'" class="btn btn-sm btn-success" (click)="advanceStatus(order)">
               {{ getNextStatusLabel(order.status) }}
             </button>
             
-            <button class="btn btn-sm btn-outline-primary" (click)="createRoute(order.id)">Útvonal készítés</button>
+            <button class="btn btn-sm btn-outline-primary" (click)="createRoute(order.id)">
+              <i class="bi bi-geo-alt"></i> Útvonal készítés
+            </button>
+
           </div>
         </div>
-
-        <div class="history-panel" *ngIf="isOrderExpanded(order.id)">
-          <h4>Rendelési Tételek</h4>
-
+        
+        <div class="history-panel bg-light p-3 border-top" *ngIf="isOrderExpanded(order.id)">
+          <h6 class="mb-3 text-secondary" style="font-size: 13px; text-transform: uppercase;">Rendelési Tételek</h6>
+          
           <div *ngIf="!order.items.length" class="empty-text">Nincsenek tételek a rendelésben.</div>
-
-          <div class="history-table-wrap mt-2" *ngIf="order.items.length">
-            <table class="history-table">
-              <thead>
+          
+          <div class="history-table-wrap" *ngIf="order.items.length">
+            <table class="table table-sm table-bordered bg-white m-0">
+              <thead class="table-light">
                 <tr>
                   <th>Cikkszám (SKU)</th>
                   <th>Mennyiség</th>
-                  <th>Forrás Rekesz</th>
+                  <th>Forrás Rekesz Kód</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let item of order.items">
-                  <td [title]="item.productSKU">{{ item.productSKU }}</td>
-                  <td><strong>{{ item.quantity }} db</strong></td>
+                  <td [title]="'SKU: ' + item.productSKU"><strong>{{ item.productSKU }}</strong></td>
+                  <td>{{ item.quantity }} db</td>
                   <td>{{ item.fromCompartmentCode || 'Nincs megadva' }}</td>
                 </tr>
               </tbody>
@@ -66,5 +108,7 @@
           </div>
         </div>
 
-      </div> </div> </ng-container>
+      </div>
+    </div>  
+  </ng-container>
 </div>
