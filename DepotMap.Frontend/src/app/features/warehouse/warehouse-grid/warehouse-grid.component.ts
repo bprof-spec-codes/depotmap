@@ -423,7 +423,8 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
       const cell = this.cellMap.get(`${x},${y}`);
       if (cell?.id && cell.cellType === 'shelf_area') {
         this.zone.run(() => {
-          this.router.navigate(['/warehouses', this.warehouseId, 'cells', cell.id]);
+          // Bypass cell-detail: direct shelf navigation via resolver. Revert: replace with ['/warehouses', this.warehouseId, 'cells', cell.id]
+          this.router.navigate(['/warehouses', this.warehouseId, 'cells', cell.id, 'shelf']);
         });
       }
     });

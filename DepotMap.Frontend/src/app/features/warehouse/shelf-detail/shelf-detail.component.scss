@@ -205,3 +205,64 @@
   gap: 4px;
   min-width: 36px;
 }
+
+// --- Settings modal ---
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1040;
+}
+
+.shelf-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1050;
+  width: 420px;
+  max-width: 90vw;
+  padding: 20px 24px;
+}
+
+.modal-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h5 {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+.modal-body-content {
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #495057;
+    }
+  }
+}
+
+.modal-footer-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+}

@@ -5,6 +5,9 @@
       <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
         <i class="bi bi-arrow-left"></i> Vissza
       </button>
+      <button class="btn btn-sm btn-outline-primary" *ngIf="shelf" (click)="openSettingsModal()">
+        <i class="bi bi-gear"></i> Beállítások
+      </button>
       <h2 *ngIf="shelf">
         Polc: {{ shelf.code }}
       </h2>
@@ -82,5 +85,46 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-backdrop" *ngIf="showSettingsModal" (click)="closeSettingsModal()"></div>
+  <div class="shelf-modal" *ngIf="showSettingsModal">
+    <div class="modal-header-row">
+      <h5>Polc beállítások
+        <span *ngIf="shelf" class="text-muted ms-1">({{ shelf.code }})</span>
+      </h5>
+      <button class="btn btn-sm btn-close" (click)="closeSettingsModal()"></button>
+    </div>
+
+    <form (ngSubmit)="saveSettings()" #settingsForm="ngForm">
+      <div class="modal-body-content">
+        <div class="form-group mb-3">
+          <label for="settings-levels">Szintek száma</label>
+          <input id="settings-levels" type="number" class="form-control" min="1" max="20"
+                 [(ngModel)]="formLevels" name="levels" required />
+        </div>
+
+        <div class="form-check mb-3">
+          <input id="settings-both-sides" type="checkbox" class="form-check-input"
+                 [(ngModel)]="formAccessibleFromBothSides" name="bothSides" />
+          <label for="settings-both-sides" class="form-check-label">Kétoldalas hozzáférés</label>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="settings-ladder">Létra szükséges ettől a szinttől (opcionális)</label>
+          <input id="settings-ladder" type="number" class="form-control" min="0"
+                 [(ngModel)]="formLadderRequiredFromLevel" name="ladder"
+                 placeholder="pl. 2" />
+        </div>
+      </div>
+
+      <div class="modal-footer-row">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeSettingsModal()" [disabled]="saving">Mégse</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          {{ saving ? 'Mentés...' : 'Mentés' }}
+        </button>
+      </div>
+    </form>
   </div>
 </div>

@@ -3,7 +3,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ShelfApiService } from '../../../core/services/shelf-api-service';
-import { ShelfDetailDto, CompartmentDto } from '../../../core/models/warehouse.models';
+import {
+  ShelfDetailDto,
+  CompartmentDto,
+  UpdateShelfDto
+} from '../../../core/models/warehouse.models';
 
 @Component({
   selector: 'app-shelf-detail',
@@ -19,6 +23,14 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error = false;
   actionLoading = false;
+  returnTo: string | null = null;
+
+  // Settings modal state
+  showSettingsModal = false;
+  formLevels = 3;
+  formAccessibleFromBothSides = false;
+  formLadderRequiredFromLevel: number | null = null;
+  saving = false;
 
   private subscription: Subscription | null = null;
 
@@ -29,6 +41,7 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.returnTo = this.route.snapshot.queryParamMap.get('returnTo');
     this.loadData();
   }
 
@@ -37,7 +50,11 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/warehouses', this.warehouseId, 'cells', this.cellId]);
+    if (this.returnTo === 'grid') {
+      this.router.navigate(['/warehouses', this.warehouseId]);
+    } else {
+      this.router.navigate(['/warehouses', this.warehouseId, 'cells', this.cellId]);
+    }
   }
 
   /** Returns level indices from top to bottom for display (highest level at top). */
@@ -92,6 +109,59 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('[ShelfDetail] Remove compartment failed:', err);
         this.actionLoading = false;
+      }
+    });
+  }
+
+  // --- Settings modal ---
+
+  openSettingsModal(): void {
+    if (!this.shelf) return;
+    this.formLevels = this.shelf.levels;
+    this.formAccessibleFromBothSides = this.shelf.accessibleFromBothSides;
+    this.formLadderRequiredFromLevel = this.shelf.ladderRequiredFromLevel;
+    this.showSettingsModal = true;
+  }
+
+  closeSettingsModal(): void {
+    if (this.saving) return;
+    this.showSettingsModal = false;
+  }
+
+  saveSettings(): void {
+    if (!this.shelf || this.saving) return;
+    if (this.formLevels < 1) return;
+    if (
+      this.formLadderRequiredFromLevel != null &&
+      (this.formLadderRequiredFromLevel < 0 || this.formLadderRequiredFromLevel >= this.formLevels)
+    ) {
+      return;
+    }
+
+    const dto: UpdateShelfDto = {
+      levels: this.formLevels,
+      accessibleFromBothSides: this.formAccessibleFromBothSides,
+      ladderRequiredFromLevel: this.formLadderRequiredFromLevel
+    };
+
+    this.saving = true;
+    this.shelfApiService.updateShelf(this.cellId, this.shelfId, dto).subscribe({
+      next: () => {
+        this.shelfApiService.getShelfDetail(this.cellId, this.shelfId).subscribe({
+          next: (shelf) => {
+            this.shelf = shelf;
+            this.saving = false;
+            this.showSettingsModal = false;
+          },
+          error: (err) => {
+            console.error('[ShelfDetail] Reload after save failed:', err);
+            this.saving = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('[ShelfDetail] Update shelf failed:', err);
+        this.saving = false;
       }
     });
   }
