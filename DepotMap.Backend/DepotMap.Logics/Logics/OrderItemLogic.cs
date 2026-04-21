@@ -65,6 +65,7 @@ namespace DepotMap.Logics.Logics
             var newItem = new TransactionItem
             {
                 Id = Guid.NewGuid().ToString(),
+                Type = "Outbound",
                 TransactionId = orderId,
                 ProductId = product.Id,
                 FromCompartmentId = compartmentId,

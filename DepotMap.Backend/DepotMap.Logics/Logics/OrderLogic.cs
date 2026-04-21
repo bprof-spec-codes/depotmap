@@ -92,6 +92,7 @@ namespace DepotMap.Logics.Logics
                     newItems.Add(new TransactionItem
                     {
                         Id = Guid.NewGuid().ToString(),
+                        Type = "Outbound",
                         ProductId = product.Id,
                         FromCompartmentId = compartmentId,
                         Quantity = itemDto.Quantity
@@ -163,6 +164,7 @@ namespace DepotMap.Logics.Logics
                     newItems.Add(new TransactionItem
                     {
                         Id = Guid.NewGuid().ToString(),
+                        Type = "Outbound",
                         ProductId = product.Id,
                         FromCompartmentId = compartmentId,
                         Quantity = itemDto.Quantity

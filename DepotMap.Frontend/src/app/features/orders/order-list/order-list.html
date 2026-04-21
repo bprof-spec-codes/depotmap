@@ -23,7 +23,7 @@
             </div>
             <div class="meta">
               Létrehozva: {{ order.timestamp | date:'yyyy.MM.dd. HH:mm' }} • 
-              Felhasználó: {{ order.createdByUserId || 'Ismeretlen' }} • 
+              Felhasználó: {{ order.userName }} ({{ order.userIdentifier || 'Ismeretlen' }}) • 
               Tételek: {{ order.items.length }} db
             </div>
           </div>
@@ -50,16 +50,16 @@
             <table class="history-table">
               <thead>
                 <tr>
-                  <th>Termék ID (Név)</th>
+                  <th>Cikkszám (SKU)</th>
                   <th>Mennyiség</th>
                   <th>Forrás Rekesz</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let item of order.items">
-                  <td [title]="item.productId">{{ item.productId }}</td>
+                  <td [title]="item.productSKU">{{ item.productSKU }}</td>
                   <td><strong>{{ item.quantity }} db</strong></td>
-                  <td>{{ item.fromCompartmentId || 'Nincs megadva' }}</td>
+                  <td>{{ item.fromCompartmentCode || 'Nincs megadva' }}</td>
                 </tr>
               </tbody>
             </table>

@@ -11,14 +11,12 @@ import { catchError, map, shareReplay, startWith } from 'rxjs/operators';
   styleUrls: ['./order-list.scss']
 })
 export class OrderList implements OnInit {
-  // A ProductsListComponent-hez hasonlóan, inline definiáljuk a típust:
   ordersVm$: Observable<{ items: OrderViewDto[]; loading: boolean; error: boolean }>;
 
   expandedOrderIds = new Set<string>();
 
   constructor(private orderService: OrderService, private router: Router) {
     
-    // Pontosan ugyanaz a felépítés, startWith és catchError 'as OrderViewDto[]' castolással
     this.ordersVm$ = this.orderService.orders$.pipe(
       map(items => ({ items, loading: false, error: false })),
       startWith({ items: [] as OrderViewDto[], loading: true, error: false }),
@@ -28,7 +26,6 @@ export class OrderList implements OnInit {
   }
 
   ngOnInit(): void {
-    // Betöltjük az adatokat az oldal megnyitásakor
     this.orderService.loadAllOrders().subscribe();
   }
 
