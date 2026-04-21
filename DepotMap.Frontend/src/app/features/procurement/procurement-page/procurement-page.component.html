@@ -75,12 +75,36 @@
           </th>
         </tr>
         <tr>
-          <th>Létrehozás időpontja</th>
-          <th colspan="2">Státusz</th>
-          <th>Felhasználó azonosító</th>
-          <th>Cikkszám</th>
-          <th>Rekesz</th>
-          <th>Darabszám</th>
+          <th>
+            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('timestamp')">
+              Létrehozás időpontja {{ getSortIndicator('timestamp') }}
+            </button>
+          </th>
+          <th colspan="2">
+            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('status')">
+              Státusz {{ getSortIndicator('status') }}
+            </button>
+          </th>
+          <th>
+            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('createdByUserId')">
+              Felhasználó azonosító {{ getSortIndicator('createdByUserId') }}
+            </button>
+          </th>
+          <th>
+            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('productId')">
+              Cikkszám {{ getSortIndicator('productId') }}
+            </button>
+          </th>
+          <th>
+            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('toCompartmentId')">
+              Rekesz {{ getSortIndicator('toCompartmentId') }}
+            </button>
+          </th>
+          <th>
+            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('quantity')">
+              Darabszám {{ getSortIndicator('quantity') }}
+            </button>
+          </th>
           <th><i class="bi bi-pencil"></i></th>
           <th><i class="bi bi-trash"></i></th>
         </tr>

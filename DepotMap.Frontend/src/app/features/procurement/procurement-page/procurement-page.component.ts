@@ -33,6 +33,14 @@ interface ProcurementTableTransaction {
 	items: ProcurementTableItem[];
 }
 
+type ProcurementSortColumn =
+	| 'timestamp'
+	| 'status'
+	| 'createdByUserId'
+	| 'productId'
+	| 'toCompartmentId'
+	| 'quantity';
+
 @Component({
 	selector: 'app-procurement-page',
 	standalone: false,
@@ -49,6 +57,8 @@ export class ProcurementPageComponent implements OnInit {
 	readonly tablePageSizeOptions = [10, 50, 100, 500];
 	tablePageSize = 100;
 	currentPage = 1;
+	sortColumn: ProcurementSortColumn | null = 'timestamp';
+	sortDirection: 'desc' | 'asc' = 'desc';
 
 	saving = false;
 	loading = false;
@@ -192,7 +202,26 @@ export class ProcurementPageComponent implements OnInit {
 
 	get pagedTransactions(): ProcurementTableTransaction[] {
 		const start = (this.currentPage - 1) * this.tablePageSize;
-		return this.transactions$.value.slice(start, start + this.tablePageSize);
+		const sorted = this.getSortedTransactions(this.transactions$.value);
+		return sorted.slice(start, start + this.tablePageSize);
+	}
+
+	toggleSort(column: ProcurementSortColumn): void {
+		if (this.sortColumn !== column) {
+			this.sortColumn = column;
+			this.sortDirection = 'desc';
+			return;
+		}
+
+		this.sortDirection = this.sortDirection === 'desc' ? 'asc' : 'desc';
+	}
+
+	getSortIndicator(column: ProcurementSortColumn): string {
+		if (this.sortColumn !== column) {
+			return '';
+		}
+
+		return this.sortDirection === 'desc' ? '↓' : '↑';
 	}
 
 	get totalPages(): number {
@@ -273,6 +302,48 @@ export class ProcurementPageComponent implements OnInit {
 
 		if (this.currentPage < 1) {
 			this.currentPage = 1;
+		}
+	}
+
+	private getSortedTransactions(items: ProcurementTableTransaction[]): ProcurementTableTransaction[] {
+		if (!this.sortColumn) {
+			return items;
+		}
+
+		const directionFactor = this.sortDirection === 'desc' ? -1 : 1;
+		const column = this.sortColumn;
+
+		return [...items].sort((a, b) => {
+			const aValue = this.getSortValue(a, column);
+			const bValue = this.getSortValue(b, column);
+
+			if (typeof aValue === 'number' || typeof bValue === 'number') {
+				return (Number(aValue) - Number(bValue)) * directionFactor;
+			}
+
+			return String(aValue).localeCompare(String(bValue), undefined, {
+				numeric: true,
+				sensitivity: 'base'
+			}) * directionFactor;
+		});
+	}
+
+	private getSortValue(transaction: ProcurementTableTransaction, column: ProcurementSortColumn): string | number {
+		switch (column) {
+			case 'timestamp':
+				return new Date(transaction.timestamp).getTime() || 0;
+			case 'status':
+				return transaction.status;
+			case 'createdByUserId':
+				return transaction.createdByUserId;
+			case 'productId':
+				return transaction.items[0]?.productId ?? '';
+			case 'toCompartmentId':
+				return transaction.items[0]?.toCompartmentId ?? '';
+			case 'quantity':
+				return transaction.items[0]?.quantity ?? 0;
+			default:
+				return '';
 		}
 	}
 
