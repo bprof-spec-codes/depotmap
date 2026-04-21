@@ -4,9 +4,19 @@
     <a routerLink="/products/create" class="btn btn-primary">Új termék</a>
   </div>
 
-  <ng-container *ngIf="productsVm$ | async as productsVm">
+  <ng-container *ngIf="visibleProductsVm$ | async as productsVm">
     <div *ngIf="productsVm.loading" class="spinner">Betöltés...</div>
     <div *ngIf="!productsVm.loading && productsVm.error" class="error-text">A termékek nem töltődtek be. Ellenőrizd, hogy a backend fut-e.</div>
+
+    <div class="products-controls" *ngIf="!productsVm.loading && !productsVm.error">
+      <input
+        type="text"
+        class="products-input"
+        placeholder="Keresés terméknévre..."
+        [ngModel]="productSearch | async"
+        (ngModelChange)="onProductSearchChange($event)"
+      />
+    </div>
 
     <div class="list">
       <div *ngFor="let p of productsVm.items" class="product-block">
