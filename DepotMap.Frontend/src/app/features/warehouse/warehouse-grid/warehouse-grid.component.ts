@@ -130,13 +130,30 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
         this.saving = false;
         this.isEditMode = false;
         this.saveSuccess = true;
-        setTimeout(() => {
-          this.router.navigate(['/warehouses']);
-        }, 1500);
+        this.modifiedCells.clear();
+        this.modifiedCount = 0;
+        this.reloadDetail();
+        setTimeout(() => { this.saveSuccess = false; }, 2500);
       },
       error: (err) => {
         console.error('[WarehouseGrid] Batch update failed:', err);
         this.saving = false;
+      }
+    });
+  }
+
+  private reloadDetail(): void {
+    this.warehouseApiService.getById(this.warehouseId).subscribe({
+      next: (detail) => {
+        this.detail = detail;
+        this.buildCellMap(detail.cells);
+        this.originalCellMap = new Map(this.cellMap);
+        if (this.stage) {
+          this.drawGrid(detail);
+        }
+      },
+      error: (err) => {
+        console.error('[WarehouseGrid] Reload after save failed:', err);
       }
     });
   }
