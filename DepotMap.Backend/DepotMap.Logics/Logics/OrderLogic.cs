@@ -31,6 +31,8 @@ namespace DepotMap.Logics.Logics
             var transactions = await _context.Transactions
                 .Include(t => t.Items)
                 .Include(t => t.CreatedBy)
+                .Include(t => t.Items).ThenInclude(i => i.Product) 
+                .Include(t => t.Items).ThenInclude(i => i.FromCompartment)
                 .Where(t => t.Type == "Outbound")
                 .ToListAsync();
 
@@ -41,6 +43,8 @@ namespace DepotMap.Logics.Logics
         {
             var transaction = await _context.Transactions
                 .Include(t => t.Items)
+                .Include(t => t.Items).ThenInclude(i => i.Product)
+                .Include(t => t.Items).ThenInclude(i => i.FromCompartment)
                 .Include(t => t.CreatedBy)
                 .FirstOrDefaultAsync(t => t.Id == id && t.Type == "Outbound");
 
@@ -53,29 +57,60 @@ namespace DepotMap.Logics.Logics
         {
             var order = _mapper.Map<Transaction>(dto);
 
+            var newItems = new List<TransactionItem>();
+
             if (dto.Items != null && dto.Items.Any())
             {
                 foreach (var itemDto in dto.Items)
                 {
+                    var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
+                    if (product == null)
+                        throw new InvalidOperationException($"Nem található termék a következő cikkszámmal: {itemDto.ProductSKU}");
+
+                    string? compartmentId = null;
+                    if (!string.IsNullOrWhiteSpace(itemDto.FromCompartmentCode))
+                    {
+                        var comp = await _context.Compartments.FirstOrDefaultAsync(c => c.Code == itemDto.FromCompartmentCode);
+                        if (comp == null)
+                            throw new InvalidOperationException($"Nem található rekesz a következő kóddal: {itemDto.FromCompartmentCode}");
+                        compartmentId = comp.Id;
+                    }
+
                     var stock = await _context.ProductStocks
-                        .FirstOrDefaultAsync(ps => ps.CompartmentId == itemDto.FromCompartmentId && ps.ProductId == itemDto.ProductId);
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == compartmentId && ps.ProductId == product.Id);
 
                     if (stock == null)
                     {
-                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductId}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentId})!");
+                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})!");
                     }
 
                     if (stock.Quantity < itemDto.Quantity)
                     {
-                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductId} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
                     }
+
+                    newItems.Add(new TransactionItem
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        ProductId = product.Id,
+                        FromCompartmentId = compartmentId,
+                        Quantity = itemDto.Quantity
+                    });
                 }
             }
+
+            order.Items = newItems;
 
             _context.Transactions.Add(order);
             await _context.SaveChangesAsync();
 
             await _context.Entry(order).Reference(t => t.CreatedBy).LoadAsync();
+            foreach (var item in order.Items)
+            {
+                await _context.Entry(item).Reference(i => i.Product).LoadAsync();
+                if (item.FromCompartmentId != null)
+                    await _context.Entry(item).Reference(i => i.FromCompartment).LoadAsync();
+            }
 
             return _mapper.Map<OrderViewDto>(order);
         }
@@ -93,34 +128,61 @@ namespace DepotMap.Logics.Logics
                 throw new InvalidOperationException("Lezárt rendelés tételei már nem módosíthatók!");
             }
 
+            var newItems = new List<TransactionItem>();
+
             if (dto.Items != null && dto.Items.Any())
             {
                 foreach (var itemDto in dto.Items)
                 {
+                    var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
+                    if (product == null)
+                        throw new InvalidOperationException($"Nem található termék a következő cikkszámmal: {itemDto.ProductSKU}");
+
+                    string? compartmentId = null;
+                    if (!string.IsNullOrWhiteSpace(itemDto.FromCompartmentCode))
+                    {
+                        var comp = await _context.Compartments.FirstOrDefaultAsync(c => c.Code == itemDto.FromCompartmentCode);
+                        if (comp == null)
+                            throw new InvalidOperationException($"Nem található rekesz a következő kóddal: {itemDto.FromCompartmentCode}");
+                        compartmentId = comp.Id;
+                    }
+
                     var stock = await _context.ProductStocks
-                        .FirstOrDefaultAsync(ps => ps.CompartmentId == itemDto.FromCompartmentId && ps.ProductId == itemDto.ProductId);
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == compartmentId && ps.ProductId == product.Id);
 
                     if (stock == null)
                     {
-                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductId}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentId})!");
+                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})!");
                     }
 
                     if (stock.Quantity < itemDto.Quantity)
                     {
-                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductId} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
                     }
+
+                    newItems.Add(new TransactionItem
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        ProductId = product.Id,
+                        FromCompartmentId = compartmentId,
+                        Quantity = itemDto.Quantity
+                    });
                 }
             }
 
             _context.TransactionItems.RemoveRange(order.Items);
-
-            var newItems = _mapper.Map<List<TransactionItem>>(dto.Items);
-
             order.Items = newItems;
 
             await _context.SaveChangesAsync();
 
             await _context.Entry(order).Reference(t => t.CreatedBy).LoadAsync();
+            foreach (var item in order.Items)
+            {
+                await _context.Entry(item).Reference(i => i.Product).LoadAsync();
+                if (item.FromCompartmentId != null)
+                    await _context.Entry(item).Reference(i => i.FromCompartment).LoadAsync();
+            }
+
             return _mapper.Map<OrderViewDto>(order);
         }
 
