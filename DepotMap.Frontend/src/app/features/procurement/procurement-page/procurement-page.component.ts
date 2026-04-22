@@ -52,7 +52,6 @@ export class ProcurementPageComponent implements OnInit {
 	private readonly pageSize = 500;
 	private readonly firstLoadRetryDelayMs = 1000;
 	private readonly maxInitialLoadRetries = 1;
-	private currentSkip = 0;
 	private initialLoadRetryCount = 0;
 	readonly tablePageSizeOptions = [10, 50, 100, 500];
 	tablePageSize = 100;
@@ -62,7 +61,6 @@ export class ProcurementPageComponent implements OnInit {
 
 	saving = false;
 	loading = false;
-	hasMore = true;
 	errorText = '';
 	//async pipe 
 	transactions$ = new BehaviorSubject<ProcurementTableTransaction[]>([]);
@@ -358,39 +356,24 @@ export class ProcurementPageComponent implements OnInit {
 				this.initialLoadRetryCount = 0;
 			}
 
-			this.currentSkip = 0;
 			this.currentPage = 1;
 			this.transactions$.next([]);
-			this.hasMore = true;
-		}
-
-		if (!this.hasMore) {
-			return;
 		}
 
 		this.loading = true;
 		this.errorText = '';
 
 		this.purchasingService
-			.getTableRows(this.currentSkip, this.pageSize, this.buildTableFilters())
+			.getTableRows(0, this.pageSize, this.buildTableFilters())
 			.pipe(finalize(() => (this.loading = false)))
 			.subscribe({
 				next: rows => {
 					const mapStart = performance.now();
 					const mapped = this.mapTableRowsToTransactions(rows);
-
-					if (reset) {
-						this.transactions$.next(mapped);
-						this.initialLoadRetryCount = 0;
-					} else {
-						const merged = this.mergeTransactions(this.transactions$.value, mapped);
-						this.transactions$.next(merged);
-					}
+					this.transactions$.next(mapped);
+					this.initialLoadRetryCount = 0;
 
 					this.ensureCurrentPageInRange();
-
-					this.currentSkip += rows.length;
-					this.hasMore = rows.length === this.pageSize;
 
 					const elapsedMs = Math.round(performance.now() - mapStart);
 					console.log(
@@ -410,14 +393,9 @@ export class ProcurementPageComponent implements OnInit {
 						this.ensureCurrentPageInRange();
 					}
 
-					this.hasMore = false;
 					this.errorText = this.extractErrorMessage(err, 'A beszerzések betöltése sikertelen volt.');
 				}
 			});
-	}
-
-	loadMoreTransactions(): void {
-		this.loadTransactions(false);
 	}
 
 	trackByTransactionId(index: number, transaction: ProcurementTableTransaction): string {
@@ -536,38 +514,6 @@ export class ProcurementPageComponent implements OnInit {
 					this.errorText = this.extractErrorMessage(err, 'A törlés sikertelen volt.');
 				}
 			});
-	}
-
-	private mergeTransactions(
-		currentTransactions: ProcurementTableTransaction[],
-		incoming: ProcurementTableTransaction[]
-	): ProcurementTableTransaction[] {
-		const byId = new Map<string, ProcurementTableTransaction>();
-
-		for (const existing of currentTransactions) {
-			byId.set(existing.id, {
-				...existing,
-				items: [...existing.items]
-			});
-		}
-
-		for (const tx of incoming) {
-			const existing = byId.get(tx.id);
-
-			if (existing) {
-				existing.items.push(...tx.items);
-				existing.status = tx.status;
-				existing.statusLabel = tx.statusLabel;
-				existing.isClosed = tx.isClosed;
-				existing.isDeleteBlocked = tx.isDeleteBlocked;
-				existing.createdByUserId = tx.createdByUserId;
-				existing.timestamp = tx.timestamp;
-			} else {
-				byId.set(tx.id, tx);
-			}
-		}
-
-		return Array.from(byId.values());
 	}
 
 	private mapTableRowsToTransactions(rows: PurchasingTransactionTableRowDto[]): ProcurementTableTransaction[] {

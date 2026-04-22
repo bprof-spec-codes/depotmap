@@ -55,11 +55,6 @@
   </div>
 
  <div *ngIf="loading" class="loading-text">Betöltés...</div> 
-  <div class="table-actions">
-    <button type="button" class="btn btn-secondary" [disabled]="loading" (click)="loadTransactions(true)">
-      Adatok újratöltése
-    </button>
-  </div>
 
   <div class="table-wrap">
     <table class="procurement-table">
@@ -206,7 +201,7 @@
 
       <tfoot *ngIf="(transactions$ | async)?.length">
         <tr>
-          <td colspan="9" style="text-align:right;">
+          <td colspan="9" style="text-align:center;">
             <button type="button" class="btn btn-secondary" [disabled]="!canGoPrevPage" (click)="goToPrevPage()">
               Előző
             </button>

@@ -53,7 +53,6 @@ type MovementSortColumn =
 export class MovementsComponent implements OnInit {
   private readonly seedUserId = 'seed-admin-001';
   private readonly pageSize = 500;
-  private currentSkip = 0;
   readonly tablePageSizeOptions = [10, 50, 100, 500];
   tablePageSize = 100;
   currentPage = 1;
@@ -62,7 +61,6 @@ export class MovementsComponent implements OnInit {
 
   saving = false;
   loading = false;
-  hasMore = true;
   productsLoading = false;
   errorText = '';
   successText = '';
@@ -376,37 +374,23 @@ export class MovementsComponent implements OnInit {
     }
 
     if (reset) {
-      this.currentSkip = 0;
       this.currentPage = 1;
       this.transactions$.next([]);
-      this.hasMore = true;
-    }
-
-    if (!this.hasMore) {
-      return;
     }
 
     this.loading = true;
     this.errorText = '';
 
     this.movementsService
-      .getTableRows(this.currentSkip, this.pageSize, this.buildTableFilters())
+      .getTableRows(0, this.pageSize, this.buildTableFilters())
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: rows => {
           const mapped = this.mapTableRowsToTransactions(rows);
 
-          if (reset) {
-            this.transactions$.next(mapped);
-          } else {
-            const merged = this.mergeTransactions(this.transactions$.value, mapped);
-            this.transactions$.next(merged);
-          }
+          this.transactions$.next(mapped);
 
           this.ensureCurrentPageInRange();
-
-          this.currentSkip += rows.length;
-          this.hasMore = rows.length === this.pageSize;
         },
         error: (err: unknown) => {
           if (reset) {
@@ -414,14 +398,9 @@ export class MovementsComponent implements OnInit {
             this.ensureCurrentPageInRange();
           }
 
-          this.hasMore = false;
           this.errorText = this.extractErrorMessage(err, 'A mozgatások betöltése sikertelen volt.');
         }
       });
-  }
-
-  loadMoreTransactions(): void {
-    this.loadTransactions(false);
   }
 
   editTransaction(transaction: MovementTableTransaction): void {
@@ -517,38 +496,6 @@ export class MovementsComponent implements OnInit {
           this.errorText = this.extractErrorMessage(err, 'A törlés sikertelen volt.');
         }
       });
-  }
-
-  private mergeTransactions(
-    currentTransactions: MovementTableTransaction[],
-    incoming: MovementTableTransaction[]
-  ): MovementTableTransaction[] {
-    const byId = new Map<string, MovementTableTransaction>();
-
-    for (const existing of currentTransactions) {
-      byId.set(existing.id, {
-        ...existing,
-        items: [...existing.items]
-      });
-    }
-
-    for (const tx of incoming) {
-      const existing = byId.get(tx.id);
-
-      if (existing) {
-        existing.items.push(...tx.items);
-        existing.status = tx.status;
-        existing.statusLabel = tx.statusLabel;
-        existing.isClosed = tx.isClosed;
-        existing.isDeleteBlocked = tx.isDeleteBlocked;
-        existing.createdByUserId = tx.createdByUserId;
-        existing.timestamp = tx.timestamp;
-      } else {
-        byId.set(tx.id, tx);
-      }
-    }
-
-    return Array.from(byId.values());
   }
 
   private mapTableRowsToTransactions(rows: MovementTransactionTableRowDto[]): MovementTableTransaction[] {
