@@ -56,6 +56,11 @@
 .empty-text { color:#64748b; font-size:13px; font-style: italic;}
 .error-text { color:#b91c1c; font-size:13px; padding: 10px; background-color: #fdf0f0; border-radius: 6px; }
 
+.route-result {
+	border-top: 1px solid #d7e6f8;
+	padding-top: 10px;
+}
+
 /* Gombok extrák a Bootstrap fölé, ha kell */
 .btn-success { background-color: #28a745; color: white; border: none; }
 .btn-success:hover { background-color: #218838; }
