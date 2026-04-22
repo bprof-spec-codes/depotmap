@@ -35,6 +35,15 @@ interface MovementTableTransaction {
   items: MovementTableItem[];
 }
 
+type MovementSortColumn =
+  | 'timestamp'
+  | 'status'
+  | 'createdByUserId'
+  | 'productId'
+  | 'fromCompartmentId'
+  | 'toCompartmentId'
+  | 'quantity';
+
 @Component({
   selector: 'app-movements',
   standalone: false,
@@ -48,6 +57,8 @@ export class MovementsComponent implements OnInit {
   readonly tablePageSizeOptions = [10, 50, 100, 500];
   tablePageSize = 100;
   currentPage = 1;
+  sortColumn: MovementSortColumn | null = null;
+  sortDirection: 'desc' | 'asc' = 'desc';
 
   saving = false;
   loading = false;
@@ -137,7 +148,26 @@ export class MovementsComponent implements OnInit {
 
   get pagedTransactions(): MovementTableTransaction[] {
     const start = (this.currentPage - 1) * this.tablePageSize;
-    return this.transactions$.value.slice(start, start + this.tablePageSize);
+    const sorted = this.getSortedTransactions(this.transactions$.value);
+    return sorted.slice(start, start + this.tablePageSize);
+  }
+
+  toggleSort(column: MovementSortColumn): void {
+    if (this.sortColumn !== column) {
+      this.sortColumn = column;
+      this.sortDirection = 'desc';
+      return;
+    }
+
+    this.sortDirection = this.sortDirection === 'desc' ? 'asc' : 'desc';
+  }
+
+  getSortIndicator(column: MovementSortColumn): string {
+    if (this.sortColumn !== column) {
+      return '';
+    }
+
+    return this.sortDirection === 'desc' ? '↓' : '↑';
   }
 
   get totalPages(): number {
@@ -220,6 +250,50 @@ export class MovementsComponent implements OnInit {
 
     if (this.currentPage < 1) {
       this.currentPage = 1;
+    }
+  }
+
+  private getSortedTransactions(items: MovementTableTransaction[]): MovementTableTransaction[] {
+    if (!this.sortColumn) {
+      return items;
+    }
+
+    const directionFactor = this.sortDirection === 'desc' ? -1 : 1;
+    const column = this.sortColumn;
+
+    return [...items].sort((a, b) => {
+      const aValue = this.getSortValue(a, column);
+      const bValue = this.getSortValue(b, column);
+
+      if (typeof aValue === 'number' || typeof bValue === 'number') {
+        return (Number(aValue) - Number(bValue)) * directionFactor;
+      }
+
+      return String(aValue).localeCompare(String(bValue), undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      }) * directionFactor;
+    });
+  }
+
+  private getSortValue(transaction: MovementTableTransaction, column: MovementSortColumn): string | number {
+    switch (column) {
+      case 'timestamp':
+        return new Date(transaction.timestamp).getTime() || 0;
+      case 'status':
+        return transaction.status;
+      case 'createdByUserId':
+        return transaction.createdByUserId;
+      case 'productId':
+        return transaction.items[0]?.productId ?? '';
+      case 'fromCompartmentId':
+        return transaction.items[0]?.fromCompartmentId ?? '';
+      case 'toCompartmentId':
+        return transaction.items[0]?.toCompartmentId ?? '';
+      case 'quantity':
+        return transaction.items[0]?.quantity ?? 0;
+      default:
+        return '';
     }
   }
 
