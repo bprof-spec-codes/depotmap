@@ -22,8 +22,8 @@ export class ProductCreateComponent {
     lowStockThreshold: null as number | null,
   };
 
-  primaryStorageSelection = '';
-  secondaryStorageSelections: string[] = [];
+  primaryStorageSelection: CompartmentOptionDto | null = null;
+  secondaryStorageSelections: (CompartmentOptionDto | null)[] = [];
 
   saving = false;
   errorText = '';
@@ -42,7 +42,7 @@ export class ProductCreateComponent {
   }
 
   addStorageSelection(): void {
-    this.secondaryStorageSelections.push('');
+    this.secondaryStorageSelections.push(null);
   }
 
   removeStorageSelection(index: number): void {
@@ -54,15 +54,17 @@ export class ProductCreateComponent {
   }
 
   isCompartmentUsedInSecondary(compartmentId: string, currentIndex: number): boolean {
-    if (this.primaryStorageSelection === compartmentId) {
+    if (this.primaryStorageSelection?.id === compartmentId) {
       return true;
     }
 
-    return this.secondaryStorageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
+    return this.secondaryStorageSelections.some(
+      (selected, index) => index !== currentIndex && selected?.id === compartmentId
+    );
   }
 
   isPrimaryCompartmentDisabled(compartmentId: string): boolean {
-    return this.secondaryStorageSelections.includes(compartmentId);
+    return this.secondaryStorageSelections.some(selected => selected?.id === compartmentId);
   }
 
   create(): void {
@@ -74,8 +76,8 @@ export class ProductCreateComponent {
     }
 
     const initialStocks = [this.primaryStorageSelection, ...this.secondaryStorageSelections]
-      .filter(compartmentId => compartmentId.trim().length > 0)
-      .map(compartmentId => ({ compartmentId, quantity: 0 }));
+      .filter((compartment): compartment is CompartmentOptionDto => compartment !== null)
+      .map(compartment => ({ compartmentId: compartment.id, quantity: 0 }));
 
     if (initialStocks.length === 0) {
       this.errorText = 'Válassz legalább egy tárolóhelyet.';
