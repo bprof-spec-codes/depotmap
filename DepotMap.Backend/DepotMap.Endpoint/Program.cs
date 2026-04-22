@@ -27,7 +27,7 @@ public class Program
         builder.Services.AddScoped<IAuthLogic, AuthLogic>();
         builder.Services.AddScoped<IWarehouseLogic, WarehouseLogic>();
         builder.Services.AddScoped<IWarehouseCellLogic, WarehouseCellLogic>();
-        builder.Services.AddScoped<IWarehousePathFinding, WarehousePathFinding>();
+        builder.Services.AddScoped<IWarehousePathFinding, WarehousePathFindingLogic>();
         builder.Services.AddScoped<IShelfLogic, ShelfLogic>();
         builder.Services.AddScoped<ICompartmentLogic, CompartmentLogic>();
         builder.Services.AddScoped<IOrderLogic, OrderLogic>();

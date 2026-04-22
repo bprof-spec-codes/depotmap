@@ -33,11 +33,11 @@ namespace DepotMap.Logics.Logics
         public List<CompartmentTaskDto> Items { get; set; } = new();
     }
 
-    public class WarehousePathFinding : IWarehousePathFinding
+    public class WarehousePathFindingLogic : IWarehousePathFinding
     {
         private readonly AppDbContext _context;
 
-        public WarehousePathFinding(AppDbContext context)
+        public WarehousePathFindingLogic(AppDbContext context)
         {
             _context = context;
         }
