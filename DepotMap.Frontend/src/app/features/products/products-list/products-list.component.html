@@ -2,7 +2,7 @@
   <app-page-header title="Termékek" subtitle="A rendszerben szereplő termékek áttekintése és kezelése"
     [hasActions]="true">
     <div header-actions>
-      <a routerLink="/products/create" class="btn btn-primary">Új termék</a>
+      <a routerLink="/products/create" class="btn btn-primary"> <i class="bi bi-plus-lg me-1"></i>Új termék</a>
     </div>
   </app-page-header>
   <ng-container *ngIf="visibleProductsVm$ | async as productsVm">
@@ -14,9 +14,15 @@
     <ng-container *ngIf="!productsVm.loading && !productsVm.error">
       <app-content-card title="Terméklista">
         <div class="products-toolbar">
-          <div class="products-toolbar-search">
-            <input type="text" class="form-control products-search" placeholder="Keresés terméknévre..."
-              [ngModel]="productSearch | async" (ngModelChange)="onProductSearchChange($event)" />
+          <div class="products-search-wrap">
+            <div class="products-search-box">
+              <span class="products-search-icon">
+                <i class="bi bi-search"></i>
+              </span>
+
+              <input type="text" class="form-control products-search-input" placeholder="Keresés terméknévre..."
+                [ngModel]="productSearch | async" (ngModelChange)="onProductSearchChange($event)" />
+            </div>
           </div>
         </div>
 
