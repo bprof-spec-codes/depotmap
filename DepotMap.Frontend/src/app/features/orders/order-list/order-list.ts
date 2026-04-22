@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { OrderService, OrderViewDto } from '../../../core/services/order-service';
+import { OrderService, OrderViewDto, PickingTaskDto } from '../../../core/services/order-service';
 import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
@@ -20,6 +20,10 @@ export class OrderList implements OnInit {
   searchTerm$ = new BehaviorSubject<string>('');
   sortBy$ = new BehaviorSubject<OrderSortColumn>('timestamp');
   sortDirection$ = new BehaviorSubject<'asc' | 'desc'>('desc');
+  routeByOrderId: Record<string, PickingTaskDto[]> = {};
+  routeErrorByOrderId: Record<string, string> = {};
+  routeLoadingOrderId: string | null = null;
+  routeLoadedOrderIds = new Set<string>();
 
   constructor(private orderService: OrderService, private router: Router) {}
 
@@ -171,7 +175,41 @@ export class OrderList implements OnInit {
   }
 
   createRoute(orderId: string) {
-    this.router.navigate(['/routes/create'], { queryParams: { orderId: orderId } });
+    this.routeLoadingOrderId = orderId;
+    this.routeErrorByOrderId[orderId] = '';
+
+    this.orderService.getOptimizedRoute(orderId).subscribe({
+      next: (route) => {
+        this.routeByOrderId[orderId] = route.filter(
+          (step) => step.cellType?.toLowerCase() !== 'entrance'
+        );
+        this.routeLoadedOrderIds.add(orderId);
+        this.routeLoadingOrderId = null;
+        this.expandedOrderIds.add(orderId);
+      },
+      error: () => {
+        this.routeByOrderId[orderId] = [];
+        this.routeErrorByOrderId[orderId] = 'Nem sikerült lekérni az útvonalat.';
+        this.routeLoadedOrderIds.add(orderId);
+        this.routeLoadingOrderId = null;
+      }
+    });
+  }
+
+  getRouteForOrder(orderId: string): PickingTaskDto[] {
+    return this.routeByOrderId[orderId] ?? [];
+  }
+
+  getRouteError(orderId: string): string {
+    return this.routeErrorByOrderId[orderId] ?? '';
+  }
+
+  isRouteLoading(orderId: string): boolean {
+    return this.routeLoadingOrderId === orderId;
+  }
+
+  isRouteLoaded(orderId: string): boolean {
+    return this.routeLoadedOrderIds.has(orderId);
   }
 
   getNextStatusLabel(currentStatus: string): string {

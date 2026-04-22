@@ -106,6 +106,34 @@
               </tbody>
             </table>
           </div>
+
+          <div class="route-result mt-3">
+            <h6 class="mb-2 text-secondary" style="font-size: 13px; text-transform: uppercase;">Kiszedési Sorrend</h6>
+
+            <div *ngIf="isRouteLoading(order.id)" class="text-muted small">Útvonal tervezése...</div>
+
+            <div *ngIf="!isRouteLoading(order.id) && getRouteError(order.id)" class="text-danger small">
+              {{ getRouteError(order.id) }}
+            </div>
+
+            <ol *ngIf="!isRouteLoading(order.id) && getRouteForOrder(order.id).length" class="mb-0 ps-3">
+              <li *ngFor="let step of getRouteForOrder(order.id)" class="mb-2">
+                <div><strong>{{ step.shelfCode }}</strong></div>
+                <div class="small text-muted" *ngIf="step.items?.length; else noRouteItems">
+                  <span *ngFor="let item of step.items; let last = last">
+                    {{ item.compartmentCode }} - {{ item.productName }} ({{ item.quantity }} db)<span *ngIf="!last">, </span>
+                  </span>
+                </div>
+                <ng-template #noRouteItems>
+                  <div class="small text-muted">Nincs kiszedendő tétel.</div>
+                </ng-template>
+              </li>
+            </ol>
+
+            <div *ngIf="!isRouteLoading(order.id) && isRouteLoaded(order.id) && !getRouteForOrder(order.id).length && !getRouteError(order.id)" class="text-muted small">
+              Nincs útvonal ehhez a rendeléshez.
+            </div>
+          </div>
         </div>
 
       </div>
