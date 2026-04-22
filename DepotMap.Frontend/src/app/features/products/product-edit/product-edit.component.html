@@ -34,47 +34,39 @@
         <div class="storage-block">
           <label class="field">
             <span>Elsődleges tárolóhely</span>
-            <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection" [disabled]="compartmentsVm.loading" required>
-              <option value="">-- Válassz tárolóhelyet --</option>
-              <option
-                *ngFor="let comp of compartmentsVm.items"
-                [value]="comp.id"
-                [disabled]="isPrimaryCompartmentDisabled(comp.id)"
-              >
-                {{ comp.id }}
+            <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection"
+              [compareWith]="compareCompartments" [disabled]="compartmentsVm.loading" required>
+              <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
+              <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp"
+                [disabled]="isPrimaryCompartmentDisabled(comp.id)">
+                {{ comp.code }}
               </option>
             </select>
           </label>
 
           <div class="selected-id" *ngIf="primaryStorageSelection">
-            Kiválasztott azonosító: {{ primaryStorageSelection }}
+            Kiválasztott tárolóhely: {{ primaryStorageSelection.code }}
           </div>
         </div>
 
         <div class="storage-block" *ngFor="let storageId of secondaryStorageSelections; let i = index">
           <label class="field">
             <span>Másodlagos tárolóhely {{ i + 1 }}</span>
-            <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]" [disabled]="compartmentsVm.loading">
-              <option value="">-- Válassz tárolóhelyet --</option>
-              <option
-                *ngFor="let comp of compartmentsVm.items"
-                [value]="comp.id"
-                [disabled]="isCompartmentUsedInSecondary(comp.id, i)"
-              >
-                {{ comp.id }}
+            <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
+              [compareWith]="compareCompartments" [disabled]="compartmentsVm.loading">
+              <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
+              <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp"
+                [disabled]="isCompartmentUsedInSecondary(comp.id, i)">
+                {{ comp.code }}
               </option>
             </select>
           </label>
 
           <div class="selected-id" *ngIf="secondaryStorageSelections[i]">
-            Kiválasztott azonosító: {{ secondaryStorageSelections[i] }}
+            Kiválasztott tárolóhely: {{ secondaryStorageSelections[i]?.code }}
           </div>
 
-          <button
-            type="button"
-            class="link-btn remove-btn danger"
-            (click)="removeStorageSelection(i)"
-          >
+          <button type="button" class="link-btn remove-btn danger" (click)="removeStorageSelection(i)">
             Tárolóhely törlése
           </button>
         </div>

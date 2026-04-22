@@ -18,8 +18,11 @@ export class ProductEditComponent implements OnInit {
   saving = false;
   loading = false;
   errorText = '';
-  primaryStorageSelection = '';
-  secondaryStorageSelections: string[] = [];
+
+  compartmentOptions: CompartmentOptionDto[] = [];
+
+  primaryStorageSelection: CompartmentOptionDto | null = null;
+  secondaryStorageSelections: (CompartmentOptionDto | null)[] = [];
 
   form = {
     sku: '',
@@ -36,7 +39,10 @@ export class ProductEditComponent implements OnInit {
     private compartmentService: CompartmentService
   ) {
     this.compartmentsVm$ = defer(() => this.compartmentService.getAll()).pipe(
-      map(items => ({ items, loading: false, error: false })),
+      map(items => {
+        this.compartmentOptions = items;
+        return { items, loading: false, error: false };
+      }),
       startWith({ items: [] as CompartmentOptionDto[], loading: true, error: false }),
       catchError(() => of({ items: [] as CompartmentOptionDto[], loading: false, error: true })),
       shareReplay(1)
@@ -45,46 +51,33 @@ export class ProductEditComponent implements OnInit {
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
-    const productFromState = history.state?.product as ProductDetailDto | undefined;
 
     if (!this.id) {
       this.errorText = 'Hiányzó termék azonosító.';
       return;
     }
 
-    if (productFromState) {
-      this.form.name = productFromState.name ?? '';
-      this.form.sku = productFromState.sku ?? '';
-      this.form.price = typeof productFromState.price === 'number' ? productFromState.price : 0;
-      this.form.lowStockThreshold = typeof productFromState.lowStockThreshold === 'number' ? productFromState.lowStockThreshold : 0;
-      this.form.description = productFromState.description ?? '';
+    // Előbb betöltjük a compartmenteket, majd utána a productot
+    this.compartmentService.getAll().pipe(
+      finalize(() => {
+        this.loadProduct();
+      })
+    ).subscribe({
+      next: items => {
+        this.compartmentOptions = items;
+      },
+      error: () => { }
+    });
+  }
 
-      const storageIds = (productFromState.productStocks ?? [])
-        .map(stock => stock.compartmentId)
-        .filter(Boolean);
-
-      this.primaryStorageSelection = storageIds[0] ?? '';
-      this.secondaryStorageSelections = storageIds.slice(1);
-    }
-
+  private loadProduct(): void {
     this.loading = true;
 
     this.productService.getById(this.id)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (product: ProductDetailDto) => {
-          this.form.name = product.name ?? '';
-          this.form.sku = product.sku ?? '';
-          this.form.price = typeof product.price === 'number' ? product.price : 0;
-          this.form.lowStockThreshold = typeof product.lowStockThreshold === 'number' ? product.lowStockThreshold : 0;
-          this.form.description = product.description ?? '';
-
-          const storageIds = (product.productStocks ?? [])
-            .map(stock => stock.compartmentId)
-            .filter(Boolean);
-
-          this.primaryStorageSelection = storageIds[0] ?? '';
-          this.secondaryStorageSelections = storageIds.slice(1);
+          this.fillForm(product);
         },
         error: () => {
           this.errorText = 'Nem sikerült betölteni a termék adatait.';
@@ -92,8 +85,34 @@ export class ProductEditComponent implements OnInit {
       });
   }
 
+  private fillForm(product: ProductDetailDto): void {
+    this.form.name = product.name ?? '';
+    this.form.sku = product.sku ?? '';
+    this.form.price = typeof product.price === 'number' ? product.price : 0;
+    this.form.lowStockThreshold = typeof product.lowStockThreshold === 'number' ? product.lowStockThreshold : 0;
+    this.form.description = product.description ?? '';
+
+    const storageIds = (product.productStocks ?? [])
+      .map(stock => stock.compartmentId)
+      .filter((id): id is string => !!id);
+
+    this.primaryStorageSelection = this.findCompartmentById(storageIds[0]) ?? null;
+    this.secondaryStorageSelections = storageIds
+      .slice(1)
+      .map(id => this.findCompartmentById(id))
+      .filter((compartment): compartment is CompartmentOptionDto => compartment !== null);
+  }
+
+  private findCompartmentById(compartmentId?: string): CompartmentOptionDto | null {
+    if (!compartmentId) {
+      return null;
+    }
+
+    return this.compartmentOptions.find(c => c.id === compartmentId) ?? null;
+  }
+
   addStorageSelection(): void {
-    this.secondaryStorageSelections.push('');
+    this.secondaryStorageSelections.push(null);
   }
 
   removeStorageSelection(index: number): void {
@@ -105,28 +124,40 @@ export class ProductEditComponent implements OnInit {
   }
 
   isCompartmentUsedInSecondary(compartmentId: string, currentIndex: number): boolean {
-    if (this.primaryStorageSelection === compartmentId) {
+    if (this.primaryStorageSelection?.id === compartmentId) {
       return true;
     }
 
-    return this.secondaryStorageSelections.some((selected, index) => index !== currentIndex && selected === compartmentId);
+    return this.secondaryStorageSelections.some(
+      (selected, index) => index !== currentIndex && selected?.id === compartmentId
+    );
   }
 
   isPrimaryCompartmentDisabled(compartmentId: string): boolean {
-    return this.secondaryStorageSelections.includes(compartmentId);
+    return this.secondaryStorageSelections.some(selected => selected?.id === compartmentId);
+  }
+
+  compareCompartments(a: CompartmentOptionDto | null, b: CompartmentOptionDto | null): boolean {
+    return (a?.id ?? null) === (b?.id ?? null);
   }
 
   save(): void {
     this.errorText = '';
 
-    if (!this.form.sku || !this.form.name || !this.form.description || this.form.price === null || this.form.lowStockThreshold === null) {
+    if (
+      !this.form.sku ||
+      !this.form.name ||
+      !this.form.description ||
+      this.form.price === null ||
+      this.form.lowStockThreshold === null
+    ) {
       this.errorText = 'Minden kötelező mezőt tölts ki.';
       return;
     }
 
     const initialStocks = [this.primaryStorageSelection, ...this.secondaryStorageSelections]
-      .filter(compartmentId => compartmentId.trim().length > 0)
-      .map(compartmentId => ({ compartmentId, quantity: 0 }));
+      .filter((compartment): compartment is CompartmentOptionDto => compartment !== null)
+      .map(compartment => ({ compartmentId: compartment.id, quantity: 0 }));
 
     if (initialStocks.length === 0) {
       this.errorText = 'Válassz legalább egy tárolóhelyet.';
@@ -134,6 +165,7 @@ export class ProductEditComponent implements OnInit {
     }
 
     this.saving = true;
+
     this.productService.update(this.id, {
       sku: this.form.sku,
       name: this.form.name,
