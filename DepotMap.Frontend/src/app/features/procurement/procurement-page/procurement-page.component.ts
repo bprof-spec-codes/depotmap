@@ -9,6 +9,8 @@ import {
 	PurchasingTransactionsService
 } from '../../../core/services/purchasing-transactions-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
+import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { ProcurementFormItem, ProcurementSortColumn, ProcurementTableItem, ProcurementTableTransaction } from '../../../core/models/procurements.models';
 
 
 @Component({
@@ -24,6 +26,8 @@ export class ProcurementPageComponent implements OnInit {
 	private readonly maxInitialLoadRetries = 1;
 	private initialLoadRetryCount = 0;
 	readonly tablePageSizeOptions = [10, 50, 100, 500];
+	compartments: CompartmentOptionDto[] = [];
+	compartmentsLoading = false;
 	tablePageSize = 100;
 	currentPage = 1;
 	sortColumn: ProcurementSortColumn | null = 'timestamp';
@@ -55,15 +59,23 @@ export class ProcurementPageComponent implements OnInit {
 
 	constructor(
 		private purchasingService: PurchasingTransactionsService,
-		private productService: ProductService
+		private productService: ProductService,
+		private compartmentService: CompartmentService
 	) { }
 
 	ngOnInit(): void {
 		// oldal indulaskor termeklista + elso tabla lekeres
+		this.loadCompartments();
 		this.loadAvailableProducts();
 		this.loadTransactions(true);
 	}
-
+	private loadCompartments(): void {
+		this.compartmentsLoading = true;
+		this.compartmentService.getAll().subscribe({
+			next: data => { this.compartments = data; this.compartmentsLoading = false; },
+			error: () => { this.compartmentsLoading = false; }
+		});
+	}
 	private loadAvailableProducts(): void {
 		this.productsLoading = true;
 

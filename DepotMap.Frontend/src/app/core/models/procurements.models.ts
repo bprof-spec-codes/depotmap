@@ -1,16 +1,16 @@
-interface ProcurementFormItem {
+export interface ProcurementFormItem {
 	productId: string;
 	quantity: number | null;
 	toCompartmentId: string;
 }
 
-interface ProcurementTableItem {
+export interface ProcurementTableItem {
 	productId: string;
 	toCompartmentId: string;
 	quantity: number;
 }
 
-interface ProcurementTableTransaction {
+export interface ProcurementTableTransaction {
 	id: string;
 	status: string;
 	statusLabel: string;
@@ -21,7 +21,7 @@ interface ProcurementTableTransaction {
 	items: ProcurementTableItem[];
 }
 
-type ProcurementSortColumn =
+export type ProcurementSortColumn =
 	| 'timestamp'
 	| 'status'
 	| 'createdByUserId'

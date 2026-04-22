@@ -37,9 +37,11 @@
         </option>
       </select>
       <input type="number" min="1" placeholder="Darabszám" [(ngModel)]="item.quantity" />
-      <select [(ngModel)]="item.toCompartmentId">
-        <option value="COMP-1">COMP-1</option>
-        <option value="COMP-2">COMP-2</option>
+      <select [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading">
+        <option value="">Válassz rekeszt...</option>
+        <option *ngFor="let c of compartments" [value]="c.id">
+          {{ c.code }}
+        </option>
       </select>
       <button type="button" class="btn btn-danger" (click)="removeItemRow(i)">-</button>
     </div>
