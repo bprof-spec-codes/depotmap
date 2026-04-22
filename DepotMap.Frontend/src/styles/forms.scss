@@ -1,0 +1,35 @@
+.form-control,
+.form-select,
+input,
+select,
+textarea {
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.form-control:focus,
+.form-select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+label,
+.form-label {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.app-form-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.app-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}

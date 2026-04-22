@@ -1,0 +1,13 @@
+<section class="app-card" [class.app-card--soft]="soft">
+  <div class="content-card-header" *ngIf="title || hasActions">
+    <h2 class="app-card-title" *ngIf="title">{{ title }}</h2>
+
+    <div class="content-card-actions" *ngIf="hasActions">
+      <ng-content select="[card-actions]"></ng-content>
+    </div>
+  </div>
+
+  <div class="content-card-body">
+    <ng-content></ng-content>
+  </div>
+</section>

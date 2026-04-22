@@ -1,0 +1,36 @@
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-outline-secondary {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.btn-outline-secondary:hover {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.btn-success {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
