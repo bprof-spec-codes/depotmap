@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProductService, ProductShortDto, ProductHistoryDto } from '../../../core/services/product-service';
+import { CompartmentService, CompartmentOptionDto } from '../../../core/services/compartment-service';
 import { BehaviorSubject, Observable, ReplaySubject, Subject, combineLatest, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
@@ -10,11 +11,13 @@ import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operato
   templateUrl: './products-list.component.html',
   styleUrls: ['./products-list.component.scss']
 })
-export class ProductsListComponent {
+export class ProductsListComponent implements OnInit {
   productsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
   visibleProductsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
   historyVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
   visibleHistory$: Observable<ProductHistoryDto[]>;
+
+  compartmentOptions: CompartmentOptionDto[] = [];
 
   openedHistoryProductId: string | null = null;
   highlightedProductId: string | null = null;
@@ -25,7 +28,11 @@ export class ProductsListComponent {
   private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
   private productsReload = new Subject<void>();
 
-  constructor(private productService: ProductService, private router: Router) {
+  constructor(
+    private productService: ProductService,
+    private router: Router,
+    private compartmentService: CompartmentService
+  ) {
     this.highlightedProductId = (history.state?.highlightProductId as string | undefined) ?? null;
 
     this.productsVm$ = this.productsReload.pipe(
@@ -81,8 +88,8 @@ export class ProductsListComponent {
         const q = search.trim().toLowerCase();
         const filtered = q
           ? historyVm.items.filter(h =>
-              `${h.actionType} ${h.name} ${h.sku} ${h.createdByUserId}`.toLowerCase().includes(q)
-            )
+            `${h.actionType} ${h.name} ${h.sku} ${h.createdByUserId}`.toLowerCase().includes(q)
+          )
           : historyVm.items;
 
         return [...filtered].sort((a, b) => {
@@ -104,6 +111,47 @@ export class ProductsListComponent {
     }
   }
 
+  ngOnInit(): void {
+    this.compartmentService.getAll().subscribe({
+      next: items => {
+        this.compartmentOptions = items;
+      },
+      error: () => {
+        this.compartmentOptions = [];
+      }
+    });
+  }
+
+  formatLocations(product: ProductShortDto): string {
+    const ids = (product.productStocks ?? [])
+      .map(stock => stock.compartmentId)
+      .filter((id): id is string => !!id && id.trim().length > 0);
+
+    const distinctCodes = Array.from(
+      new Set(
+        ids.map(id => this.compartmentOptions.find(c => c.id === id)?.code ?? id)
+      )
+    );
+
+    return distinctCodes.length ? distinctCodes.join(', ') : '-';
+  }
+
+  onProductSearchChange(value: string): void {
+    this.productSearch.next(value ?? '');
+  }
+
+  onHistorySearchChange(value: string): void {
+    this.historySearch.next(value ?? '');
+  }
+
+  onHistorySortChange(value: 'newest' | 'oldest'): void {
+    this.historySort.next(value ?? 'newest');
+  }
+
+  isHistoryOpen(productId: string): boolean {
+    return this.openedHistoryProductId === productId;
+  }
+
   showHistory(productId: string, productName: string): void {
     if (this.openedHistoryProductId === productId) {
       this.openedHistoryProductId = null;
@@ -115,32 +163,6 @@ export class ProductsListComponent {
     this.historySort.next('newest');
     this.historyRequest.next({ id: productId, name: productName });
   }
-
-  isHistoryOpen(productId: string): boolean {
-    return this.openedHistoryProductId === productId;
-  }
-
-  onHistorySearchChange(value: string): void {
-    this.historySearch.next(value ?? '');
-  }
-
-  onProductSearchChange(value: string): void {
-    this.productSearch.next(value ?? '');
-  }
-
-  onHistorySortChange(value: 'newest' | 'oldest'): void {
-    this.historySort.next(value ?? 'newest');
-  }
-
-  formatLocations(product: ProductShortDto): string {
-    const ids = (product.productStocks ?? [])
-      .map(stock => stock.compartmentId)
-      .filter(id => !!id && id.trim().length > 0);
-
-    const distinct = Array.from(new Set(ids));
-    return distinct.length ? distinct.join(', ') : '-';
-  }
-
 
   formatAction(actionType: string): string {
     if (actionType === 'edit') return 'Szerkesztés';
