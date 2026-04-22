@@ -3,6 +3,7 @@ import { BehaviorSubject, finalize } from 'rxjs';
 import {
   CreateMovementTransactionItemDto,
   CreateMovementTransactionDto,
+  MovementTransactionTableFilters,
   MovementTransactionTableRowDto,
   MovementTransactionViewDto,
   MovementsService
@@ -60,6 +61,15 @@ export class MovementsComponent implements OnInit {
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
   compartmentOptions: string[] = ['COMP-1', 'COMP-2'];
+  tableFilters = {
+    date: '',
+    status: '',
+    createdByUserId: '',
+    productId: '',
+    fromCompartmentId: '',
+    toCompartmentId: '',
+    quantity: null as number | null
+  };
 
   form = {
     createdByUserId: this.seedUserId,
@@ -170,6 +180,39 @@ export class MovementsComponent implements OnInit {
     this.currentPage += 1;
   }
 
+  applyTableFilters(): void {
+    this.currentPage = 1;
+    this.loadTransactions(true);
+  }
+
+  clearTableFilters(): void {
+    this.tableFilters = {
+      date: '',
+      status: '',
+      createdByUserId: '',
+      productId: '',
+      fromCompartmentId: '',
+      toCompartmentId: '',
+      quantity: null
+    };
+
+    this.currentPage = 1;
+    this.loadTransactions(true);
+  }
+
+  private buildTableFilters(): MovementTransactionTableFilters {
+    const quantity = this.tableFilters.quantity;
+    return {
+      date: this.tableFilters.date.trim() || undefined,
+      status: this.tableFilters.status.trim() || undefined,
+      createdByUserId: this.tableFilters.createdByUserId.trim() || undefined,
+      productId: this.tableFilters.productId.trim() || undefined,
+      fromCompartmentId: this.tableFilters.fromCompartmentId.trim() || undefined,
+      toCompartmentId: this.tableFilters.toCompartmentId.trim() || undefined,
+      quantity: typeof quantity === 'number' && Number.isFinite(quantity) ? quantity : undefined
+    };
+  }
+
   private ensureCurrentPageInRange(): void {
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
@@ -273,7 +316,7 @@ export class MovementsComponent implements OnInit {
     this.errorText = '';
 
     this.movementsService
-      .getTableRows(this.currentSkip, this.pageSize)
+      .getTableRows(this.currentSkip, this.pageSize, this.buildTableFilters())
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: rows => {

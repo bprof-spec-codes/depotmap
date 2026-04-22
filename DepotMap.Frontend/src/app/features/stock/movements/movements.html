@@ -96,6 +96,41 @@
           <th><i class="bi bi-pencil"></i></th>
           <th><i class="bi bi-trash"></i></th>
         </tr>
+        <tr>
+          <th>
+            <input type="date" [(ngModel)]="tableFilters.date" />
+          </th>
+          <th>
+            <select [(ngModel)]="tableFilters.status">
+              <option value="">Összes</option>
+              <option value="Planning">Tervezés</option>
+              <option value="Active">Összekészítés</option>
+              <option value="Closed">Lezárva</option>
+            </select>
+          </th>
+          <th></th>
+          <th>
+            <input type="text" placeholder="Felhasználó" [(ngModel)]="tableFilters.createdByUserId" />
+          </th>
+          <th>
+            <input type="text" placeholder="Cikkszám" [(ngModel)]="tableFilters.productId" />
+          </th>
+          <th>
+            <input type="number" min="1" placeholder="Darab" [(ngModel)]="tableFilters.quantity" />
+          </th>
+          <th>
+            <input type="text" placeholder="Forrás rekesz" [(ngModel)]="tableFilters.fromCompartmentId" />
+          </th>
+          <th>
+            <input type="text" placeholder="Cél rekesz" [(ngModel)]="tableFilters.toCompartmentId" />
+          </th>
+          <th>
+            <button type="button" class="btn btn-secondary" (click)="applyTableFilters()">Szűrés</button>
+          </th>
+          <th>
+            <button type="button" class="btn btn-secondary" (click)="clearTableFilters()">Törlés</button>
+          </th>
+        </tr>
       </thead>
 
       <tbody>
