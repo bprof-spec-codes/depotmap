@@ -10,9 +10,9 @@
       <h4 class="mb-3">A rendelésbe szánt tételek</h4>
       <div class="saved-row" *ngFor="let item of addedItems; let i = index">
         <div class="row-num">{{ i + 1 }}.</div>
-        <div class="col-data"><strong>Termék ID:</strong> {{ item.productId }}</div>
+        <div class="col-data"><strong>Cikkszám (SKU):</strong> {{ item.productSKU }}</div>
         <div class="col-data"><strong>Mennyiség:</strong> {{ item.quantity }} db</div>
-        <div class="col-data"><strong>Forrás rekesz:</strong> {{ item.fromCompartmentId || '-' }}</div>
+        <div class="col-data"><strong>Forrás rekesz:</strong> {{ item.fromCompartmentCode || '-' }}</div>
         <button class="btn btn-sm btn-outline-danger" (click)="removeItem(i)" title="Tétel törlése">
           <i class="bi bi-trash"></i>
         </button>
@@ -23,8 +23,8 @@
     <h4>Új tétel hozzáadása</h4>
     <div class="active-row mt-3">
       <div class="form-group">
-        <label>Termék ID *</label>
-        <input type="text" class="form-control" placeholder="pl. PROD-1" [(ngModel)]="currentRow.productId">
+        <label>Cikkszám (SKU) *</label>
+        <input type="text" class="form-control" placeholder="pl. PROD-1" [(ngModel)]="currentRow.productSKU">
       </div>
       
       <div class="form-group">
@@ -33,8 +33,8 @@
       </div>
       
       <div class="form-group">
-        <label>Rekesz ID (Opcionális)</label>
-        <input type="text" class="form-control" placeholder="pl. COMP-1" [(ngModel)]="currentRow.fromCompartmentId">
+        <label>Forrás rekesz</label>
+        <input type="text" class="form-control" placeholder="pl. COMP-1" [(ngModel)]="currentRow.fromCompartmentCode">
       </div>
     </div>
 

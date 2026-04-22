@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { OrderService, OrderViewDto } from '../../../core/services/order-service';
-import { Observable, defer, of } from 'rxjs';
-import { catchError, map, shareReplay, startWith } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
+
+export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName';
 
 @Component({
   selector: 'app-order-list',
@@ -11,25 +13,105 @@ import { catchError, map, shareReplay, startWith } from 'rxjs/operators';
   styleUrls: ['./order-list.scss']
 })
 export class OrderList implements OnInit {
-  // A ProductsListComponent-hez hasonlóan, inline definiáljuk a típust:
-  ordersVm$: Observable<{ items: OrderViewDto[]; loading: boolean; error: boolean }>;
+  ordersVm$!: Observable<{ items: OrderViewDto[]; loading: boolean; error: boolean }>;
 
   expandedOrderIds = new Set<string>();
+  private refresh$ = new BehaviorSubject<void>(undefined);
+  searchTerm$ = new BehaviorSubject<string>('');
+  sortBy$ = new BehaviorSubject<OrderSortColumn>('timestamp');
+  sortDirection$ = new BehaviorSubject<'asc' | 'desc'>('desc');
 
-  constructor(private orderService: OrderService, private router: Router) {
-    
-    // Pontosan ugyanaz a felépítés, startWith és catchError 'as OrderViewDto[]' castolással
-    this.ordersVm$ = this.orderService.orders$.pipe(
-      map(items => ({ items, loading: false, error: false })),
-      startWith({ items: [] as OrderViewDto[], loading: true, error: false }),
-      catchError(() => of({ items: [] as OrderViewDto[], loading: false, error: true })),
+  constructor(private orderService: OrderService, private router: Router) {}
+
+  ngOnInit(): void {
+    const rawData$ = this.refresh$.pipe(
+      switchMap(() => this.orderService.loadAllOrders()),
+      catchError((err) => {
+        console.error('Hiba az adatok lekérésekor', err);
+        return of(null);
+      }),
       shareReplay(1)
+    );
+
+    // 2. Keresés és Rendezés összekötése a memóriában
+    this.ordersVm$ = combineLatest([
+      rawData$,
+      this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()),
+      this.sortBy$,
+      this.sortDirection$
+    ]).pipe(
+      map(([rawItems, search, sortBy, sortDirection]) => {
+        if (!rawItems) return { items: [], loading: false, error: true };
+
+        let result = [...rawItems];
+
+        // --- KERESÉS ---
+        if (search) {
+          const s = search.toLowerCase();
+          result = result.filter(order => {
+            // A. Fő rendelés adatokban keresés
+            const inMain = 
+              order.id?.toLowerCase().includes(s) ||
+              order.status?.toLowerCase().includes(s) ||
+              order.userIdentifier?.toLowerCase().includes(s) ||
+              order.userName?.toLowerCase().includes(s) ||
+              order.timestamp?.includes(s);
+
+            // B. A rendelés BELSŐ TÉTELEIBEN (cikkszám, kód) való keresés!
+            const inItems = order.items?.some(item => 
+              item.productSKU?.toLowerCase().includes(s) ||
+              item.fromCompartmentCode?.toLowerCase().includes(s) ||
+              item.quantity.toString().includes(s)
+            );
+
+            // Ha bármelyikben benne van, a rendelés megjelenik!
+            return inMain || inItems;
+          });
+        }
+
+        // --- RENDEZÉS ---
+        result.sort((a, b) => {
+          let valA: any = a[sortBy];
+          let valB: any = b[sortBy];
+
+          // Dátumok összehasonlítása
+          if (sortBy === 'timestamp') {
+            valA = new Date(a.timestamp).getTime();
+            valB = new Date(b.timestamp).getTime();
+          }
+
+          if (valA == null) valA = '';
+          if (valB == null) valB = '';
+
+          let comparison = 0;
+          if (valA > valB) comparison = 1;
+          if (valA < valB) comparison = -1;
+
+          return sortDirection === 'asc' ? comparison : -comparison;
+        });
+
+        return { items: result, loading: false, error: false };
+      }),
+      startWith({ items: [], loading: true, error: false }) // Betöltés alatti állapot
     );
   }
 
-  ngOnInit(): void {
-    // Betöltjük az adatokat az oldal megnyitásakor
-    this.orderService.loadAllOrders().subscribe();
+  onSearch(term: string) {
+    this.searchTerm$.next(term);
+  }
+
+  onSortChange(column: OrderSortColumn) {
+    if (this.sortBy$.value === column) {
+      this.sortDirection$.next(this.sortDirection$.value === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy$.next(column);
+      this.sortDirection$.next('desc'); // Új oszlopnál legyen csökkenő a kezdő (pl legújabb, vagy Z-A)
+    }
+  }
+
+  getSortIcon(column: OrderSortColumn): string {
+    if (this.sortBy$.value !== column) return '↕';
+    return this.sortDirection$.value === 'asc' ? '↑' : '↓';
   }
 
   canEdit(status: string): boolean {
@@ -62,7 +144,10 @@ export class OrderList implements OnInit {
     if (!confirm('Biztosan törölni szeretnéd a rendelést? Ezt nem lehet visszavonni!')) return;
     
     this.orderService.deleteOrder(id).subscribe({
-      next: () => console.log(`Order ${id} deleted.`),
+      next: () => { 
+        console.log(`Order ${id} deleted.`);
+        this.refresh$.next(); 
+      },
       error: (err) => alert('Nem sikerült törölni a rendelést.')
     });
   }
@@ -79,7 +164,8 @@ export class OrderList implements OnInit {
     }
 
     this.orderService.updateOrderStatus(order.id, { status: nextStatus }).subscribe({
-      next: () => console.log(`Order ${order.id} advanced to ${nextStatus}.`),
+      next: () => { console.log(`Order ${order.id} advanced to ${nextStatus}.`);
+      this.refresh$.next(); },
       error: (err) => alert('Nem sikerült a státusz frissítése.')
     });
   }

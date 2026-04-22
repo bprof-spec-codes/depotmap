@@ -5,9 +5,9 @@ import { environment } from '../../../environments/environment.development';
 
 export interface OrderItemViewDto {
   id: string;
-  productId: string;
+  productSKU: string;
   quantity: number;
-  fromCompartmentId?: string;
+  fromCompartmentCode?: string;
 }
 
 export interface OrderViewDto {
@@ -15,6 +15,8 @@ export interface OrderViewDto {
   type: string;
   status: string;
   createdByUserId: string;
+  userIdentifier: string;
+  userName: string;
   timestamp: string;
   items: OrderItemViewDto[];
 }
@@ -33,14 +35,15 @@ export interface UpdateOrderStatusDto {
 }
 
 export interface CreateOrderItemDto {
-  productId: string;
+  productSKU: string;
   quantity: number;
-  fromCompartmentId?: string;
+  fromCompartmentCode?: string;
 }
 
 export interface UpdateOrderItemDto {
+  productSKU: string;
   quantity: number;
-  fromCompartmentId?: string;
+  fromCompartmentCode?: string;
 }
 
 interface ValuesWrapper<T> {

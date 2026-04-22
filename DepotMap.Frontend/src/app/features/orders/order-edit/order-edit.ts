@@ -17,9 +17,9 @@ orderId!: string;
   editingItems: CreateOrderItemDto[] = [];
 
   currentRow: CreateOrderItemDto = {
-    productId: '',
+    productSKU: '',
     quantity: 1,
-    fromCompartmentId: ''
+    fromCompartmentCode: ''
   };
 
   constructor(
@@ -48,9 +48,9 @@ orderId!: string;
 
   private populateForm(order: OrderViewDto) {
     this.editingItems = order.items.map(item => ({
-      productId: item.productId,
+      productSKU: item.productSKU,
       quantity: item.quantity,
-      fromCompartmentId: item.fromCompartmentId || ''
+      fromCompartmentCode: item.fromCompartmentCode || ''
     }));
     this.isLoading = false;
   }
@@ -63,12 +63,12 @@ orderId!: string;
   }
 
   addNewItem() {
-    if (!this.currentRow.productId) return alert('Kérlek, add meg a Termék ID-t!');
+    if (!this.currentRow.productSKU) return alert('Kérlek, add meg a Termék ID-t!');
     if (!this.currentRow.quantity || this.currentRow.quantity < 1) return alert('A darabszám legalább 1 kell legyen!');
 
     this.editingItems.push({ ...this.currentRow });
     
-    this.currentRow = { productId: '', quantity: 1, fromCompartmentId: '' };
+    this.currentRow = { productSKU: '', quantity: 1, fromCompartmentCode: '' };
   }
 
   removeItem(index: number) {
@@ -76,7 +76,7 @@ orderId!: string;
   }
 
   saveOrder() {
-    if (this.currentRow.productId) {
+    if (this.currentRow.productSKU) {
       this.addNewItem();
     }
 

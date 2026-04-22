@@ -18,9 +18,9 @@ export class OrderCreate implements OnInit {
 
   // Az aktuálisan kitöltendő (üres) sor
   currentRow: CreateOrderItemDto = {
-    productId: '',
+    productSKU: '',
     quantity: 1,
-    fromCompartmentId: ''
+    fromCompartmentCode: ''
   };
 
   constructor(
@@ -36,21 +36,21 @@ export class OrderCreate implements OnInit {
   // Böngésző fül bezárásának/frissítésének blokkolása, ha van már felvitt tétel
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    if (!this.isSavedOrDiscarded && (this.addedItems.length > 0 || this.currentRow.productId)) {
+    if (!this.isSavedOrDiscarded && (this.addedItems.length > 0 || this.currentRow.productSKU)) {
       $event.returnValue = true;
     }
   }
 
   // --- ÚJ TÉTEL HOZZÁADÁSA (CSAK MEMÓRIÁBA!) ---
   addNewItem() {
-    if (!this.currentRow.productId) return alert('Kérlek, add meg a Termék ID-t!');
+    if (!this.currentRow.productSKU) return alert('Kérlek, add meg a Termék ID-t!');
     if (!this.currentRow.quantity || this.currentRow.quantity < 1) return alert('A darabszám legalább 1 kell legyen!');
 
     // Lemásoljuk a sort és betesszük a listába
     this.addedItems.push({ ...this.currentRow });
     
     // Kiürítjük a beviteli mezőket a következő tételnek
-    this.currentRow = { productId: '', quantity: 1, fromCompartmentId: '' };
+    this.currentRow = { productSKU: '', quantity: 1, fromCompartmentCode: '' };
   }
 
   // --- TÉTEL TÖRLÉSE A LISTÁBÓL ---
@@ -58,10 +58,8 @@ export class OrderCreate implements OnInit {
     this.addedItems.splice(index, 1);
   }
 
-  // --- RENDELÉS MENTÉSE (EGYETLEN HÍVÁSSAL A BACKENDRE!) ---
   saveOrder() {
-    // Ha az alsó sorba beírt valamit, de elfelejtette megnyomni a "Hozzáadás" gombot, mentsük meg!
-    if (this.currentRow.productId) {
+    if (this.currentRow.productSKU) {
       this.addNewItem();
     }
 
@@ -76,13 +74,11 @@ export class OrderCreate implements OnInit {
 
     this.isSaving = true;
 
-    // Összeállítjuk a teljes rendelést
     const newOrder = {
       createdByUserId: currentUserId,
-      items: this.addedItems // Itt küldjük el a memóriában összegyűlt listát!
+      items: this.addedItems
     };
 
-    // Elküldjük a backendnek
     this.orderService.createOrder(newOrder).subscribe({
       next: (res) => {
         this.isSavedOrDiscarded = true;
@@ -95,13 +91,11 @@ export class OrderCreate implements OnInit {
     });
   }
 
-  // --- RENDELÉS ELVETÉSE ---
   discardOrder() {
-    if (this.addedItems.length > 0 || this.currentRow.productId) {
+    if (this.addedItems.length > 0 || this.currentRow.productSKU) {
       if (!confirm('Biztosan elveted a rendelést? Minden megadott adat elvész!')) return;
     }
     
-    // Mivel nem hoztunk létre semmit a backendben, csak simán visszalépünk!
     this.isSavedOrDiscarded = true;
     this.router.navigate(['/orders']);
   }
