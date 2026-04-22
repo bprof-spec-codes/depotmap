@@ -22,7 +22,7 @@ namespace DepotMap.Logics.Logics
         public async Task<List<PickingTaskDto>> GetOrderPickingRouteAsync(string transactionId)
         {
             var rawData = await _context.TransactionItems
-                .Where(ti => ti.TransactionId == transactionId)
+                .Where(ti => ti.TransactionId == transactionId && ti.FromCompartmentId != null)
                 .Select(ti => new
                 {
                     ti.ProductId,
