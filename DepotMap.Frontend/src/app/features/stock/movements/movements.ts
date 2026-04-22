@@ -9,6 +9,7 @@ import {
   MovementsService
 } from '../../../core/services/movements-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
+import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
 
 interface MovementFormItem {
   productId: string;
@@ -54,6 +55,9 @@ export class MovementsComponent implements OnInit {
   private readonly seedUserId = 'seed-admin-001';
   private readonly pageSize = 500;
   readonly tablePageSizeOptions = [10, 50, 100, 500];
+  compartmentOptions: CompartmentOptionDto[] = [];
+  compartmentsLoading = false;
+
   tablePageSize = 100;
   currentPage = 1;
   sortColumn: MovementSortColumn | null = null;
@@ -69,7 +73,6 @@ export class MovementsComponent implements OnInit {
 
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
-  compartmentOptions: string[] = ['COMP-1', 'COMP-2'];
   tableFilters = {
     date: '',
     status: '',
@@ -88,14 +91,32 @@ export class MovementsComponent implements OnInit {
 
   constructor(
     private movementsService: MovementsService,
-    private productService: ProductService
-  ) {}
+    private productService: ProductService,
+    private compartmentService: CompartmentService
+  ) { }
 
   ngOnInit(): void {
     this.loadAvailableProducts();
+    this.loadCompartments();
     this.loadTransactions(true);
   }
 
+  private loadCompartments(): void {
+    this.compartmentsLoading = true;
+
+    this.compartmentService.getAll()
+      .pipe(finalize(() => (this.compartmentsLoading = false)))
+      .subscribe(items => {
+        this.compartmentOptions = items;
+      });
+  }
+  getAvailableFromCompartments(selectedToCompartmentId: string): CompartmentOptionDto[] {
+    return this.compartmentOptions.filter(c => c.id !== selectedToCompartmentId);
+  }
+
+  getAvailableToCompartments(selectedFromCompartmentId: string): CompartmentOptionDto[] {
+    return this.compartmentOptions.filter(c => c.id !== selectedFromCompartmentId);
+  }
   private loadAvailableProducts(): void {
     this.productsLoading = true;
 

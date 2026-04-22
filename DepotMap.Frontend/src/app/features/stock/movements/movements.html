@@ -40,14 +40,18 @@
 
       <input type="number" min="1" placeholder="Darabszám" [(ngModel)]="item.quantity" />
 
-      <select [(ngModel)]="item.fromCompartmentId">
+      <select [(ngModel)]="item.fromCompartmentId" [disabled]="compartmentsLoading">
         <option value="">Forrás rekesz...</option>
-        <option *ngFor="let compartment of compartmentOptions" [value]="compartment">{{ compartment }}</option>
+        <option *ngFor="let compartment of getAvailableFromCompartments(item.toCompartmentId)" [value]="compartment.id">
+          {{ compartment.code }}
+        </option>
       </select>
 
-      <select [(ngModel)]="item.toCompartmentId">
+      <select [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading">
         <option value="">Cél rekesz...</option>
-        <option *ngFor="let compartment of compartmentOptions" [value]="compartment">{{ compartment }}</option>
+        <option *ngFor="let compartment of getAvailableToCompartments(item.fromCompartmentId)" [value]="compartment.id">
+          {{ compartment.code }}
+        </option>
       </select>
 
       <button type="button" class="btn btn-danger" (click)="removeItemRow(i)">-</button>
@@ -157,21 +161,17 @@
           <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
             <ng-container *ngIf="transaction.items as rows">
               <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}</td>
+                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}
+                </td>
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length">
                   <span class="status-chip" [ngClass]="getStatusClass(transaction.status)">
                     {{ transaction.statusLabel }}
                   </span>
                 </td>
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button
-                    *ngIf="isStatusArrowVisible(transaction.status)"
-                    type="button"
-                    class="icon-btn next-status"
-                    [disabled]="statusUpdatingId === transaction.id"
-                    (click)="advanceStatus(transaction)"
-                    title="Következő státusz"
-                  >
+                  <button *ngIf="isStatusArrowVisible(transaction.status)" type="button" class="icon-btn next-status"
+                    [disabled]="statusUpdatingId === transaction.id" (click)="advanceStatus(transaction)"
+                    title="Következő státusz">
                     <i class="bi bi-arrow-right"></i>
                   </button>
                 </td>
@@ -183,25 +183,15 @@
                 <td>{{ row.toCompartmentId }}</td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    [disabled]="transaction.isClosed"
-                    (click)="editTransaction(transaction)"
-                    title="Szerkesztés"
-                  >
+                  <button type="button" class="icon-btn" [disabled]="transaction.isClosed"
+                    (click)="editTransaction(transaction)" title="Szerkesztés">
                     <i class="bi bi-pencil"></i>
                   </button>
                 </td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button
-                    type="button"
-                    class="icon-btn danger"
-                    [disabled]="transaction.isDeleteBlocked"
-                    (click)="deleteTransaction(transaction)"
-                    title="Törlés"
-                  >
+                  <button type="button" class="icon-btn danger" [disabled]="transaction.isDeleteBlocked"
+                    (click)="deleteTransaction(transaction)" title="Törlés">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
