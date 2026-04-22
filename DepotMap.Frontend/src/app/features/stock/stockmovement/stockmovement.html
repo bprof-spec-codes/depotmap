@@ -7,47 +7,79 @@
     </h2>
   </div>
 
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="input-group shadow-sm">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input 
+          type="text" 
+          class="form-control border-start-0 pl-0" 
+          placeholder="Keresés..."
+          [ngModel]="searchTerm$ | async"
+          (ngModelChange)="onSearch($event)">
+      </div>
+    </div>
+  </div>
+
   <div *ngIf="vm.loading" class="spinner">Mozgások betöltése...</div>
   <div *ngIf="!vm.loading && vm.error" class="error-text">Hiba történt az adatok lekérésekor.</div>
 
   <div class="form-container" *ngIf="!vm.loading && !vm.error">
+
+      <div *ngIf="!vm.items.length" class="empty-text mb-4">
+        Nem található a keresésnek megfelelő készletmozgás.
+      </div>
+
     
-    <div *ngIf="!vm.items.length" class="empty-text mb-4">
-      Nem található készletmozgás ehhez a lekérdezéshez.
-    </div>
+
 
     <div class="history-table-wrap mb-4" *ngIf="vm.items.length > 0">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Dátum</th>
-            <th>Termék ID</th>
-            <th>Rekesz ID</th>
-            <th>Típus</th>
-            <th>Változás</th>
-            <th>Tranzakció / Készítő</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let mov of vm.items">
-            <td>{{ mov.timestamp | date:'yyyy.MM.dd. HH:mm:ss' }}</td>
-            <td>{{ mov.productId }}</td>
-            <td>{{ mov.compartmentId || '-' }}</td>
-            <td>
-              <span class="status-badge" [ngClass]="mov.movementType === 'Inbound' ? 'badge-closed' : 'badge-planning'">
-                {{ mov.movementType }}
-              </span>
-            </td>
-            <td [ngClass]="getMovementColor(mov.quantityChange)">
-              <strong>{{ mov.quantityChange > 0 ? '+' : '' }}{{ mov.quantityChange }} db</strong>
-            </td>
-            <td>
-              <small class="text-muted">Tr: {{ mov.transactionId || '-' }}<br>U: {{ mov.createdByUserId || '-' }}</small>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th (click)="onSortChange('timestamp')" class="cursor-pointer select-none">
+                Dátum {{ getSortIcon('timestamp') }}
+              </th>
+              <th (click)="onSortChange('productSKU')" class="cursor-pointer select-none">
+                Termék (SKU) {{ getSortIcon('productSKU') }}
+              </th>
+              <th (click)="onSortChange('compartmentCode')" class="cursor-pointer select-none">
+                Rekesz Kód {{ getSortIcon('compartmentCode') }}
+              </th>
+              <th (click)="onSortChange('movementType')" class="cursor-pointer select-none">
+                Típus {{ getSortIcon('movementType') }}
+              </th>
+              <th (click)="onSortChange('quantityChange')" class="cursor-pointer select-none">
+                Változás {{ getSortIcon('quantityChange') }}
+              </th>
+              <th (click)="onSortChange('userName')" class="cursor-pointer select-none">
+                Tranzakció / Készítő {{ getSortIcon('userName') }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mov of vm.items">
+              <td>{{ mov.timestamp | date:'yyyy.MM.dd. HH:mm:ss' }}</td>
+              <td [title]="'ID: ' + mov.productId">{{ mov.productSKU }}</td>
+              <td [title]="'ID: ' + mov.compartmentId">{{ mov.compartmentCode || '-' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="mov.movementType === 'Inbound' ? 'badge-closed' : 'badge-planning'">
+                  {{ mov.movementType }}
+                </span>
+              </td>
+              <td [ngClass]="getMovementColor(mov.quantityChange)">
+                <strong>{{ mov.quantityChange > 0 ? '+' : '' }}{{ mov.quantityChange }} db</strong>
+              </td>
+              <td>
+                <div class="text-muted small">
+                  Tr: {{ mov.transactionId || '-' }}<br>
+                  Felh: {{ mov.userName }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
     <div class="footer-actions mt-4 pt-3 border-top">
       <button class="btn btn-outline-secondary" (click)="goBack()">

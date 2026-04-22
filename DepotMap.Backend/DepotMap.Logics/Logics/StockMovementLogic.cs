@@ -26,6 +26,9 @@ namespace DepotMap.Logics.Logics
         public async Task<IEnumerable<StockMovementViewDto>> GetAllMovementsAsync()
         {
             var movements = await _context.StockMovements
+                .Include(sm => sm.Product)
+                .Include(sm => sm.Compartment)
+                .Include(sm => sm.CreatedBy)
                 .OrderByDescending(sm => sm.Timestamp)
                 .ToListAsync();
 
@@ -35,6 +38,9 @@ namespace DepotMap.Logics.Logics
         public async Task<IEnumerable<StockMovementViewDto>> GetMovementsByProductAsync(string productId)
         {
             var movements = await _context.StockMovements
+                .Include(sm => sm.Product)
+                .Include(sm => sm.Compartment)
+                .Include(sm => sm.CreatedBy)
                 .Where(sm => sm.ProductId == productId)
                 .OrderByDescending(sm => sm.Timestamp)
                 .ToListAsync();

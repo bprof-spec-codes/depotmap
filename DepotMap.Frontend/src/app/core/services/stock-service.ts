@@ -16,11 +16,15 @@ export interface ProductStockViewDto {
 export interface StockMovementViewDto {
   id: string;
   productId: string;
+  productSKU: string;
   compartmentId: string;
+  compartmentCode: string;
   quantityChange: number;
   movementType: string;
   transactionId?: string;
   createdByUserId?: string;
+  userIdentifier: string;
+  userName: string;
   timestamp: string;
 }
 

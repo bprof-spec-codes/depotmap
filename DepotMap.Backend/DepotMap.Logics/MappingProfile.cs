@@ -61,7 +61,11 @@ namespace DepotMap.Logics
 
             CreateMap<Transaction, MovementTransactionViewDto>();
 
-            CreateMap<StockMovement, StockMovementViewDto>();
+            CreateMap<StockMovement, StockMovementViewDto>()
+                .ForMember(dest => dest.ProductSKU, opt => opt.MapFrom(src => src.Product.SKU))
+                .ForMember(dest => dest.CompartmentCode, opt => opt.MapFrom(src => src.Compartment.Code))
+                .ForMember(dest => dest.UserIdentifier, opt => opt.MapFrom(src => src.CreatedBy.Identifier))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.CreatedBy.LastName + " " + src.CreatedBy.FirstName));
 
             CreateMap<CreateStockMovementDto, StockMovement>();
 
