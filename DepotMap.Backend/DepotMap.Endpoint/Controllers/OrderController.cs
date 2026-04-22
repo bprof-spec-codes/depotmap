@@ -1,9 +1,11 @@
 ﻿using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Logics.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
@@ -15,6 +17,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetAllOrders()
         {
             var orders = await _orderLogic.GetAllOrdersAsync();
@@ -22,6 +25,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetOrderById(string id)
         {
             var order = await _orderLogic.GetOrderByIdAsync(id);
@@ -35,6 +39,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
             if (!ModelState.IsValid)
@@ -55,6 +60,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> UpdateOrder(string id, [FromBody] UpdateOrderDto dto)
         {
             if (!ModelState.IsValid)
@@ -80,6 +86,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPatch("{id}/status")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> UpdateOrderStatus(string id, [FromBody] UpdateOrderStatusDto dto)
         {
             if (!ModelState.IsValid)
@@ -87,9 +94,11 @@ namespace DepotMap.Endpoint.Controllers
                 return BadRequest(ModelState);
             }
 
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+
             try
             {
-                var updatedOrder = await _orderLogic.UpdateOrderStatusAsync(id, dto);
+                var updatedOrder = await _orderLogic.UpdateOrderStatusAsync(id, dto, userRole!);
 
                 if (updatedOrder == null)
                 {
@@ -102,9 +111,14 @@ namespace DepotMap.Endpoint.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> DeleteOrder(string id)
         {
             try

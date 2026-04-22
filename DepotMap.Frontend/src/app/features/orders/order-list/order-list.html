@@ -1,7 +1,7 @@
 <div class="orders-list">
   
   <div class="header d-flex flex-wrap justify-content-between align-items-center mb-4">
-    <h2>Kimenő Rendelések</h2>
+    <h2>Rendelések</h2>
     <a routerLink="/orders/create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Új Rendelés</a>
   </div>
 
@@ -12,7 +12,7 @@
         <input 
           type="text" 
           class="form-control" 
-          placeholder="Keresés azonosító, státusz, név vagy cikkszám alapján..."
+          placeholder="Keresés..."
           [ngModel]="searchTerm$ | async"
           (ngModelChange)="onSearch($event)">
       </div>
