@@ -3,6 +3,7 @@ import { BehaviorSubject, finalize } from 'rxjs';
 import {
 	CreatePurchasingTransactionDto,
 	CreatePurchasingTransactionItemDto,
+	PurchasingTransactionTableFilters,
 	PurchasingTransactionTableRowDto,
 	PurchasingTransactionViewDto,
 	PurchasingTransactionsService
@@ -32,6 +33,14 @@ interface ProcurementTableTransaction {
 	items: ProcurementTableItem[];
 }
 
+type ProcurementSortColumn =
+	| 'timestamp'
+	| 'status'
+	| 'createdByUserId'
+	| 'productId'
+	| 'toCompartmentId'
+	| 'quantity';
+
 @Component({
 	selector: 'app-procurement-page',
 	standalone: false,
@@ -40,15 +49,18 @@ interface ProcurementTableTransaction {
 })
 export class ProcurementPageComponent implements OnInit {
 	private readonly seedUserId = 'seed-admin-001';
-	private readonly pageSize = 100;
+	private readonly pageSize = 500;
 	private readonly firstLoadRetryDelayMs = 1000;
 	private readonly maxInitialLoadRetries = 1;
-	private currentSkip = 0;
 	private initialLoadRetryCount = 0;
+	readonly tablePageSizeOptions = [10, 50, 100, 500];
+	tablePageSize = 100;
+	currentPage = 1;
+	sortColumn: ProcurementSortColumn | null = 'timestamp';
+	sortDirection: 'desc' | 'asc' = 'desc';
 
 	saving = false;
 	loading = false;
-	hasMore = true;
 	errorText = '';
 	//async pipe 
 	transactions$ = new BehaviorSubject<ProcurementTableTransaction[]>([]);
@@ -56,6 +68,14 @@ export class ProcurementPageComponent implements OnInit {
 	productsLoading = false;
 	editingTransactionId: string | null = null;
 	statusUpdatingId: string | null = null;
+	tableFilters = {
+		date: '',
+		status: '',
+		createdByUserId: '',
+		productId: '',
+		toCompartmentId: '',
+		quantity: null as number | null
+	};
 
 	form = {
 		createdByUserId: this.seedUserId,
@@ -178,6 +198,153 @@ export class ProcurementPageComponent implements OnInit {
 		return this.editingTransactionId !== null;
 	}
 
+	get pagedTransactions(): ProcurementTableTransaction[] {
+		const start = (this.currentPage - 1) * this.tablePageSize;
+		const sorted = this.getSortedTransactions(this.transactions$.value);
+		return sorted.slice(start, start + this.tablePageSize);
+	}
+
+	toggleSort(column: ProcurementSortColumn): void {
+		if (this.sortColumn !== column) {
+			this.sortColumn = column;
+			this.sortDirection = 'desc';
+			return;
+		}
+
+		this.sortDirection = this.sortDirection === 'desc' ? 'asc' : 'desc';
+	}
+
+	getSortIndicator(column: ProcurementSortColumn): string {
+		if (this.sortColumn !== column) {
+			return '';
+		}
+
+		return this.sortDirection === 'desc' ? '↓' : '↑';
+	}
+
+	get totalPages(): number {
+		const total = this.transactions$.value.length;
+		return total > 0 ? Math.ceil(total / this.tablePageSize) : 1;
+	}
+
+	get canGoPrevPage(): boolean {
+		return this.currentPage > 1;
+	}
+
+	get canGoNextPage(): boolean {
+		return this.currentPage < this.totalPages;
+	}
+
+	onTablePageSizeChange(size: number | string): void {
+		const parsed = Number(size);
+		if (![10, 50, 100, 500].includes(parsed)) {
+			return;
+		}
+
+		this.tablePageSize = parsed;
+		this.currentPage = 1;
+		this.ensureCurrentPageInRange();
+	}
+
+	goToPrevPage(): void {
+		if (!this.canGoPrevPage) {
+			return;
+		}
+
+		this.currentPage -= 1;
+	}
+
+	goToNextPage(): void {
+		if (!this.canGoNextPage) {
+			return;
+		}
+
+		this.currentPage += 1;
+	}
+
+	applyTableFilters(): void {
+		this.currentPage = 1;
+		this.loadTransactions(true);
+	}
+
+	clearTableFilters(): void {
+		this.tableFilters = {
+			date: '',
+			status: '',
+			createdByUserId: '',
+			productId: '',
+			toCompartmentId: '',
+			quantity: null
+		};
+
+		this.currentPage = 1;
+		this.loadTransactions(true);
+	}
+
+	private buildTableFilters(): PurchasingTransactionTableFilters {
+		const quantity = this.tableFilters.quantity;
+		return {
+			date: this.tableFilters.date.trim() || undefined,
+			status: this.tableFilters.status.trim() || undefined,
+			createdByUserId: this.tableFilters.createdByUserId.trim() || undefined,
+			productId: this.tableFilters.productId.trim() || undefined,
+			toCompartmentId: this.tableFilters.toCompartmentId.trim() || undefined,
+			quantity: typeof quantity === 'number' && Number.isFinite(quantity) ? quantity : undefined
+		};
+	}
+
+	private ensureCurrentPageInRange(): void {
+		if (this.currentPage > this.totalPages) {
+			this.currentPage = this.totalPages;
+		}
+
+		if (this.currentPage < 1) {
+			this.currentPage = 1;
+		}
+	}
+
+	private getSortedTransactions(items: ProcurementTableTransaction[]): ProcurementTableTransaction[] {
+		if (!this.sortColumn) {
+			return items;
+		}
+
+		const directionFactor = this.sortDirection === 'desc' ? -1 : 1;
+		const column = this.sortColumn;
+
+		return [...items].sort((a, b) => {
+			const aValue = this.getSortValue(a, column);
+			const bValue = this.getSortValue(b, column);
+
+			if (typeof aValue === 'number' || typeof bValue === 'number') {
+				return (Number(aValue) - Number(bValue)) * directionFactor;
+			}
+
+			return String(aValue).localeCompare(String(bValue), undefined, {
+				numeric: true,
+				sensitivity: 'base'
+			}) * directionFactor;
+		});
+	}
+
+	private getSortValue(transaction: ProcurementTableTransaction, column: ProcurementSortColumn): string | number {
+		switch (column) {
+			case 'timestamp':
+				return new Date(transaction.timestamp).getTime() || 0;
+			case 'status':
+				return transaction.status;
+			case 'createdByUserId':
+				return transaction.createdByUserId;
+			case 'productId':
+				return transaction.items[0]?.productId ?? '';
+			case 'toCompartmentId':
+				return transaction.items[0]?.toCompartmentId ?? '';
+			case 'quantity':
+				return transaction.items[0]?.quantity ?? 0;
+			default:
+				return '';
+		}
+	}
+
 	loadTransactions(reset = true, fromAutoRetry = false): void {
 		// egyszerre csak 1 lekeres menjen
 		if (this.loading) {
@@ -189,36 +356,24 @@ export class ProcurementPageComponent implements OnInit {
 				this.initialLoadRetryCount = 0;
 			}
 
-			this.currentSkip = 0;
+			this.currentPage = 1;
 			this.transactions$.next([]);
-			this.hasMore = true;
-		}
-
-		if (!this.hasMore) {
-			return;
 		}
 
 		this.loading = true;
 		this.errorText = '';
 
 		this.purchasingService
-			.getTableRows(this.currentSkip, this.pageSize)
+			.getTableRows(0, this.pageSize, this.buildTableFilters())
 			.pipe(finalize(() => (this.loading = false)))
 			.subscribe({
 				next: rows => {
 					const mapStart = performance.now();
 					const mapped = this.mapTableRowsToTransactions(rows);
+					this.transactions$.next(mapped);
+					this.initialLoadRetryCount = 0;
 
-					if (reset) {
-						this.transactions$.next(mapped);
-						this.initialLoadRetryCount = 0;
-					} else {
-						const merged = this.mergeTransactions(this.transactions$.value, mapped);
-						this.transactions$.next(merged);
-					}
-
-					this.currentSkip += rows.length;
-					this.hasMore = rows.length === this.pageSize;
+					this.ensureCurrentPageInRange();
 
 					const elapsedMs = Math.round(performance.now() - mapStart);
 					console.log(
@@ -235,16 +390,12 @@ export class ProcurementPageComponent implements OnInit {
 
 					if (reset) {
 						this.transactions$.next([]);
+						this.ensureCurrentPageInRange();
 					}
 
-					this.hasMore = false;
 					this.errorText = this.extractErrorMessage(err, 'A beszerzések betöltése sikertelen volt.');
 				}
 			});
-	}
-
-	loadMoreTransactions(): void {
-		this.loadTransactions(false);
 	}
 
 	trackByTransactionId(index: number, transaction: ProcurementTableTransaction): string {
@@ -363,38 +514,6 @@ export class ProcurementPageComponent implements OnInit {
 					this.errorText = this.extractErrorMessage(err, 'A törlés sikertelen volt.');
 				}
 			});
-	}
-
-	private mergeTransactions(
-		currentTransactions: ProcurementTableTransaction[],
-		incoming: ProcurementTableTransaction[]
-	): ProcurementTableTransaction[] {
-		const byId = new Map<string, ProcurementTableTransaction>();
-
-		for (const existing of currentTransactions) {
-			byId.set(existing.id, {
-				...existing,
-				items: [...existing.items]
-			});
-		}
-
-		for (const tx of incoming) {
-			const existing = byId.get(tx.id);
-
-			if (existing) {
-				existing.items.push(...tx.items);
-				existing.status = tx.status;
-				existing.statusLabel = tx.statusLabel;
-				existing.isClosed = tx.isClosed;
-				existing.isDeleteBlocked = tx.isDeleteBlocked;
-				existing.createdByUserId = tx.createdByUserId;
-				existing.timestamp = tx.timestamp;
-			} else {
-				byId.set(tx.id, tx);
-			}
-		}
-
-		return Array.from(byId.values());
 	}
 
 	private mapTableRowsToTransactions(rows: PurchasingTransactionTableRowDto[]): ProcurementTableTransaction[] {

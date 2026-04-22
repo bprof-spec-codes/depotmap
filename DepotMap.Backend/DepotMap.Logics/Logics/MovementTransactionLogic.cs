@@ -31,7 +31,16 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<List<MovementTransactionViewDto>>(transactions);
         }
 
-        public async Task<List<MovementTransactionTableRowDto>> GetTableRowsAsync(int skip = 0, int take = 500)
+        public async Task<List<MovementTransactionTableRowDto>> GetTableRowsAsync(
+            int skip = 0,
+            int take = 500,
+            DateTime? date = null,
+            string? status = null,
+            string? createdByUserId = null,
+            string? productId = null,
+            string? fromCompartmentId = null,
+            string? toCompartmentId = null,
+            int? quantity = null)
         {
             if (skip < 0)
             {
@@ -43,9 +52,34 @@ namespace DepotMap.Logics.Logics
                 take = 500;
             }
 
-            return await _context.Transactions
+            status = string.IsNullOrWhiteSpace(status) ? null : status.Trim();
+            createdByUserId = string.IsNullOrWhiteSpace(createdByUserId) ? null : createdByUserId.Trim();
+            productId = string.IsNullOrWhiteSpace(productId) ? null : productId.Trim();
+            fromCompartmentId = string.IsNullOrWhiteSpace(fromCompartmentId) ? null : fromCompartmentId.Trim();
+            toCompartmentId = string.IsNullOrWhiteSpace(toCompartmentId) ? null : toCompartmentId.Trim();
+
+            var transactionsQuery = _context.Transactions
                 .AsNoTracking()
-                .Where(t => t.Type == "Transfer")
+                .Where(t => t.Type == "Transfer");
+
+            if (date.HasValue)
+            {
+                var start = date.Value.Date;
+                var end = start.AddDays(1);
+                transactionsQuery = transactionsQuery.Where(t => t.Timestamp >= start && t.Timestamp < end);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                transactionsQuery = transactionsQuery.Where(t => t.Status.Contains(status));
+            }
+
+            if (!string.IsNullOrWhiteSpace(createdByUserId))
+            {
+                transactionsQuery = transactionsQuery.Where(t => t.CreatedByUserId.Contains(createdByUserId));
+            }
+
+            var rowsQuery = transactionsQuery
                 .OrderByDescending(t => t.Timestamp)
                 .SelectMany(t => t.Items.Select(item => new MovementTransactionTableRowDto
                 {
@@ -57,7 +91,29 @@ namespace DepotMap.Logics.Logics
                     Quantity = item.Quantity,
                     FromCompartmentId = item.FromCompartmentId ?? string.Empty,
                     ToCompartmentId = item.ToCompartmentId ?? string.Empty
-                }))
+                }));
+
+            if (!string.IsNullOrWhiteSpace(productId))
+            {
+                rowsQuery = rowsQuery.Where(r => r.ProductId.Contains(productId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(fromCompartmentId))
+            {
+                rowsQuery = rowsQuery.Where(r => r.FromCompartmentId.Contains(fromCompartmentId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(toCompartmentId))
+            {
+                rowsQuery = rowsQuery.Where(r => r.ToCompartmentId.Contains(toCompartmentId));
+            }
+
+            if (quantity.HasValue)
+            {
+                rowsQuery = rowsQuery.Where(r => r.Quantity == quantity.Value);
+            }
+
+            return await rowsQuery
                 .Skip(skip)
                 .Take(take)
                 .ToListAsync();
