@@ -42,8 +42,11 @@ interface MovementTableTransaction {
 })
 export class MovementsComponent implements OnInit {
   private readonly seedUserId = 'seed-admin-001';
-  private readonly pageSize = 100;
+  private readonly pageSize = 500;
   private currentSkip = 0;
+  readonly tablePageSizeOptions = [10, 50, 100, 500];
+  tablePageSize = 100;
+  currentPage = 1;
 
   saving = false;
   loading = false;
@@ -120,6 +123,61 @@ export class MovementsComponent implements OnInit {
 
   isEditing(): boolean {
     return this.editingTransactionId !== null;
+  }
+
+  get pagedTransactions(): MovementTableTransaction[] {
+    const start = (this.currentPage - 1) * this.tablePageSize;
+    return this.transactions$.value.slice(start, start + this.tablePageSize);
+  }
+
+  get totalPages(): number {
+    const total = this.transactions$.value.length;
+    return total > 0 ? Math.ceil(total / this.tablePageSize) : 1;
+  }
+
+  get canGoPrevPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get canGoNextPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  onTablePageSizeChange(size: number | string): void {
+    const parsed = Number(size);
+    if (![10, 50, 100, 500].includes(parsed)) {
+      return;
+    }
+
+    this.tablePageSize = parsed;
+    this.currentPage = 1;
+    this.ensureCurrentPageInRange();
+  }
+
+  goToPrevPage(): void {
+    if (!this.canGoPrevPage) {
+      return;
+    }
+
+    this.currentPage -= 1;
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoNextPage) {
+      return;
+    }
+
+    this.currentPage += 1;
+  }
+
+  private ensureCurrentPageInRange(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
+    }
   }
 
   submit(): void {
@@ -202,6 +260,7 @@ export class MovementsComponent implements OnInit {
 
     if (reset) {
       this.currentSkip = 0;
+      this.currentPage = 1;
       this.transactions$.next([]);
       this.hasMore = true;
     }
@@ -227,12 +286,15 @@ export class MovementsComponent implements OnInit {
             this.transactions$.next(merged);
           }
 
+          this.ensureCurrentPageInRange();
+
           this.currentSkip += rows.length;
           this.hasMore = rows.length === this.pageSize;
         },
         error: (err: unknown) => {
           if (reset) {
             this.transactions$.next([]);
+            this.ensureCurrentPageInRange();
           }
 
           this.hasMore = false;
