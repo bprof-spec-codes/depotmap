@@ -23,9 +23,27 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("table")]
-        public async Task<IActionResult> GetTable([FromQuery] int skip = 0, [FromQuery] int take = 500)
+        public async Task<IActionResult> GetTable(
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 500,
+            [FromQuery] DateTime? date = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? createdByUserId = null,
+            [FromQuery] string? productId = null,
+            [FromQuery] string? fromCompartmentId = null,
+            [FromQuery] string? toCompartmentId = null,
+            [FromQuery] int? quantity = null)
         {
-            var rows = await _movementTransactionLogic.GetTableRowsAsync(skip, take);
+            var rows = await _movementTransactionLogic.GetTableRowsAsync(
+                skip,
+                take,
+                date,
+                status,
+                createdByUserId,
+                productId,
+                fromCompartmentId,
+                toCompartmentId,
+                quantity);
             return Ok(rows);
         }
 

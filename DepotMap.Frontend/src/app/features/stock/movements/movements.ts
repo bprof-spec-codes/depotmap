@@ -3,6 +3,7 @@ import { BehaviorSubject, finalize } from 'rxjs';
 import {
   CreateMovementTransactionItemDto,
   CreateMovementTransactionDto,
+  MovementTransactionTableFilters,
   MovementTransactionTableRowDto,
   MovementTransactionViewDto,
   MovementsService
@@ -34,6 +35,15 @@ interface MovementTableTransaction {
   items: MovementTableItem[];
 }
 
+type MovementSortColumn =
+  | 'timestamp'
+  | 'status'
+  | 'createdByUserId'
+  | 'productId'
+  | 'fromCompartmentId'
+  | 'toCompartmentId'
+  | 'quantity';
+
 @Component({
   selector: 'app-movements',
   standalone: false,
@@ -42,8 +52,13 @@ interface MovementTableTransaction {
 })
 export class MovementsComponent implements OnInit {
   private readonly seedUserId = 'seed-admin-001';
-  private readonly pageSize = 100;
+  private readonly pageSize = 500;
   private currentSkip = 0;
+  readonly tablePageSizeOptions = [10, 50, 100, 500];
+  tablePageSize = 100;
+  currentPage = 1;
+  sortColumn: MovementSortColumn | null = null;
+  sortDirection: 'desc' | 'asc' = 'desc';
 
   saving = false;
   loading = false;
@@ -57,6 +72,15 @@ export class MovementsComponent implements OnInit {
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
   compartmentOptions: string[] = ['COMP-1', 'COMP-2'];
+  tableFilters = {
+    date: '',
+    status: '',
+    createdByUserId: '',
+    productId: '',
+    fromCompartmentId: '',
+    toCompartmentId: '',
+    quantity: null as number | null
+  };
 
   form = {
     createdByUserId: this.seedUserId,
@@ -120,6 +144,157 @@ export class MovementsComponent implements OnInit {
 
   isEditing(): boolean {
     return this.editingTransactionId !== null;
+  }
+
+  get pagedTransactions(): MovementTableTransaction[] {
+    const start = (this.currentPage - 1) * this.tablePageSize;
+    const sorted = this.getSortedTransactions(this.transactions$.value);
+    return sorted.slice(start, start + this.tablePageSize);
+  }
+
+  toggleSort(column: MovementSortColumn): void {
+    if (this.sortColumn !== column) {
+      this.sortColumn = column;
+      this.sortDirection = 'desc';
+      return;
+    }
+
+    this.sortDirection = this.sortDirection === 'desc' ? 'asc' : 'desc';
+  }
+
+  getSortIndicator(column: MovementSortColumn): string {
+    if (this.sortColumn !== column) {
+      return '';
+    }
+
+    return this.sortDirection === 'desc' ? '↓' : '↑';
+  }
+
+  get totalPages(): number {
+    const total = this.transactions$.value.length;
+    return total > 0 ? Math.ceil(total / this.tablePageSize) : 1;
+  }
+
+  get canGoPrevPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get canGoNextPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  onTablePageSizeChange(size: number | string): void {
+    const parsed = Number(size);
+    if (![10, 50, 100, 500].includes(parsed)) {
+      return;
+    }
+
+    this.tablePageSize = parsed;
+    this.currentPage = 1;
+    this.ensureCurrentPageInRange();
+  }
+
+  goToPrevPage(): void {
+    if (!this.canGoPrevPage) {
+      return;
+    }
+
+    this.currentPage -= 1;
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoNextPage) {
+      return;
+    }
+
+    this.currentPage += 1;
+  }
+
+  applyTableFilters(): void {
+    this.currentPage = 1;
+    this.loadTransactions(true);
+  }
+
+  clearTableFilters(): void {
+    this.tableFilters = {
+      date: '',
+      status: '',
+      createdByUserId: '',
+      productId: '',
+      fromCompartmentId: '',
+      toCompartmentId: '',
+      quantity: null
+    };
+
+    this.currentPage = 1;
+    this.loadTransactions(true);
+  }
+
+  private buildTableFilters(): MovementTransactionTableFilters {
+    const quantity = this.tableFilters.quantity;
+    return {
+      date: this.tableFilters.date.trim() || undefined,
+      status: this.tableFilters.status.trim() || undefined,
+      createdByUserId: this.tableFilters.createdByUserId.trim() || undefined,
+      productId: this.tableFilters.productId.trim() || undefined,
+      fromCompartmentId: this.tableFilters.fromCompartmentId.trim() || undefined,
+      toCompartmentId: this.tableFilters.toCompartmentId.trim() || undefined,
+      quantity: typeof quantity === 'number' && Number.isFinite(quantity) ? quantity : undefined
+    };
+  }
+
+  private ensureCurrentPageInRange(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
+    }
+  }
+
+  private getSortedTransactions(items: MovementTableTransaction[]): MovementTableTransaction[] {
+    if (!this.sortColumn) {
+      return items;
+    }
+
+    const directionFactor = this.sortDirection === 'desc' ? -1 : 1;
+    const column = this.sortColumn;
+
+    return [...items].sort((a, b) => {
+      const aValue = this.getSortValue(a, column);
+      const bValue = this.getSortValue(b, column);
+
+      if (typeof aValue === 'number' || typeof bValue === 'number') {
+        return (Number(aValue) - Number(bValue)) * directionFactor;
+      }
+
+      return String(aValue).localeCompare(String(bValue), undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      }) * directionFactor;
+    });
+  }
+
+  private getSortValue(transaction: MovementTableTransaction, column: MovementSortColumn): string | number {
+    switch (column) {
+      case 'timestamp':
+        return new Date(transaction.timestamp).getTime() || 0;
+      case 'status':
+        return transaction.status;
+      case 'createdByUserId':
+        return transaction.createdByUserId;
+      case 'productId':
+        return transaction.items[0]?.productId ?? '';
+      case 'fromCompartmentId':
+        return transaction.items[0]?.fromCompartmentId ?? '';
+      case 'toCompartmentId':
+        return transaction.items[0]?.toCompartmentId ?? '';
+      case 'quantity':
+        return transaction.items[0]?.quantity ?? 0;
+      default:
+        return '';
+    }
   }
 
   submit(): void {
@@ -202,6 +377,7 @@ export class MovementsComponent implements OnInit {
 
     if (reset) {
       this.currentSkip = 0;
+      this.currentPage = 1;
       this.transactions$.next([]);
       this.hasMore = true;
     }
@@ -214,7 +390,7 @@ export class MovementsComponent implements OnInit {
     this.errorText = '';
 
     this.movementsService
-      .getTableRows(this.currentSkip, this.pageSize)
+      .getTableRows(this.currentSkip, this.pageSize, this.buildTableFilters())
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: rows => {
@@ -227,12 +403,15 @@ export class MovementsComponent implements OnInit {
             this.transactions$.next(merged);
           }
 
+          this.ensureCurrentPageInRange();
+
           this.currentSkip += rows.length;
           this.hasMore = rows.length === this.pageSize;
         },
         error: (err: unknown) => {
           if (reset) {
             this.transactions$.next([]);
+            this.ensureCurrentPageInRange();
           }
 
           this.hasMore = false;
