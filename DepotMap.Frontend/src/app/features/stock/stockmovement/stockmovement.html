@@ -1,58 +1,55 @@
-<div class="products-list" *ngIf="movementsVm$ | async as vm">
-  
-  <div class="header">
-    <h2>
-      Készletmozgások 
-      <span *ngIf="vm.productId" class="text-secondary fs-5"> ({{ vm.productId }})</span>
-    </h2>
-  </div>
+<div class="app-page" *ngIf="movementsVm$ | async as vm">
 
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <div class="input-group shadow-sm">
-        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-        <input 
-          type="text" 
-          class="form-control border-start-0 pl-0" 
-          placeholder="Keresés..."
-          [ngModel]="searchTerm$ | async"
-          (ngModelChange)="onSearch($event)">
+  <app-page-header title="Készletmozgások"
+    [subtitle]="vm.productId ? ('Szűrve erre a termékre: ' + vm.productId) : 'Az összes készletmozgás áttekintése'">
+  </app-page-header>
+
+  <app-content-card title="Mozgáslista">
+    <div class="movements-toolbar">
+      <div class="movements-search-wrap">
+        <div class="movements-search-box">
+          <span class="movements-search-icon">
+            <i class="bi bi-search"></i>
+          </span>
+
+          <input type="text" class="form-control movements-search-input" placeholder="Keresés..."
+            [ngModel]="searchTerm$ | async" (ngModelChange)="onSearch($event)" />
+        </div>
       </div>
     </div>
-  </div>
 
-  <div *ngIf="vm.loading" class="spinner">Mozgások betöltése...</div>
-  <div *ngIf="!vm.loading && vm.error" class="error-text">Hiba történt az adatok lekérésekor.</div>
+    <div *ngIf="vm.loading" class="app-loading">Mozgások betöltése...</div>
+    <div *ngIf="!vm.loading && vm.error" class="app-error">Hiba történt az adatok lekérésekor.</div>
 
-  <div class="form-container" *ngIf="!vm.loading && !vm.error">
+    <ng-container *ngIf="!vm.loading && !vm.error">
 
-      <div *ngIf="!vm.items.length" class="empty-text mb-4">
+      <div *ngIf="!vm.items.length" class="app-empty">
         Nem található a keresésnek megfelelő készletmozgás.
       </div>
 
-    
 
 
-    <div class="history-table-wrap mb-4" *ngIf="vm.items.length > 0">
-        <table class="history-table">
+
+      <div class="app-table-wrap mb-4" *ngIf="vm.items.length > 0">
+        <table class="app-table movements-table">
           <thead>
             <tr>
-              <th (click)="onSortChange('timestamp')" class="cursor-pointer select-none">
+              <th (click)="onSortChange('timestamp')" class="movements-sortable">
                 Dátum {{ getSortIcon('timestamp') }}
               </th>
-              <th (click)="onSortChange('productSKU')" class="cursor-pointer select-none">
+              <th (click)="onSortChange('productSKU')" class="movements-sortable">
                 Termék (SKU) {{ getSortIcon('productSKU') }}
               </th>
-              <th (click)="onSortChange('compartmentCode')" class="cursor-pointer select-none">
+              <th (click)="onSortChange('compartmentCode')" class="movements-sortable">
                 Rekesz Kód {{ getSortIcon('compartmentCode') }}
               </th>
-              <th (click)="onSortChange('movementType')" class="cursor-pointer select-none">
+              <th (click)="onSortChange('movementType')" class="movements-sortable">
                 Típus {{ getSortIcon('movementType') }}
               </th>
-              <th (click)="onSortChange('quantityChange')" class="cursor-pointer select-none">
+              <th (click)="onSortChange('quantityChange')" class="movements-sortable">
                 Változás {{ getSortIcon('quantityChange') }}
               </th>
-              <th (click)="onSortChange('userName')" class="cursor-pointer select-none">
+              <th (click)="onSortChange('userName')" class="movements-sortable">
                 Tranzakció / Készítő {{ getSortIcon('userName') }}
               </th>
             </tr>
@@ -63,7 +60,8 @@
               <td [title]="'ID: ' + mov.productId">{{ mov.productSKU }}</td>
               <td [title]="'ID: ' + mov.compartmentId">{{ mov.compartmentCode || '-' }}</td>
               <td>
-                <span class="status-badge" [ngClass]="mov.movementType === 'Inbound' ? 'badge-closed' : 'badge-planning'">
+                <span class="movement-type-badge"
+                  [ngClass]="mov.movementType === 'Inbound' ? 'movement-type-badge--in' : 'movement-type-badge--out'">
                   {{ mov.movementType }}
                 </span>
               </td>
@@ -71,7 +69,7 @@
                 <strong>{{ mov.quantityChange > 0 ? '+' : '' }}{{ mov.quantityChange }} db</strong>
               </td>
               <td>
-                <div class="text-muted small">
+                <div class="movement-user-meta">
                   Tr: {{ mov.transactionId || '-' }}<br>
                   Felh: {{ mov.userName }}
                 </div>
@@ -81,10 +79,11 @@
         </table>
       </div>
 
-    <div class="footer-actions mt-4 pt-3 border-top">
-      <button class="btn btn-outline-secondary" (click)="goBack()">
-        <i class="bi bi-arrow-left me-1"></i> Vissza a készlethez
-      </button>
-    </div>
-  </div>
+      <div class="movements-footer-actions">
+        <button class="btn btn-outline-secondary" (click)="goBack()">
+          <i class="bi bi-arrow-left me-1"></i> Vissza a készlethez
+        </button>
+      </div>
+    </ng-container>
+</app-content-card>
 </div>
