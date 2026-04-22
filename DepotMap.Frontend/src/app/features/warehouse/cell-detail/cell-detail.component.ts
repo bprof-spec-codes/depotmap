@@ -93,10 +93,9 @@ export class CellDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  // dblclick → shelf detail navigation (disabled until F4 ShelfDetail route exists)
-  // onShelfDblClick(shelf: ShelfListDto): void {
-  //   this.router.navigate(['/warehouses', this.warehouseId, 'cells', this.cellId, 'shelves', shelf.id]);
-  // }
+  onShelfDblClick(shelf: ShelfListDto): void {
+    this.router.navigate(['/warehouses', this.warehouseId, 'cells', this.cellId, 'shelves', shelf.id]);
+  }
 
   // --- Create modal ---
 

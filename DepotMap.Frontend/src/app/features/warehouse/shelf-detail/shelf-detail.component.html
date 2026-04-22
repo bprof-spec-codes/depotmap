@@ -1,0 +1,130 @@
+<div class="shelf-detail-page">
+  <!-- Header -->
+  <div class="shelf-header">
+    <div class="shelf-header-left">
+      <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Vissza
+      </button>
+      <button class="btn btn-sm btn-outline-primary" *ngIf="shelf" (click)="openSettingsModal()">
+        <i class="bi bi-gear"></i> Beállítások
+      </button>
+      <h2 *ngIf="shelf">
+        Polc: {{ shelf.code }}
+      </h2>
+    </div>
+    <div class="shelf-meta" *ngIf="shelf">
+      <span class="meta-badge">{{ shelf.levels }} szint</span>
+      <span class="meta-badge" *ngIf="shelf.accessibleFromBothSides">Kétoldalas</span>
+      <span class="meta-badge ladder-badge" *ngIf="shelf.ladderRequiredFromLevel != null">
+        Létra: {{ shelf.ladderRequiredFromLevel }}. szinttől
+      </span>
+    </div>
+  </div>
+
+  <!-- Loading / Error -->
+  <div *ngIf="loading" class="state-msg">Betöltés...</div>
+  <div *ngIf="error" class="state-msg error-text">
+    A polc nem tölthető be. Ellenőrizd, hogy a backend fut-e.
+  </div>
+
+  <!-- Shelf front view -->
+  <div class="shelf-view-wrapper" *ngIf="!loading && !error && shelf">
+    <p class="view-hint">
+      A polc szemből nézve. Az alsó sor a 0. szint, felül a legmagasabb.
+    </p>
+
+    <div class="shelf-view">
+      <div *ngFor="let level of levelIndices"
+           class="level-row"
+           [class.ladder-level]="isLadderLevel(level)">
+
+        <!-- Level label -->
+        <div class="level-label">
+          <span class="level-number">{{ level }}.</span>
+          <span class="ladder-icon" *ngIf="isLadderLevel(level)" title="Létra szükséges">&#x1FA9C;</span>
+        </div>
+
+        <!-- Compartments -->
+        <div class="compartments-row">
+          <div *ngIf="getCompartmentsForLevel(level).length === 0" class="empty-level">
+            <span class="empty-level-text">Üres szint</span>
+          </div>
+          <div *ngFor="let comp of getCompartmentsForLevel(level)"
+               class="compartment"
+               [class.compartment-stocked]="hasStock(comp)"
+               [class.compartment-empty]="!hasStock(comp)">
+            <div class="compartment-code">{{ comp.code }}</div>
+            <div class="compartment-stock" *ngIf="hasStock(comp)">
+              <div *ngFor="let ps of comp.productStocks" class="stock-item">
+                <span class="stock-name">{{ ps.productName }}</span>
+                <span class="stock-sku">{{ ps.sku }}</span>
+                <span class="stock-qty">{{ ps.quantity }} db</span>
+              </div>
+            </div>
+            <div class="compartment-stock empty-stock" *ngIf="!hasStock(comp)">
+              <span>Üres</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add / Remove buttons -->
+        <div class="level-actions">
+          <button class="btn btn-sm btn-outline-primary"
+                  (click)="addCompartment(level)"
+                  [disabled]="actionLoading"
+                  title="Rekesz hozzáadása">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger"
+                  *ngIf="getCompartmentsForLevel(level).length > 0"
+                  (click)="removeCompartment(level)"
+                  [disabled]="actionLoading"
+                  title="Utolsó rekesz eltávolítása">
+            <i class="bi bi-dash-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-backdrop" *ngIf="showSettingsModal" (click)="closeSettingsModal()"></div>
+  <div class="shelf-modal" *ngIf="showSettingsModal">
+    <div class="modal-header-row">
+      <h5>Polc beállítások
+        <span *ngIf="shelf" class="text-muted ms-1">({{ shelf.code }})</span>
+      </h5>
+      <button class="btn btn-sm btn-close" (click)="closeSettingsModal()"></button>
+    </div>
+
+    <form (ngSubmit)="saveSettings()" #settingsForm="ngForm">
+      <div class="modal-body-content">
+        <div class="form-group mb-3">
+          <label for="settings-levels">Szintek száma</label>
+          <input id="settings-levels" type="number" class="form-control" min="1" max="20"
+                 [(ngModel)]="formLevels" name="levels" required />
+        </div>
+
+        <div class="form-check mb-3">
+          <input id="settings-both-sides" type="checkbox" class="form-check-input"
+                 [(ngModel)]="formAccessibleFromBothSides" name="bothSides" />
+          <label for="settings-both-sides" class="form-check-label">Kétoldalas hozzáférés</label>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="settings-ladder">Létra szükséges ettől a szinttől (opcionális)</label>
+          <input id="settings-ladder" type="number" class="form-control" min="0"
+                 [(ngModel)]="formLadderRequiredFromLevel" name="ladder"
+                 placeholder="pl. 2" />
+        </div>
+      </div>
+
+      <div class="modal-footer-row">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeSettingsModal()" [disabled]="saving">Mégse</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          {{ saving ? 'Mentés...' : 'Mentés' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

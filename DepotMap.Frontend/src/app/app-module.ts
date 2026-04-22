@@ -17,6 +17,8 @@ import { OrderEdit } from './features/orders/order-edit/order-edit';
 import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
 import { CellDetailComponent } from './features/warehouse/cell-detail/cell-detail.component';
+import { CellShelfResolverComponent } from './features/warehouse/cell-shelf-resolver/cell-shelf-resolver.component';
+import { ShelfDetailComponent } from './features/warehouse/shelf-detail/shelf-detail.component';
 import { AdminView } from './features/admin/admin-view/admin-view';
 import { OwnProfile } from './features/profile/own-profile/own-profile';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
@@ -40,6 +42,8 @@ import { MovementsComponent } from './features/stock/movements/movements';
     WarehouseListComponent,
     WarehouseGridComponent,
     CellDetailComponent,
+    CellShelfResolverComponent,
+    ShelfDetailComponent,
     AdminView,
     ProductStockListComponent,
     StockMovementListComponent,
