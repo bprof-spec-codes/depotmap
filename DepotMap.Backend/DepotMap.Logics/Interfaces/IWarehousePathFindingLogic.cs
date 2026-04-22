@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DepotMap.Logics.Interfaces
 {
-    public interface IWarehousePathFinding
+    public interface IWarehousePathFindingLogic
     {
         Task<List<PickingTaskDto>> GetOrderPickingRouteAsync(string orderId);
     }

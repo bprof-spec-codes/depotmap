@@ -9,9 +9,9 @@ namespace DepotMap.Endpoint.Controllers
     [Route("api/[controller]")]
     public class WarehousePathFindingController : ControllerBase
     {
-        private readonly IWarehousePathFinding _pathFindingLogic;
+        private readonly IWarehousePathFindingLogic _pathFindingLogic;
 
-        public WarehousePathFindingController(IWarehousePathFinding pathFindingLogic)
+        public WarehousePathFindingController(IWarehousePathFindingLogic pathFindingLogic)
         {
             _pathFindingLogic = pathFindingLogic;
         }

@@ -10,30 +10,7 @@ using System.Threading.Tasks;
 
 namespace DepotMap.Logics.Logics
 {
-    public class CompartmentTaskDto
-    {
-        public string CompartmentId { get; set; }
-        public string CompartmentCode { get; set; }
-        public int LevelIndex { get; set; } // CompartmentDto.LevelIndex
-        public string ProductName { get; set; }
-        public int Quantity { get; set; }
-    }
-    public class PickingTaskDto
-    {
-        public string ShelfId { get; set; }
-        public string ShelfCode { get; set; }
-        // Koordináták a te DTO-idból
-        public int CellX { get; set; }  // WarehouseCellDto.X
-        public int CellY { get; set; }  // WarehouseCellDto.Y
-        public int ShelfX { get; set; } // ShelfListDto.X
-        public int ShelfY { get; set; } // ShelfListDto.Y
-        public string CellType { get; set; }
-
-        // A termékek, amiket ennél a szekrénynél kell fogni
-        public List<CompartmentTaskDto> Items { get; set; } = new();
-    }
-
-    public class WarehousePathFindingLogic : IWarehousePathFinding
+    public class WarehousePathFindingLogic : IWarehousePathFindingLogic
     {
         private readonly AppDbContext _context;
 
@@ -44,34 +21,32 @@ namespace DepotMap.Logics.Logics
 
         public async Task<List<PickingTaskDto>> GetOrderPickingRouteAsync(string transactionId)
         {
-            // 1. Adatbázis lekérdezés a TransactionItems-ből
-            // Itt a 'FromCompartment' az induló polc, mert kiadási tranzakciót (picking) feltételezünk
             var rawData = await _context.TransactionItems
                 .Where(ti => ti.TransactionId == transactionId)
                 .Select(ti => new
                 {
-                    ProductId = ti.ProductId,
+                    ti.ProductId,
                     ProductName = ti.Product.Name,
-                    Quantity = ti.Quantity,
+                    ti.Quantity,
                     Comp = ti.FromCompartment,
                     Shelf = ti.FromCompartment.Shelf,
-                    Cell = ti.FromCompartment.Shelf.WarehouseCell
+                    Cell = ti.FromCompartment.Shelf.WarehouseCell,
+                    WarehouseId = ti.FromCompartment.Shelf.WarehouseCell.WarehouseId
                 })
                 .ToListAsync();
 
             if (!rawData.Any()) return new List<PickingTaskDto>();
 
-            // 2. Csoportosítás szekrényenként
+            var currentWarehouseId = rawData.First().WarehouseId;
+
             var tasks = rawData
                 .GroupBy(x => x.Shelf.Id)
                 .Select(g => new PickingTaskDto
                 {
                     ShelfId = g.Key,
                     ShelfCode = g.First().Shelf.Code,
-                    CellX = g.First().Cell.X,
-                    CellY = g.First().Cell.Y,
-                    ShelfX = g.First().Shelf.X,
-                    ShelfY = g.First().Shelf.Y,
+                    X = g.First().Cell.X,
+                    Y = g.First().Cell.Y,
                     CellType = g.First().Cell.CellType,
                     Items = g.Select(i => new CompartmentTaskDto
                     {
@@ -80,59 +55,53 @@ namespace DepotMap.Logics.Logics
                         LevelIndex = i.Comp.LevelIndex,
                         ProductName = i.ProductName,
                         Quantity = i.Quantity
-                    }).ToList()
+                    }).OrderBy(i => i.LevelIndex).ToList()
                 })
                 .ToList();
 
-            // 3. Bejárat keresése
             var entrance = await _context.WarehouseCells
-                .Where(c => c.CellType == "entrance")
-                .Select(c => new PickingTaskDto
-                {
-                    CellX = c.X,
-                    CellY = c.Y,
-                    CellType = "entrance",
-                    ShelfCode = "BEJÁRAT"
-                })
+                .Where(c => c.CellType == "entrance" && c.WarehouseId == currentWarehouseId)
                 .FirstOrDefaultAsync();
 
-            // 4. Kettős Snake rendezés
-            return SortBySnake(tasks, entrance);
+            PickingTaskDto? entranceDto = null;
+            if (entrance != null)
+            {
+                entranceDto = new PickingTaskDto
+                {
+                    X = entrance.X,
+                    Y = entrance.Y,
+                    CellType = entrance.CellType,
+                    ShelfCode = "Entrance",
+                    Items = null,
+                    ShelfId = null
+                };
+            }
+            return SortBySnake(tasks, entranceDto);
         }
 
-        private List<PickingTaskDto> SortBySnake(List<PickingTaskDto> shelves, PickingTaskDto entrance)
+        private List<PickingTaskDto> SortBySnake(List<PickingTaskDto> shelves, PickingTaskDto? entrance)
         {
-            // Függőleges (V) irányú bejárás
-            var vRoute = shelves
-                .OrderBy(t => t.CellX)
-                .ThenBy(t => (t.CellX % 2 == 0) ? t.CellY : int.MaxValue - t.CellY)
-                .ThenBy(t => t.ShelfX)
-                .ThenBy(t => (t.ShelfX % 2 == 0) ? t.ShelfY : int.MaxValue - t.ShelfY)
-                .ToList();
+            var distinctX = shelves.Select(s => s.X).Distinct().OrderBy(x => x).ToList();
+            var vRoute = shelves.OrderBy(s => s.X).ThenBy(s =>
+            {
+                int colIdx = distinctX.IndexOf(s.X);
+                return (colIdx % 2 == 0) ? s.Y : int.MaxValue - s.Y;
+            }).ToList();
 
-            // Vízszintes (H) irányú bejárás
-            var hRoute = shelves
-                .OrderBy(t => t.CellY)
-                .ThenBy(t => (t.CellY % 2 == 0) ? t.CellX : int.MaxValue - t.CellX)
-                .ThenBy(t => t.ShelfY)
-                .ThenBy(t => (t.ShelfY % 2 == 0) ? t.ShelfX : int.MaxValue - t.ShelfX)
-                .ToList();
+            var distinctY = shelves.Select(s => s.Y).Distinct().OrderBy(y => y).ToList();
+            var hRoute = shelves.OrderBy(s => s.Y).ThenBy(s =>
+            {
+                int rowIdx = distinctY.IndexOf(s.Y);
+                return (rowIdx % 2 == 0) ? s.X : int.MaxValue - s.X;
+            }).ToList();
 
-            var start = entrance ?? (shelves.Any() ? shelves.First() : null);
-            if (start == null) return shelves;
-
-            // Kiválasztjuk a rövidebbet
-            var best = CalculateDist(start, vRoute) <= CalculateDist(start, hRoute) ? vRoute : hRoute;
+            var start = entrance ?? shelves.First();
+            var bestRoute = CalculateDist(start, vRoute) <= CalculateDist(start, hRoute) ? vRoute : hRoute;
 
             var result = new List<PickingTaskDto>();
             if (entrance != null) result.Add(entrance);
+            result.AddRange(bestRoute);
 
-            foreach (var task in best)
-            {
-                // Szekrényen belül szintek szerint rendezünk (lentről felfelé)
-                task.Items = task.Items.OrderBy(i => i.LevelIndex).ToList();
-                result.Add(task);
-            }
             return result;
         }
 
@@ -142,9 +111,7 @@ namespace DepotMap.Logics.Logics
             var curr = start;
             foreach (var next in route)
             {
-                // Manhattan távolság a nagy rácson és a belső rácson is
-                d += Math.Abs(curr.CellX - next.CellX) + Math.Abs(curr.CellY - next.CellY);
-                d += Math.Abs(curr.ShelfX - next.ShelfX) + Math.Abs(curr.ShelfY - next.ShelfY);
+                d += Math.Abs(curr.X - next.X) + Math.Abs(curr.Y - next.Y);
                 curr = next;
             }
             return d;
