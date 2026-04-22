@@ -161,7 +161,7 @@
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
 
                 <td>{{ row.productId }}</td>
-                <td>{{ row.toCompartmentId || '-' }}</td>
+                <td>{{ getCompartmentCode(row.toCompartmentId) }}</td>
                 <td>{{ row.quantity }}</td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">

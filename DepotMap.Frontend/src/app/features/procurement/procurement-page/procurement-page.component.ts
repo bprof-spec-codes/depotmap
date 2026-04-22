@@ -664,4 +664,8 @@ export class ProcurementPageComponent implements OnInit {
 		const message = maybeError?.error?.message;
 		return message && message.trim() ? message : fallback;
 	}
+	getCompartmentCode(compartmentId: string): string {
+		const compartment = this.compartments.find(c => c.id === compartmentId);
+		return compartment?.code ?? '-';
+	}
 }
