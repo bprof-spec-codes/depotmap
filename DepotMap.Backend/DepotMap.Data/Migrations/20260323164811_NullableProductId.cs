@@ -14,6 +14,14 @@ namespace DepotMap.Data.Migrations
                 name: "FK_ProductHistories_Products_ProductId",
                 table: "ProductHistories");
 
+            migrationBuilder.AlterColumn<string>(
+                name: "ProductId",
+                table: "ProductHistories",
+                type: "nvarchar(450)",
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(450)");
+
             migrationBuilder.AddForeignKey(
                 name: "FK_ProductHistories_Products_ProductId",
                 table: "ProductHistories",
@@ -29,6 +37,16 @@ namespace DepotMap.Data.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_ProductHistories_Products_ProductId",
                 table: "ProductHistories");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "ProductId",
+                table: "ProductHistories",
+                type: "nvarchar(450)",
+                nullable: false,
+                defaultValue: "",
+                oldClrType: typeof(string),
+                oldType: "nvarchar(450)",
+                oldNullable: true);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ProductHistories_Products_ProductId",

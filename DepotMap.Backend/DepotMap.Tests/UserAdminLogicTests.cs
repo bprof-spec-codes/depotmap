@@ -52,43 +52,100 @@ namespace DepotMap.Tests
 
     public class UserAdminLogicTests
     {
+
         [Fact]
         public async Task GetUsersAsync_ShouldReturnAllUsers()
         {
             var (context, hasher, logic) = UserAdminTestHelper.Create();
-            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Admin");
-            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-2", "user2", "Raktáros");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Manager");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-2", "user2", "Operator");
 
-            var result = await logic.GetUsersAsync();
+            var result = await logic.GetUsersAsync(new UserQueryParameters());
 
             Assert.Equal(2, result.Count);
         }
 
         [Fact]
-        public async Task CreateUserAsync_ShouldCreateNewUser()
+        public async Task GetUsersAsync_ShouldReturnAllRoles()
+        {
+            var (context, hasher, logic) = UserAdminTestHelper.Create();
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "manager1", "Manager");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-2", "officer1", "Officer");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-3", "operator1", "Operator");
+
+            var result = await logic.GetUsersAsync(new UserQueryParameters());
+
+            Assert.Equal(3, result.Count);
+            Assert.Contains(result, u => u.Role == "Manager");
+            Assert.Contains(result, u => u.Role == "Officer");
+            Assert.Contains(result, u => u.Role == "Operator");
+        }
+
+        [Fact]
+        public async Task CreateUserAsync_ShouldCreateNewUser_AsManager()
         {
             var (_, _, logic) = UserAdminTestHelper.Create();
 
             var result = await logic.CreateUserAsync(new UserCreateDto
             {
-                Identifier = "newuser",
+                Identifier = "newmanager",
                 FirstName = "Új",
-                LastName = "User",
+                LastName = "Manager",
                 Password = "Pass123!",
-                Role = "Raktáros",
+                Role = "Manager",
+                Position = "Raktárvezető"
+            });
+
+            Assert.NotNull(result);
+            Assert.Equal("newmanager", result.Identifier);
+            Assert.Equal("Manager", result.Role);
+        }
+
+        [Fact]
+        public async Task CreateUserAsync_ShouldCreateNewUser_AsOfficer()
+        {
+            var (_, _, logic) = UserAdminTestHelper.Create();
+
+            var result = await logic.CreateUserAsync(new UserCreateDto
+            {
+                Identifier = "newofficer",
+                FirstName = "Új",
+                LastName = "Irodista",
+                Password = "Pass123!",
+                Role = "Officer",
+                Position = "Irodista"
+            });
+
+            Assert.NotNull(result);
+            Assert.Equal("newofficer", result.Identifier);
+            Assert.Equal("Officer", result.Role);
+        }
+
+        [Fact]
+        public async Task CreateUserAsync_ShouldCreateNewUser_AsOperator()
+        {
+            var (_, _, logic) = UserAdminTestHelper.Create();
+
+            var result = await logic.CreateUserAsync(new UserCreateDto
+            {
+                Identifier = "newoperator",
+                FirstName = "Új",
+                LastName = "Raktáros",
+                Password = "Pass123!",
+                Role = "Operator",
                 Position = "Raktáros"
             });
 
             Assert.NotNull(result);
-            Assert.Equal("newuser", result.Identifier);
-            Assert.Equal("Raktáros", result.Role);
+            Assert.Equal("newoperator", result.Identifier);
+            Assert.Equal("Operator", result.Role);
         }
 
         [Fact]
         public async Task CreateUserAsync_ShouldReturnNull_IfIdentifierExists()
         {
             var (context, hasher, logic) = UserAdminTestHelper.Create();
-            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "existing", "Admin");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "existing", "Manager");
 
             var result = await logic.CreateUserAsync(new UserCreateDto
             {
@@ -96,7 +153,7 @@ namespace DepotMap.Tests
                 FirstName = "Dup",
                 LastName = "User",
                 Password = "pass",
-                Role = "Admin"
+                Role = "Officer"
             });
 
             Assert.Null(result);
@@ -106,17 +163,32 @@ namespace DepotMap.Tests
         public async Task UpdateUserAsync_ShouldUpdateUser()
         {
             var (context, hasher, logic) = UserAdminTestHelper.Create();
-            var user = await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Raktáros");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Operator");
 
             var result = await logic.UpdateUserAsync("U-1", new UserUpdateDto
             {
-                Role = "Admin",
+                Role = "Manager",
                 FirstName = "Frissített"
             });
 
             Assert.NotNull(result);
-            Assert.Equal("Admin", result.Role);
+            Assert.Equal("Manager", result.Role);
             Assert.Equal("Frissített User", result.FullName);
+        }
+
+        [Fact]
+        public async Task UpdateUserAsync_ShouldUpdateRole_ToOfficer()
+        {
+            var (context, hasher, logic) = UserAdminTestHelper.Create();
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Operator");
+
+            var result = await logic.UpdateUserAsync("U-1", new UserUpdateDto
+            {
+                Role = "Officer"
+            });
+
+            Assert.NotNull(result);
+            Assert.Equal("Officer", result.Role);
         }
 
         [Fact]
@@ -124,7 +196,7 @@ namespace DepotMap.Tests
         {
             var (_, _, logic) = UserAdminTestHelper.Create();
 
-            var result = await logic.UpdateUserAsync("nonexistent", new UserUpdateDto { Role = "Admin" });
+            var result = await logic.UpdateUserAsync("nonexistent", new UserUpdateDto { Role = "Manager" });
 
             Assert.Null(result);
         }
@@ -133,7 +205,7 @@ namespace DepotMap.Tests
         public async Task DeleteUserAsync_ShouldDeleteUser()
         {
             var (context, hasher, logic) = UserAdminTestHelper.Create();
-            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Raktáros");
+            await UserAdminTestHelper.AddUserAsync(context, hasher, "U-1", "user1", "Operator");
 
             var result = await logic.DeleteUserAsync("U-1");
 
@@ -151,6 +223,4 @@ namespace DepotMap.Tests
             Assert.False(result);
         }
     }
-
 }
-

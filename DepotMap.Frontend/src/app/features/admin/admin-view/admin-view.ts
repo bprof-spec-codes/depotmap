@@ -1,7 +1,8 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { UserAdminDto } from '../../../core/models/dtos/admin/user-admin-dto';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserAdminService } from '../../../core/services/user-admin-service';
+import { BehaviorSubject, catchError, combineLatest, debounceTime, distinctUntilChanged, EMPTY, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-admin-view',
@@ -10,13 +11,25 @@ import { UserAdminService } from '../../../core/services/user-admin-service';
   styleUrl: './admin-view.scss',
 })
 export class AdminView {
-  users: UserAdminDto[] = [];
+  users$!: Observable<UserAdminDto[]>;
   selectedUser: UserAdminDto | null = null;
   isEditMode = false;
   showModal = false;
   errorMessage = '';
 
-  roles = ['Szuperadmin', 'Admin', 'Raktáros', 'Beszerző'];
+  roles = ['Raktárvezető', 'Irodista', 'Raktáros'];
+
+  private readonly roleToBackend: Record<string, string> = {
+    'Raktárvezető': 'Manager',
+    'Irodista': 'Officer',
+    'Raktáros': 'Operator'
+  };
+
+  private readonly roleToDisplay: Record<string, string> = {
+    'Manager': 'Raktárvezető',
+    'Officer': 'Irodista',
+    'Operator': 'Raktáros'
+  };
 
   userForm = new FormGroup({
     identifier: new FormControl('', Validators.required),
@@ -27,23 +40,65 @@ export class AdminView {
     position: new FormControl('', Validators.required)
   });
 
-  constructor(
-    private userAdminService: UserAdminService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  searchTerm$ = new BehaviorSubject<string>('');
+  sortBy$ = new BehaviorSubject<string>('fullname');
+  sortDirection$ = new BehaviorSubject<'asc' | 'desc'>('asc');
+
+  private refresh$ = new BehaviorSubject<void>(undefined);
+  private destroy$ = new Subject<void>();
+
+  constructor(private userAdminService: UserAdminService) {}
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.users$ = combineLatest([
+      this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()),
+      this.sortBy$,
+      this.sortDirection$,
+      this.refresh$,
+    ]).pipe(
+      switchMap(([search, sortBy, sortDirection]) =>
+        this.userAdminService.getUsers({
+          search: search || undefined,
+          sortBy,
+          sortDirection,
+        })
+      )
+    );
   }
 
-  loadUsers(): void {
-    this.userAdminService.getUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-        this.cdr.detectChanges();
-      },
-      error: () => this.errorMessage = 'Hiba a felhasználók betöltésekor'
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private refreshUsers(): void {
+    this.refresh$.next();
+  }
+
+  displayRole(apiRole: string): string {
+    return this.roleToDisplay[apiRole] ?? apiRole;
+  }
+
+  private toApiRole(displayRole: string | null): string | undefined {
+    return displayRole ? (this.roleToBackend[displayRole] ?? displayRole) : undefined;
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm$.next(term);
+  }
+
+  onSort(column: string): void {
+    if (this.sortBy$.value === column) {
+      this.sortDirection$.next(this.sortDirection$.value === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy$.next(column);
+      this.sortDirection$.next('asc');
+    }
+  }
+
+  getSortIcon(column: string): string {
+    if (this.sortBy$.value !== column) return '↕';
+    return this.sortDirection$.value === 'asc' ? '↑' : '↓';
   }
 
   openCreateModal(): void {
@@ -77,7 +132,7 @@ export class AdminView {
       firstName: nameParts[0] ?? '',
       lastName: nameParts.slice(1).join(' ') ?? '',
       password: '',
-      role: user.role ?? 'Raktáros',
+      role: this.displayRole(user.role ?? ''),
       position: user.position ?? ''
     });
 
@@ -87,54 +142,46 @@ export class AdminView {
   }
 
   saveUser(): void {
-    if (this.userForm.invalid) {
-      this.userForm.markAllAsTouched();
-      return;
-    }
-
+    if (this.userForm.invalid) { this.userForm.markAllAsTouched(); return; }
     this.errorMessage = '';
     const val = this.userForm.getRawValue();
 
-    if (this.isEditMode && this.selectedUser) {
-      this.userAdminService.updateUser(this.selectedUser.id, {
-        identifier: val.identifier ?? undefined,
-        firstName: val.firstName ?? undefined,
-        lastName: val.lastName ?? undefined,
-        password: val.password || undefined,
-        role: val.role ?? undefined,
-        position: val.position ?? undefined
-      }).subscribe({
-        next: () => {
-          this.showModal = false;
-          this.loadUsers();
-        },
-        error: () => this.errorMessage = 'Hiba a frissítéskor'
-      });
-    } else {
-      this.userAdminService.createUser({
-        identifier: val.identifier ?? '',
-        firstName: val.firstName ?? '',
-        lastName: val.lastName ?? '',
-        password: val.password ?? '',
-        role: val.role ?? 'Raktáros',
-        position: val.position ?? ''
-      }).subscribe({
-        next: () => {
-          this.showModal = false;
-          this.loadUsers();
-        },
-        error: () => this.errorMessage = 'Hiba a létrehozáskor'
-      });
-    }
+    const request$ = this.isEditMode && this.selectedUser
+      ? this.userAdminService.updateUser(this.selectedUser.id, {
+          identifier: val.identifier ?? undefined,
+          firstName: val.firstName ?? undefined,
+          lastName: val.lastName ?? undefined,
+          password: val.password || undefined,
+          role: this.toApiRole(val.role),
+          position: val.position ?? undefined,
+        })
+      : this.userAdminService.createUser({
+          identifier: val.identifier ?? '',
+          firstName: val.firstName ?? '',
+          lastName: val.lastName ?? '',
+          password: val.password ?? '',
+          role: this.toApiRole(val.role) ?? 'Operator',
+          position: val.position ?? '',
+        });
+
+    request$.pipe(
+      tap(() => { this.showModal = false; this.refreshUsers(); }),
+      catchError(() => {
+        this.errorMessage = this.isEditMode ? 'Hiba a frissítéskor' : 'Hiba a létrehozáskor';
+        return EMPTY;
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe();
   }
 
   deleteUser(id: string): void {
     if (!confirm('Biztosan törli ezt a felhasználót?')) return;
 
-    this.userAdminService.deleteUser(id).subscribe({
-      next: () => this.loadUsers(),
-      error: () => this.errorMessage = 'Hiba a törléskor'
-    });
+    this.userAdminService.deleteUser(id).pipe(
+      tap(() => this.refreshUsers()),
+      catchError(() => { this.errorMessage = 'Hiba a törlésnél'; return EMPTY; }),
+      takeUntil(this.destroy$)
+    ).subscribe();
   }
 
   closeModal(): void {
@@ -158,12 +205,11 @@ export class AdminView {
 
   getRoleBadgeClass(role: string): string {
     const map: Record<string, string> = {
-      'Admin': 'badge-admin',
-      'Szuperadmin': 'badge-super',
-      'Raktáros': 'badge-raktaros',
-      'Beszerző': 'badge-beszerzo',
+      'Manager': 'badge-manager',
+      'Officer': 'badge-officer',
+      'Operator': 'badge-operator'
     };
 
-    return map[role];
+    return map[role] ?? '';
   }
 }

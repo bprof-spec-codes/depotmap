@@ -1,9 +1,11 @@
 ﻿using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Logics.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class OrderItemController : ControllerBase
@@ -14,7 +16,9 @@ namespace DepotMap.Endpoint.Controllers
         {
             _orderItemLogic = orderLogic;
         }
+
         [HttpPost("{orderId}/items")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> AddItemToOrder(string orderId, [FromBody] CreateOrderItemDto dto)
         {
             try
@@ -32,6 +36,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpDelete("{orderId}/items/{itemId}")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> DeleteItemFromOrder(string orderId, string itemId)
         {
             try
@@ -49,6 +54,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{orderId}/items/{itemId}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetOrderItemById(string orderId, string itemId)
         {
             var item = await _orderItemLogic.GetOrderItemByIdAsync(orderId, itemId);
@@ -62,6 +68,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("{orderId}/items/{itemId}")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> UpdateOrderItem(string orderId, string itemId, [FromBody] UpdateOrderItemDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);

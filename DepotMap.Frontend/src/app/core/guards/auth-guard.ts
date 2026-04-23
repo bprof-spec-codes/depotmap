@@ -1,34 +1,14 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { jwtDecode } from 'jwt-decode';
+import { AuthService } from '../services/auth-service';
 
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const token = localStorage.getItem('token');
+  const authService = inject(AuthService);
 
-  if (!token) {
-    router.navigate(['/']);
-    return false;
+  if (!authService.hasValidToken()) {
+    return router.createUrlTree(['/login']);
   }
 
-  try {
-    const decoded: any = jwtDecode(token);
-    const isExpired = decoded.exp * 1000 < Date.now();  //más mértékegységben van ezért meg kell szorozni 1000-el
-
-    if (isExpired) {
-      localStorage.removeItem('token');
-      router.navigate(['/']);
-      return false;
-    }
-
-    return true;
-
-  }
-  catch (e) {
-    // érvénytelen token
-    localStorage.removeItem('token');
-    router.navigate(['/']);
-    return false;
-  }
-
+  return true;
 };

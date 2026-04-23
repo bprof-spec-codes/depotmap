@@ -26,7 +26,7 @@ const DEFAULT_COLOR = '#f5f5f5';
 
 const CELL_TYPE_LABELS: Record<string, string> = {
   corridor: 'Folyosó',
-  shelf_area: 'Polcterület',
+  shelf_area: 'Szekrény',
   wall: 'Fal',
   entrance: 'Bejárat',
 };
@@ -130,13 +130,30 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
         this.saving = false;
         this.isEditMode = false;
         this.saveSuccess = true;
-        setTimeout(() => {
-          this.router.navigate(['/warehouses']);
-        }, 1500);
+        this.modifiedCells.clear();
+        this.modifiedCount = 0;
+        this.reloadDetail();
+        setTimeout(() => { this.saveSuccess = false; }, 2500);
       },
       error: (err) => {
         console.error('[WarehouseGrid] Batch update failed:', err);
         this.saving = false;
+      }
+    });
+  }
+
+  private reloadDetail(): void {
+    this.warehouseApiService.getById(this.warehouseId).subscribe({
+      next: (detail) => {
+        this.detail = detail;
+        this.buildCellMap(detail.cells);
+        this.originalCellMap = new Map(this.cellMap);
+        if (this.stage) {
+          this.drawGrid(detail);
+        }
+      },
+      error: (err) => {
+        console.error('[WarehouseGrid] Reload after save failed:', err);
       }
     });
   }
@@ -418,14 +435,16 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
       });
     });
 
-    // dblclick → cell detail navigation (disabled until F3 CellDetail route exists)
-    // rect.on('dblclick', () => {
-    //   if (this.isEditMode) return;
-    //   const cell = this.cellMap.get(`${x},${y}`);
-    //   if (cell?.id) {
-    //     this.router.navigate(['/warehouses', this.warehouseId, 'cells', cell.id]);
-    //   }
-    // });
+    rect.on('dblclick', () => {
+      if (this.isEditMode) return;
+      const cell = this.cellMap.get(`${x},${y}`);
+      if (cell?.id && cell.cellType === 'shelf_area') {
+        this.zone.run(() => {
+          // Bypass cell-detail: direct shelf navigation via resolver. Revert: replace with ['/warehouses', this.warehouseId, 'cells', cell.id]
+          this.router.navigate(['/warehouses', this.warehouseId, 'cells', cell.id, 'shelf']);
+        });
+      }
+    });
   }
 
   private onCellClickEdit(x: number, y: number, rect: Konva.Rect): void {

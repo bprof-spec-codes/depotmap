@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { Observable, defer, of } from 'rxjs';
+import { catchError, finalize, map, shareReplay, startWith } from 'rxjs/operators';
 import { ProductService } from '../../../core/services/product-service';
+import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
 
 @Component({
   selector: 'app-product-create',
@@ -10,22 +12,60 @@ import { ProductService } from '../../../core/services/product-service';
   styleUrls: ['./product-create.component.scss']
 })
 export class ProductCreateComponent {
+  compartmentsVm$: Observable<{ items: CompartmentOptionDto[]; loading: boolean; error: boolean }>;
+
   form = {
     sku: '',
     name: '',
     description: '',
     price: null as number | null,
     lowStockThreshold: null as number | null,
-    primaryStorageLocation: ''
   };
+
+  primaryStorageSelection: CompartmentOptionDto | null = null;
+  secondaryStorageSelections: (CompartmentOptionDto | null)[] = [];
 
   saving = false;
   errorText = '';
 
   constructor(
     private productService: ProductService,
+    private compartmentService: CompartmentService,
     private router: Router
-  ) {}
+  ) {
+    this.compartmentsVm$ = defer(() => this.compartmentService.getAll()).pipe(
+      map(items => ({ items, loading: false, error: false })),
+      startWith({ items: [] as CompartmentOptionDto[], loading: true, error: false }),
+      catchError(() => of({ items: [] as CompartmentOptionDto[], loading: false, error: true })),
+      shareReplay(1)
+    );
+  }
+
+  addStorageSelection(): void {
+    this.secondaryStorageSelections.push(null);
+  }
+
+  removeStorageSelection(index: number): void {
+    if (index < 0 || index >= this.secondaryStorageSelections.length) {
+      return;
+    }
+
+    this.secondaryStorageSelections.splice(index, 1);
+  }
+
+  isCompartmentUsedInSecondary(compartmentId: string, currentIndex: number): boolean {
+    if (this.primaryStorageSelection?.id === compartmentId) {
+      return true;
+    }
+
+    return this.secondaryStorageSelections.some(
+      (selected, index) => index !== currentIndex && selected?.id === compartmentId
+    );
+  }
+
+  isPrimaryCompartmentDisabled(compartmentId: string): boolean {
+    return this.secondaryStorageSelections.some(selected => selected?.id === compartmentId);
+  }
 
   create(): void {
     this.errorText = '';
@@ -35,13 +75,23 @@ export class ProductCreateComponent {
       return;
     }
 
+    const initialStocks = [this.primaryStorageSelection, ...this.secondaryStorageSelections]
+      .filter((compartment): compartment is CompartmentOptionDto => compartment !== null)
+      .map(compartment => ({ compartmentId: compartment.id, quantity: 0 }));
+
+    if (initialStocks.length === 0) {
+      this.errorText = 'Válassz legalább egy tárolóhelyet.';
+      return;
+    }
+
     this.saving = true;
     this.productService.create({
       sku: this.form.sku,
       name: this.form.name,
       description: this.form.description,
       price: this.form.price,
-      lowStockThreshold: this.form.lowStockThreshold
+      lowStockThreshold: this.form.lowStockThreshold,
+      initialStocks
     })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe({

@@ -13,7 +13,7 @@ namespace DepotMap.Logics.Interfaces
         Task<OrderViewDto?> GetOrderByIdAsync(string id); 
         Task<OrderViewDto?> CreateOrderAsync(CreateOrderDto dto);
         Task<OrderViewDto?> UpdateOrderAsync(string id, UpdateOrderDto dto); 
-        Task<OrderViewDto?> UpdateOrderStatusAsync(string id, UpdateOrderStatusDto dto); 
+        Task<OrderViewDto?> UpdateOrderStatusAsync(string id, UpdateOrderStatusDto dto, string userRole); 
         Task<bool> DeleteOrderAsync(string id);
     }
 }

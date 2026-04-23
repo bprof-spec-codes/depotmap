@@ -175,6 +175,10 @@ namespace DepotMap.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("X")
                         .HasColumnType("int");
 
@@ -183,10 +187,10 @@ namespace DepotMap.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
                     b.HasIndex("WarehouseCellId");
+
+                    b.HasIndex("WarehouseId", "Code")
+                        .IsUnique();
 
                     b.ToTable("Shelves");
                 });
@@ -439,6 +443,14 @@ namespace DepotMap.Data.Migrations
                         .HasForeignKey("WarehouseCellId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("DepotMap.Entities.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Warehouse");
 
                     b.Navigation("WarehouseCell");
                 });

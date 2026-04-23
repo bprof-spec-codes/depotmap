@@ -45,13 +45,13 @@ namespace DepotMap.Data.DbSeeder
                 _db.WarehouseCells.Add(cell);
                 _db.SaveChanges();
 
-                var shelf = new Shelf { Id = "SHELF-1", WarehouseCellId = "CELL-1", Code = "A1" };
+                var shelf = new Shelf { Id = "SHELF-1", WarehouseId = "WH-1", WarehouseCellId = "CELL-1", Code = "1-1A" };
                 _db.Shelves.Add(shelf);
                 _db.SaveChanges();
 
                 _db.Compartments.AddRange(
-                    new Compartment { Id = "COMP-1", ShelfId = "SHELF-1", Code = "A1-L1-S1", LevelIndex = 1, SlotIndex = 1 },
-                    new Compartment { Id = "COMP-2", ShelfId = "SHELF-1", Code = "A1-L1-S2", LevelIndex = 1, SlotIndex = 2 }
+                    new Compartment { Id = "COMP-1", ShelfId = "SHELF-1", Code = "F.1-1A.2.2", LevelIndex = 1, SlotIndex = 1 },
+                    new Compartment { Id = "COMP-2", ShelfId = "SHELF-1", Code = "F.1-1A.2.3", LevelIndex = 1, SlotIndex = 2 }
                 );
                 _db.SaveChanges();
             }
@@ -64,7 +64,7 @@ namespace DepotMap.Data.DbSeeder
                     Identifier = _config["SeedAdmin:Identifier"]!,
                     FirstName = _config["SeedAdmin:FirstName"]!,
                     LastName = _config["SeedAdmin:LastName"]!,
-                    Role = "superadmin",
+                    Role = "Manager",
                     Position = _config["SeedAdmin:Position"]!,
                     PasswordHash = ""
                 };
@@ -81,8 +81,8 @@ namespace DepotMap.Data.DbSeeder
                     Identifier = "tesztadmin",
                     FirstName = "Teszt",
                     LastName = "Elek",
-                    Role = "superadmin",
-                    Position = "Raktárvezető",
+                    Role = "Manager",
+                    Position = "Teszt",
                     PasswordHash = ""
                 };
                 user1.PasswordHash = _hasher.HashPassword(user1, "Admin123!");

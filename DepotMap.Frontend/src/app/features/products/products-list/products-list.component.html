@@ -4,16 +4,26 @@
     <a routerLink="/products/create" class="btn btn-primary">Új termék</a>
   </div>
 
-  <ng-container *ngIf="productsVm$ | async as productsVm">
+  <ng-container *ngIf="visibleProductsVm$ | async as productsVm">
     <div *ngIf="productsVm.loading" class="spinner">Betöltés...</div>
     <div *ngIf="!productsVm.loading && productsVm.error" class="error-text">A termékek nem töltődtek be. Ellenőrizd, hogy a backend fut-e.</div>
+
+    <div class="products-controls" *ngIf="!productsVm.loading && !productsVm.error">
+      <input
+        type="text"
+        class="products-input"
+        placeholder="Keresés terméknévre..."
+        [ngModel]="productSearch | async"
+        (ngModelChange)="onProductSearchChange($event)"
+      />
+    </div>
 
     <div class="list">
       <div *ngFor="let p of productsVm.items" class="product-block">
         <div class="item" [class.item-highlight]="p.id === highlightedProductId">
           <div class="left">
             <div class="title">{{p.name}} <span *ngIf="p.id === highlightedProductId" class="updated-badge">Frissítve</span></div>
-            <div class="meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}}</div>
+            <div class="meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}} • Hely: {{ formatLocations(p) }}</div>
           </div>
 
           <div class="actions">

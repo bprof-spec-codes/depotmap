@@ -1,0 +1,98 @@
+<div class="cell-detail-page">
+  <!-- Header -->
+  <div class="cell-header">
+    <div class="cell-header-left">
+      <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Vissza
+      </button>
+      <h2 *ngIf="cell">
+        Cella ({{ cell.x }}, {{ cell.y }})
+        <span class="cell-type-badge">{{ cell.cellType }}</span>
+      </h2>
+    </div>
+  </div>
+
+  <!-- Loading / Error -->
+  <div *ngIf="loading" class="state-msg">Betöltés...</div>
+  <div *ngIf="error" class="state-msg error-text">
+    A cella nem tölthető be. Ellenőrizd, hogy a backend fut-e.
+  </div>
+
+  <!-- Grid -->
+  <div class="shelf-grid-wrapper" *ngIf="!loading && !error && cell">
+    <p class="grid-hint">
+      Kattints egy üres cellára új polc hozzáadásához, vagy egy meglévő polcra szerkesztéshez.
+    </p>
+    <div class="shelf-grid"
+         [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'"
+         [style.grid-template-rows]="'repeat(' + gridRows + ', 1fr)'">
+      <div *ngFor="let pos of gridCells"
+           class="grid-cell"
+           [class.grid-cell-occupied]="getShelfAt(pos.x, pos.y)"
+           [class.grid-cell-empty]="!getShelfAt(pos.x, pos.y)"
+           (click)="onCellClick(pos.x, pos.y)">
+        <ng-container *ngIf="getShelfAt(pos.x, pos.y) as shelf">
+          <div class="shelf-card">
+            <span class="shelf-code">{{ shelf.code }}</span>
+            <span class="shelf-info">{{ shelf.levels }} szint</span>
+            <span class="shelf-info" *ngIf="shelf.accessibleFromBothSides">kétoldalas</span>
+            <button class="shelf-open-btn" (click)="onShelfDblClick(shelf); $event.stopPropagation()" title="Polc megnyitása">
+              <i class="bi bi-eye"></i> Megnyitás
+            </button>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="!getShelfAt(pos.x, pos.y)">
+          <div class="empty-cell">
+            <i class="bi bi-plus"></i>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal backdrop + dialog -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
+  <div class="shelf-modal" *ngIf="showModal">
+    <div class="modal-header-row">
+      <h5>{{ modalMode === 'create' ? 'Új polc' : 'Polc szerkesztése' }}
+        <span *ngIf="modalMode === 'edit' && modalShelf" class="text-muted ms-1">({{ modalShelf.code }})</span>
+      </h5>
+      <button class="btn btn-sm btn-close" (click)="closeModal()"></button>
+    </div>
+
+    <div class="modal-body-content">
+      <div *ngIf="modalMode === 'create'" class="mb-3 text-muted small">
+        Pozíció: ({{ modalX }}, {{ modalY }}) — a kód automatikusan generálódik.
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="shelf-levels">Szintek száma</label>
+        <input id="shelf-levels" type="number" class="form-control" min="1" max="20"
+               [(ngModel)]="formLevels" />
+      </div>
+
+      <div class="form-check mb-3">
+        <input id="shelf-both-sides" type="checkbox" class="form-check-input"
+               [(ngModel)]="formAccessibleFromBothSides" />
+        <label for="shelf-both-sides" class="form-check-label">Kétoldalas hozzáférés</label>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="shelf-ladder">Létra szükséges ettől a szinttől (opcionális)</label>
+        <input id="shelf-ladder" type="number" class="form-control" min="1"
+               [(ngModel)]="formLadderRequiredFromLevel"
+               placeholder="pl. 3" />
+      </div>
+    </div>
+
+    <div class="modal-footer-row">
+      <button *ngIf="modalMode === 'edit'" class="btn btn-danger me-auto" (click)="deleteShelf()" [disabled]="saving">
+        <i class="bi bi-trash"></i> Törlés
+      </button>
+      <button class="btn btn-outline-secondary" (click)="closeModal()" [disabled]="saving">Mégse</button>
+      <button class="btn btn-primary" (click)="saveShelf()" [disabled]="saving">
+        {{ saving ? 'Mentés...' : 'Mentés' }}
+      </button>
+    </div>
+  </div>
+</div>

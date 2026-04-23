@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3EBDD"/>
+      <stop offset="1" stop-color="#E7DCC9"/>
+    </linearGradient>
+    <pattern id="grain" width="6" height="6" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.35" fill="#B79F7D" opacity="0.34"/>
+      <circle cx="4" cy="3" r="0.3" fill="#B79F7D" opacity="0.28"/>
+      <circle cx="2" cy="5" r="0.25" fill="#B79F7D" opacity="0.25"/>
+    </pattern>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M 28 0 L 0 0 0 28" stroke="#A18A69" stroke-width="0.8" opacity="0.35"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#paper)"/>
+  <rect width="1600" height="900" fill="url(#grain)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+
+  <g stroke="#645743" stroke-width="2.2" opacity="0.55" fill="none">
+    <rect x="120" y="120" width="520" height="310" rx="8"/>
+    <line x1="120" y1="223" x2="640" y2="223"/>
+    <line x1="120" y1="326" x2="640" y2="326"/>
+    <line x1="293" y1="120" x2="293" y2="430"/>
+    <line x1="466" y1="120" x2="466" y2="430"/>
+  </g>
+
+  <g stroke="#645743" stroke-width="2.4" opacity="0.45" fill="none">
+    <rect x="900" y="170" width="560" height="390" rx="10"/>
+    <line x1="900" y1="300" x2="1460" y2="300"/>
+    <line x1="900" y1="430" x2="1460" y2="430"/>
+    <line x1="1187" y1="170" x2="1187" y2="560"/>
+  </g>
+
+  <g stroke="#7C6A52" stroke-width="1.3" opacity="0.45">
+    <line x1="760" y1="110" x2="860" y2="110"/>
+    <line x1="760" y1="130" x2="900" y2="130"/>
+    <line x1="760" y1="150" x2="840" y2="150"/>
+    <line x1="80" y1="760" x2="270" y2="760"/>
+    <line x1="80" y1="780" x2="230" y2="780"/>
+  </g>
+</svg>

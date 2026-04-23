@@ -23,7 +23,8 @@ namespace DepotMap.Logics.Helpers
 
             CreateMap<ProductStock, ProductStockInfoDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
-                .ForMember(dest => dest.SKU, opt => opt.MapFrom(src => src.Product.SKU));
+                .ForMember(dest => dest.SKU, opt => opt.MapFrom(src => src.Product.SKU))
+                .ForMember(dest => dest.CompartmentId, opt => opt.MapFrom(src => src.CompartmentId));
 
             CreateMap<Compartment, CompartmentDto>();
 

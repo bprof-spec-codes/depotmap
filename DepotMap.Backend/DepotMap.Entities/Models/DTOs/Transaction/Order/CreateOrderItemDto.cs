@@ -9,10 +9,10 @@ namespace DepotMap.Entities.Models.DTOs.Transaction.Order
 {
     public class CreateOrderItemDto
     {
-        public string ProductId { get; set; }
+        public string ProductSKU { get; set; } = string.Empty;
 
         [Range(1, int.MaxValue, ErrorMessage = "A darabszám legalább 1 kell legyen!")]
         public int Quantity { get; set; }
-        public string FromCompartmentId { get; set; }
+        public string FromCompartmentCode { get; set; } = string.Empty;
     }
 }

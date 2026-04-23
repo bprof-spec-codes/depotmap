@@ -1,10 +1,16 @@
-<app-navbar-component
-  (collapsedChange)="onSidebarCollapsedChange($event)"
-></app-navbar-component>
+<ng-container *ngIf="isLoggedIn$ | async; else guestLayout">
+  <app-navbar-component
+    (collapsedChange)="onSidebarCollapsedChange($event)"
+  ></app-navbar-component>
 
-<div
-  class="app-content"
-  [class.sidebar-collapsed]="isSidebarCollapsed"
->
+  <div
+    class="app-content"
+    [class.sidebar-collapsed]="isSidebarCollapsed"
+  >
+    <router-outlet></router-outlet>
+  </div>
+</ng-container>
+
+<ng-template #guestLayout>
   <router-outlet></router-outlet>
-</div>
+</ng-template>
