@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { OrderService, OrderViewDto, PickingTaskDto } from '../../../core/services/order-service';
 import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
-import { RoutePdfService } from '../../../core/services/warehouse-route-pdf-service';
+import { RoutePdfService, RouteStep } from '../../../core/services/warehouse-route-pdf-service';
 
 export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName';
 
@@ -101,16 +101,18 @@ export class OrderList implements OnInit {
     );
   }
 
-downloadRoutePdf(orderId: string): void {
-  const route = this.getRouteForOrder(orderId).map(step => ({
-    ...step,
-    items: step.items ?? undefined
-  }));
-  if (!route.length) return;
-  this.routePdfService.generate(orderId, route);
-}
+  downloadRoutePdf(orderId: string): void {
+    const route = this.getRouteForOrder(orderId).map(step => ({
+      shelfCode: step.shelfCode,
+      items: step.items ?? null
+    }));
 
-  onSearch(term: string) {
+    if (!route.length) {
+      return;
+    }
+
+    this.routePdfService.generate(orderId, route, 'Fő raktár');
+  } onSearch(term: string) {
     this.searchTerm$.next(term);
   }
 
