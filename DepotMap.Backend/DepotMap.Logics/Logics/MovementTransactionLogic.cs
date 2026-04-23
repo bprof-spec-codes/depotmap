@@ -165,7 +165,7 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<MovementTransactionViewDto>(transaction);
         }
 
-        public async Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto)
+        public async Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto, string? userRole = null)
         {
             var transaction = await _context.Transactions
                 .Include(t => t.Items)
@@ -181,6 +181,8 @@ namespace DepotMap.Logics.Logics
             {
                 throw new InvalidOperationException("Lezárt mozgatás nem szerkeszthető.");
             }
+
+          
 
             if (dto.Items == null && string.IsNullOrWhiteSpace(dto.Status))
             {
