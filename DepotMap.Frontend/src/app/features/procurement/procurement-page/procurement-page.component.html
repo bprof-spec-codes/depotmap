@@ -160,7 +160,7 @@
                 </td>
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
 
-                <td>{{ row.productId }}</td>
+                <td>{{ getProductLabel(row.productId) }}</td>
                 <td>{{ getCompartmentCode(row.toCompartmentId) }}</td>
                 <td>{{ row.quantity }}</td>
 

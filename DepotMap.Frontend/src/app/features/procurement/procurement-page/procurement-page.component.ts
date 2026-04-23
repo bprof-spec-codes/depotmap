@@ -668,4 +668,9 @@ export class ProcurementPageComponent implements OnInit {
 		const compartment = this.compartments.find(c => c.id === compartmentId);
 		return compartment?.code ?? '-';
 	}
+	getProductLabel(productId: string): string {
+		const product = this.availableProducts.find(p => p.id === productId);
+		if (!product) return productId; // fallback: ID ha még nem töltött be
+		return product.sku ? `${product.sku} - ${product.name}` : product.name;
+	}
 }
