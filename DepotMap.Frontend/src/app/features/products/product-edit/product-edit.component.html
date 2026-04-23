@@ -1,8 +1,5 @@
 <div class="app-page product-edit-page">
-  <app-page-header
-    title="Termék szerkesztése"
-    subtitle="A kiválasztott termék adatainak és tárolóhelyeinek módosítása"
-  >
+  <app-page-header title="Termék szerkesztése" subtitle="A kiválasztott termék adatainak és tárolóhelyeinek módosítása">
   </app-page-header>
 
   <app-content-card title="Szerkesztési adatok" [soft]="true">
@@ -31,13 +28,7 @@
 
           <label class="field">
             <span>Alacsony készlet küszöb</span>
-            <input
-              type="number"
-              name="lowStockThreshold"
-              [(ngModel)]="form.lowStockThreshold"
-              min="0"
-              required
-            />
+            <input type="number" name="lowStockThreshold" [(ngModel)]="form.lowStockThreshold" min="0" required />
           </label>
         </div>
       </div>
@@ -47,19 +38,11 @@
           <div class="storage-card">
             <label class="field">
               <span>Elsődleges tárolóhely</span>
-              <select
-                name="editPrimaryStorageSelection"
-                [(ngModel)]="primaryStorageSelection"
-                [compareWith]="compareCompartments"
-                [disabled]="compartmentsVm.loading"
-                required
-              >
+              <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection"
+                [compareWith]="compareCompartments" [disabled]="compartmentsVm.loading" required>
                 <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
-                <option
-                  *ngFor="let comp of compartmentsVm.items"
-                  [ngValue]="comp"
-                  [disabled]="isPrimaryCompartmentDisabled(comp.id)"
-                >
+                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp"
+                  [disabled]="isPrimaryCompartmentDisabled(comp.id)">
                   {{ comp.code }}
                 </option>
               </select>
@@ -70,24 +53,14 @@
             </div>
           </div>
 
-          <div
-            class="storage-card"
-            *ngFor="let storageId of secondaryStorageSelections; let i = index"
-          >
+          <div class="storage-card" *ngFor="let storageId of secondaryStorageSelections; let i = index">
             <label class="field">
               <span>Másodlagos tárolóhely {{ i + 1 }}</span>
-              <select
-                [name]="'editSecondaryStorageSelection' + i"
-                [(ngModel)]="secondaryStorageSelections[i]"
-                [compareWith]="compareCompartments"
-                [disabled]="compartmentsVm.loading"
-              >
+              <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
+                [compareWith]="compareCompartments" [disabled]="compartmentsVm.loading">
                 <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
-                <option
-                  *ngFor="let comp of compartmentsVm.items"
-                  [ngValue]="comp"
-                  [disabled]="isCompartmentUsedInSecondary(comp.id, i)"
-                >
+                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp"
+                  [disabled]="isCompartmentUsedInSecondary(comp.id, i)">
                   {{ comp.code }}
                 </option>
               </select>
@@ -97,11 +70,8 @@
               Kiválasztott tárolóhely: {{ secondaryStorageSelections[i]?.code }}
             </div>
 
-            <button
-              type="button"
-              class="btn btn-outline-danger btn-sm storage-remove-btn"
-              (click)="removeStorageSelection(i)"
-            >
+            <button type="button" class="btn btn-outline-danger btn-sm storage-remove-btn"
+              (click)="removeStorageSelection(i)">
               Tárolóhely törlése
             </button>
           </div>
@@ -113,11 +83,7 @@
       </ng-container>
 
       <div class="storage-actions">
-        <button
-          type="button"
-          class="link-btn storage-add-btn"
-          (click)="addStorageSelection()"
-        >
+        <button type="button" class="link-btn storage-add-btn" (click)="addStorageSelection()">
           <i class="bi bi-plus-circle me-1"></i>
           Plusz tárolóhely hozzáadása
         </button>

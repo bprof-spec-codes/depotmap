@@ -10,7 +10,7 @@ $body-color: #1a1a1a;
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
-
+@import './styles/tokens.scss';
 @import './styles/base.scss';
 @import './styles/buttons.scss';
 @import './styles/cards.scss';
@@ -18,4 +18,4 @@ $body-color: #1a1a1a;
 @import './styles/layout.scss';
 @import './styles/states.scss';
 @import './styles/tables.scss';
-@import './styles/tokens.scss';
+
