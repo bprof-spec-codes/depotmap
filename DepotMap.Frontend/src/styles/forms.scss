@@ -5,6 +5,7 @@ select,
 textarea {
   border-radius: 12px;
   border: 1px solid var(--color-border);
+  background-color: var(--color-surface) !important;
 }
 
 .form-control:focus,
