@@ -1,4 +1,4 @@
-<div class="app-page">
+<div class="app-page app-page--full">
   <app-page-header title="Kimenő rendelések" subtitle="A rendelések áttekintése, szűrése és állapotkezelése"
     [hasActions]="true">
     <div header-actions>
@@ -14,9 +14,8 @@
       <div class="orders-search-wrap">
         <div class="orders-search-box">
           <span class="orders-search-icon"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control orders-search-input"
-            placeholder="Keresés azonosító, státusz, név vagy cikkszám alapján..." [ngModel]="searchTerm$ | async"
-            (ngModelChange)="onSearch($event)">
+          <input type="text" class="form-control orders-search-input" placeholder="Keresés..."
+            [ngModel]="searchTerm$ | async" (ngModelChange)="onSearch($event)">
         </div>
       </div>
 
@@ -59,9 +58,6 @@
                     <span class="order-id">#{{ order.id | slice:0:8 }}...</span>
                   </div>
 
-                  <span class="order-status-badge" [ngClass]="getStatusBadgeClass(order.status)">
-                    {{ translateStatus(order.status) }}
-                  </span>
                 </div>
                 <div class="order-meta">
                   <span>
@@ -85,16 +81,19 @@
 
                 <button *ngIf="canEdit(order.status)" class="btn btn-sm btn-outline-secondary"
                   (click)="editOrder(order)">
-                  <i class="bi bi-pencil"></i> Szerkeszt
+                  <i class="bi bi-pencil"></i> Szerkesztés
                 </button>
 
                 <button *ngIf="canDelete(order.status)" class="btn btn-sm btn-danger" (click)="deleteOrder(order.id)">
                   <i class="bi bi-trash"></i> Törlés
                 </button>
 
+                <span class="badge px-3 py-2 me-2" [ngClass]="getStatusBadgeClass(order.status)"
+                  style="font-size: 0.9rem;">
+                  {{ translateStatus(order.status) }}
+                </span>
 
-
-                <button *ngIf="order.status !== 'Closed'" class="btn btn-sm btn-success" (click)="advanceStatus(order)">
+                <button *ngIf="order.status !== 'Closed'" class="btn btn-sm btn-primary" (click)="advanceStatus(order)">
                   {{ getNextStatusLabel(order.status) }}
                 </button>
 
@@ -132,6 +131,48 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              <div class="route-result">
+                <h3 class="order-details-title">Kiszedési sorrend</h3>
+
+                <div *ngIf="isRouteLoading(order.id)" class="route-result-message">
+                  Útvonal tervezése...
+                </div>
+
+                <div *ngIf="!isRouteLoading(order.id) && getRouteError(order.id)" class="route-result-error">
+                  {{ getRouteError(order.id) }}
+                </div>
+
+                <button *ngIf="!isRouteLoading(order.id) && getRouteForOrder(order.id).length" type="button"
+                  class="btn btn-sm btn-outline-secondary route-pdf-btn" (click)="downloadRoutePdf(order.id)">
+                  <i class="bi bi-file-earmark-pdf me-1"></i>
+                  PDF letöltése
+                </button>
+
+                <ol *ngIf="!isRouteLoading(order.id) && getRouteForOrder(order.id).length" class="route-steps">
+                  <li *ngFor="let step of getRouteForOrder(order.id)" class="route-step">
+                    <div class="route-step-shelf">
+                      <strong>{{ step.shelfCode }}</strong>
+                    </div>
+
+                    <div class="route-step-items" *ngIf="step.items?.length; else noRouteItems">
+                      <span *ngFor="let item of step.items; let last = last">
+                        {{ item.compartmentCode }} - {{ item.productName }} ({{ item.quantity }} db)<span
+                          *ngIf="!last">, </span>
+                      </span>
+                    </div>
+
+                    <ng-template #noRouteItems>
+                      <div class="route-step-items">Nincs kiszedendő tétel.</div>
+                    </ng-template>
+                  </li>
+                </ol>
+
+                <div
+                  *ngIf="!isRouteLoading(order.id) && isRouteLoaded(order.id) && !getRouteForOrder(order.id).length && !getRouteError(order.id)"
+                  class="route-result-message">
+                  Nincs útvonal ehhez a rendeléshez.
+                </div>
               </div>
             </div>
           </div>

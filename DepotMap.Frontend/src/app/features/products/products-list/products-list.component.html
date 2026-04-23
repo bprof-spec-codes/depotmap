@@ -1,4 +1,4 @@
-<div class="app-page ">
+<div class="app-page app-page--full ">
   <app-page-header title="Termékek" subtitle="A rendszerben szereplő termékek áttekintése és kezelése"
     [hasActions]="true">
     <div header-actions>
@@ -20,7 +20,7 @@
                 <i class="bi bi-search"></i>
               </span>
 
-              <input type="text" class="form-control products-search-input" placeholder="Keresés terméknévre..."
+              <input type="text" class="form-control products-search-input" placeholder="Keresés..."
                 [ngModel]="productSearch | async" (ngModelChange)="onProductSearchChange($event)" />
             </div>
           </div>
@@ -39,7 +39,7 @@
 
               <div class="product-actions">
                 <button class="btn btn-sm btn-outline-secondary" (click)="showHistory(p.id, p.name)">Előzmények</button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="editProduct(p)">Szerkeszt</button>
+                <button class="btn btn-sm btn-outline-secondary" (click)="editProduct(p)">Szerkesztés</button>
                 <button class="btn btn-sm btn-danger" (click)="deleteProduct(p.id)">Törlés</button>
               </div>
             </div>
@@ -50,12 +50,12 @@
               </div>
 
               <div class="product-history-toolbar">
-                <input type="text" class="form-control" placeholder="Keresés..." [ngModel]="historySearch | async"
+                <input type="text" class="form-control products-search-input" placeholder="Keresés..." [ngModel]="historySearch | async"
                   (ngModelChange)="onHistorySearchChange($event)" />
-                <select class="form-select" [ngModel]="historySort | async"
+                <select class="form-select products-search-input" [ngModel]="historySort | async"
                   (ngModelChange)="onHistorySortChange($event)">
-                  <option value="newest">Rendezés: Legújabb elöl</option>
-                  <option value="oldest">Rendezés: Legrégebbi elöl</option>
+                  <option class="products-search-input" value="newest">Rendezés: Legújabb elöl</option>
+                  <option class="products-search-input" value="oldest">Rendezés: Legrégebbi elöl</option>
                 </select>
               </div>
 

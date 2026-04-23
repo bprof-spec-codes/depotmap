@@ -30,6 +30,13 @@
   border-color: var(--color-danger);
 }
 
+.btn-danger:hover,
+.btn-danger:focus {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+}
+
+
 .btn-success {
   background: var(--color-success);
   border-color: var(--color-success);

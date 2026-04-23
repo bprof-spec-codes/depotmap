@@ -1,4 +1,4 @@
-<div class="app-page" *ngIf="movementsVm$ | async as vm">
+<div class="app-page app-page--full" *ngIf="movementsVm$ | async as vm">
 
   <app-page-header title="Készletmozgások"
     [subtitle]="vm.productId ? ('Szűrve erre a termékre: ' + vm.productId) : 'Az összes készletmozgás áttekintése'">

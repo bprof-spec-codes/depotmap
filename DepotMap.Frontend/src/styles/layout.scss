@@ -58,6 +58,8 @@
 }
 
 .app-page--full {
+  width: 100%;
   max-width: none;
   margin: 0;
+  padding: var(--space-6) var(--space-7); // opcionálisan nagyobb oldal padding
 }
