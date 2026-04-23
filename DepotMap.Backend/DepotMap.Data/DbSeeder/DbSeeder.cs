@@ -64,7 +64,7 @@ namespace DepotMap.Data.DbSeeder
                     Identifier = _config["SeedAdmin:Identifier"]!,
                     FirstName = _config["SeedAdmin:FirstName"]!,
                     LastName = _config["SeedAdmin:LastName"]!,
-                    Role = "Raktárvezető",
+                    Role = "Manager",
                     Position = _config["SeedAdmin:Position"]!,
                     PasswordHash = ""
                 };
@@ -81,7 +81,7 @@ namespace DepotMap.Data.DbSeeder
                     Identifier = "tesztadmin",
                     FirstName = "Teszt",
                     LastName = "Elek",
-                    Role = "Raktárvezető",
+                    Role = "Manager",
                     Position = "Teszt",
                     PasswordHash = ""
                 };

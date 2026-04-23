@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { OrderService, OrderViewDto } from '../../../core/services/order-service';
+import { OrderService, OrderViewDto, PickingTaskDto } from '../../../core/services/order-service';
 import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
+import { RoutePdfService, RouteStep } from '../../../core/services/warehouse-route-pdf-service';
 
 export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName';
 
@@ -20,8 +21,12 @@ export class OrderList implements OnInit {
   searchTerm$ = new BehaviorSubject<string>('');
   sortBy$ = new BehaviorSubject<OrderSortColumn>('timestamp');
   sortDirection$ = new BehaviorSubject<'asc' | 'desc'>('desc');
+  routeByOrderId: Record<string, PickingTaskDto[]> = {};
+  routeErrorByOrderId: Record<string, string> = {};
+  routeLoadingOrderId: string | null = null;
+  routeLoadedOrderIds = new Set<string>();
 
-  constructor(private orderService: OrderService, private router: Router) {}
+  constructor(private orderService: OrderService, private router: Router, private routePdfService: RoutePdfService) { }
 
   ngOnInit(): void {
     const rawData$ = this.refresh$.pipe(
@@ -50,7 +55,7 @@ export class OrderList implements OnInit {
           const s = search.toLowerCase();
           result = result.filter(order => {
             // A. Fő rendelés adatokban keresés
-            const inMain = 
+            const inMain =
               order.id?.toLowerCase().includes(s) ||
               order.status?.toLowerCase().includes(s) ||
               order.userIdentifier?.toLowerCase().includes(s) ||
@@ -58,7 +63,7 @@ export class OrderList implements OnInit {
               order.timestamp?.includes(s);
 
             // B. A rendelés BELSŐ TÉTELEIBEN (cikkszám, kód) való keresés!
-            const inItems = order.items?.some(item => 
+            const inItems = order.items?.some(item =>
               item.productSKU?.toLowerCase().includes(s) ||
               item.fromCompartmentCode?.toLowerCase().includes(s) ||
               item.quantity.toString().includes(s)
@@ -96,7 +101,18 @@ export class OrderList implements OnInit {
     );
   }
 
-  onSearch(term: string) {
+  downloadRoutePdf(orderId: string): void {
+    const route = this.getRouteForOrder(orderId).map(step => ({
+      shelfCode: step.shelfCode,
+      items: step.items ?? null
+    }));
+
+    if (!route.length) {
+      return;
+    }
+
+    this.routePdfService.generate(orderId, route, 'Fő raktár');
+  } onSearch(term: string) {
     this.searchTerm$.next(term);
   }
 
@@ -142,11 +158,11 @@ export class OrderList implements OnInit {
 
   deleteOrder(id: string) {
     if (!confirm('Biztosan törölni szeretnéd a rendelést? Ezt nem lehet visszavonni!')) return;
-    
+
     this.orderService.deleteOrder(id).subscribe({
-      next: () => { 
+      next: () => {
         console.log(`Order ${id} deleted.`);
-        this.refresh$.next(); 
+        this.refresh$.next();
       },
       error: (err) => alert('Nem sikerült törölni a rendelést.')
     });
@@ -156,22 +172,58 @@ export class OrderList implements OnInit {
     let nextStatus = '';
     if (order.status === 'Planning') nextStatus = 'Processing';
     else if (order.status === 'Processing') nextStatus = 'Closed';
-    
+
     if (!nextStatus) return;
 
     if (nextStatus === 'Closed') {
-       if(!confirm('Biztosan lezárod a rendelést? Ezzel fizikailag levonjuk a termékeket a polcról!')) return;
+      if (!confirm('Biztosan lezárod a rendelést? Ezzel fizikailag levonjuk a termékeket a polcról!')) return;
     }
 
     this.orderService.updateOrderStatus(order.id, { status: nextStatus }).subscribe({
-      next: () => { console.log(`Order ${order.id} advanced to ${nextStatus}.`);
-      this.refresh$.next(); },
+      next: () => {
+        console.log(`Order ${order.id} advanced to ${nextStatus}.`);
+        this.refresh$.next();
+      },
       error: (err) => alert('Nem sikerült a státusz frissítése.')
     });
   }
 
   createRoute(orderId: string) {
-    this.router.navigate(['/routes/create'], { queryParams: { orderId: orderId } });
+    this.routeLoadingOrderId = orderId;
+    this.routeErrorByOrderId[orderId] = '';
+
+    this.orderService.getOptimizedRoute(orderId).subscribe({
+      next: (route) => {
+        this.routeByOrderId[orderId] = route.filter(
+          (step) => step.cellType?.toLowerCase() !== 'entrance'
+        );
+        this.routeLoadedOrderIds.add(orderId);
+        this.routeLoadingOrderId = null;
+        this.expandedOrderIds.add(orderId);
+      },
+      error: () => {
+        this.routeByOrderId[orderId] = [];
+        this.routeErrorByOrderId[orderId] = 'Nem sikerült lekérni az útvonalat.';
+        this.routeLoadedOrderIds.add(orderId);
+        this.routeLoadingOrderId = null;
+      }
+    });
+  }
+
+  getRouteForOrder(orderId: string): PickingTaskDto[] {
+    return this.routeByOrderId[orderId] ?? [];
+  }
+
+  getRouteError(orderId: string): string {
+    return this.routeErrorByOrderId[orderId] ?? '';
+  }
+
+  isRouteLoading(orderId: string): boolean {
+    return this.routeLoadingOrderId === orderId;
+  }
+
+  isRouteLoaded(orderId: string): boolean {
+    return this.routeLoadedOrderIds.has(orderId);
   }
 
   getNextStatusLabel(currentStatus: string): string {

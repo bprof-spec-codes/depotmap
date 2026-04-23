@@ -188,7 +188,7 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<OrderViewDto>(order);
         }
 
-        public async Task<OrderViewDto?> UpdateOrderStatusAsync(string id, UpdateOrderStatusDto dto)
+        public async Task<OrderViewDto?> UpdateOrderStatusAsync(string id, UpdateOrderStatusDto dto, string userRole)
         {
             var order = await _context.Transactions
                 .Include(t => t.Items)
@@ -201,6 +201,14 @@ namespace DepotMap.Logics.Logics
             var newStatus = dto.Status;
 
             if (currentStatus == newStatus) return _mapper.Map<OrderViewDto>(order);
+
+            if (userRole == "Operator")
+            {
+                if (!(currentStatus == "Processing" && newStatus == "Closed"))
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak folyamatban lévő rendelést zárhat le!");
+                }
+            }
 
             if (currentStatus == "Planning" && newStatus != "Processing")
             {

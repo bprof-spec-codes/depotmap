@@ -46,6 +46,23 @@ export interface UpdateOrderItemDto {
   fromCompartmentCode?: string;
 }
 
+export interface CompartmentTaskDto {
+  compartmentId: string;
+  compartmentCode: string;
+  levelIndex: number;
+  productName: string;
+  quantity: number;
+}
+
+export interface PickingTaskDto {
+  shelfId: string | null;
+  shelfCode: string;
+  x: number;
+  y: number;
+  cellType: string;
+  items: CompartmentTaskDto[] | null;
+}
+
 interface ValuesWrapper<T> {
   $values?: T[];
 }
@@ -56,6 +73,7 @@ interface ValuesWrapper<T> {
 export class OrderService {
   private orderApiBase = `${environment.apiUrl}/Order`;
   private orderItemApiBase = `${environment.apiUrl}/OrderItem`;
+  private pathFindingApiBase = `${environment.apiUrl}/WarehousePathFinding`;
 
   // Állapotkezelés a rendelések listájához
   private ordersSubject = new BehaviorSubject<OrderViewDto[]>([]);
@@ -141,6 +159,14 @@ export class OrderService {
     return this.http.delete(`${this.orderItemApiBase}/${orderId}/items/${itemId}`, { responseType: 'text' }).pipe(
       tap(() => this.loadAllOrders().subscribe()),
       map(() => void 0)
+    );
+  }
+
+  getOptimizedRoute(orderId: string): Observable<PickingTaskDto[]> {
+    return this.http.get<unknown>(`${this.pathFindingApiBase}/optimize/${orderId}`).pipe(
+      timeout(5000),
+      map(response => this.normalizeResponse<PickingTaskDto>(response)),
+      catchError(() => of([]))
     );
   }
 }

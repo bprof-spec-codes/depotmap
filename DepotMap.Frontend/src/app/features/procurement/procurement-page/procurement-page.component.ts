@@ -9,37 +9,9 @@ import {
 	PurchasingTransactionsService
 } from '../../../core/services/purchasing-transactions-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
+import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { ProcurementFormItem, ProcurementSortColumn, ProcurementTableItem, ProcurementTableTransaction } from '../../../core/models/procurements.models';
 
-interface ProcurementFormItem {
-	productId: string;
-	quantity: number | null;
-	toCompartmentId: string;
-}
-
-interface ProcurementTableItem {
-	productId: string;
-	toCompartmentId: string;
-	quantity: number;
-}
-
-interface ProcurementTableTransaction {
-	id: string;
-	status: string;
-	statusLabel: string;
-	isClosed: boolean;
-	isDeleteBlocked: boolean;
-	createdByUserId: string;
-	timestamp: string;
-	items: ProcurementTableItem[];
-}
-
-type ProcurementSortColumn =
-	| 'timestamp'
-	| 'status'
-	| 'createdByUserId'
-	| 'productId'
-	| 'toCompartmentId'
-	| 'quantity';
 
 @Component({
 	selector: 'app-procurement-page',
@@ -54,6 +26,8 @@ export class ProcurementPageComponent implements OnInit {
 	private readonly maxInitialLoadRetries = 1;
 	private initialLoadRetryCount = 0;
 	readonly tablePageSizeOptions = [10, 50, 100, 500];
+	compartments: CompartmentOptionDto[] = [];
+	compartmentsLoading = false;
 	tablePageSize = 100;
 	currentPage = 1;
 	sortColumn: ProcurementSortColumn | null = 'timestamp';
@@ -85,15 +59,23 @@ export class ProcurementPageComponent implements OnInit {
 
 	constructor(
 		private purchasingService: PurchasingTransactionsService,
-		private productService: ProductService
+		private productService: ProductService,
+		private compartmentService: CompartmentService
 	) { }
 
 	ngOnInit(): void {
 		// oldal indulaskor termeklista + elso tabla lekeres
+		this.loadCompartments();
 		this.loadAvailableProducts();
 		this.loadTransactions(true);
 	}
-
+	private loadCompartments(): void {
+		this.compartmentsLoading = true;
+		this.compartmentService.getAll().subscribe({
+			next: data => { this.compartments = data; this.compartmentsLoading = false; },
+			error: () => { this.compartmentsLoading = false; }
+		});
+	}
 	private loadAvailableProducts(): void {
 		this.productsLoading = true;
 
@@ -681,5 +663,14 @@ export class ProcurementPageComponent implements OnInit {
 		const maybeError = err as { error?: { message?: string } } | null;
 		const message = maybeError?.error?.message;
 		return message && message.trim() ? message : fallback;
+	}
+	getCompartmentCode(compartmentId: string): string {
+		const compartment = this.compartments.find(c => c.id === compartmentId);
+		return compartment?.code ?? '-';
+	}
+	getProductLabel(productId: string): string {
+		const product = this.availableProducts.find(p => p.id === productId);
+		if (!product) return productId; // fallback: ID ha még nem töltött be
+		return product.sku ? `${product.sku} - ${product.name}` : product.name;
 	}
 }

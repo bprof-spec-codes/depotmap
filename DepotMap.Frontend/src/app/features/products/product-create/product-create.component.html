@@ -34,7 +34,6 @@
         </div>
       </div>
 
-
       <ng-container *ngIf="compartmentsVm$ | async as compartmentsVm">
         <div class="storage-section">
           <div class="storage-card">
@@ -42,16 +41,15 @@
               <span>Elsődleges tárolóhely</span>
               <select name="primaryStorageSelection" [(ngModel)]="primaryStorageSelection"
                 [disabled]="compartmentsVm.loading" required>
-                <option value="">-- Válassz tárolóhelyet --</option>
-                <option *ngFor="let comp of compartmentsVm.items" [value]="comp.id"
-                  [disabled]="isPrimaryCompartmentDisabled(comp.id)">
-                  {{ comp.id }}
+                <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
+                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp">
+                  {{ comp.code }}
                 </option>
               </select>
             </label>
 
             <div class="selected-id" *ngIf="primaryStorageSelection">
-              Kiválasztott azonosító: {{ primaryStorageSelection }}
+              Kiválasztott tárolóhely: {{ primaryStorageSelection.code || '-' }}
             </div>
           </div>
 
@@ -60,19 +58,19 @@
               <span>Másodlagos tárolóhely {{ i + 1 }}</span>
               <select [name]="'secondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
                 [disabled]="compartmentsVm.loading">
-                <option value="">-- Válassz tárolóhelyet --</option>
-                <option *ngFor="let comp of compartmentsVm.items" [value]="comp.id"
-                  [disabled]="isCompartmentUsedInSecondary(comp.id, i)">
-                  {{ comp.id }}
+                <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
+                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp">
+                  {{ comp.code }}
                 </option>
               </select>
             </label>
 
             <div class="selected-id" *ngIf="secondaryStorageSelections[i]">
-              Kiválasztott azonosító: {{ secondaryStorageSelections[i] }}
+              Kiválasztott tárolóhely: {{ secondaryStorageSelections[i]?.code || '-' }}
             </div>
 
-            <button type="button" class="btn btn-outline-danger btn-sm storage-remove-btn" (click)="removeStorageSelection(i)">
+            <button type="button" class="btn btn-outline-danger btn-sm storage-remove-btn"
+              (click)="removeStorageSelection(i)">
               Tárolóhely törlése
             </button>
           </div>
@@ -88,13 +86,17 @@
       </ng-container>
 
       <div class="storage-actions">
-        <button type="button" class="link-btn storage-add-btn" (click)="addStorageSelection()"><i class="bi bi-plus-circle me-1"></i> Plusz tárolóhely hozzáadása</button>
+        <button type="button" class="link-btn storage-add-btn" (click)="addStorageSelection()">
+          <i class="bi bi-plus-circle me-1"></i>
+          Plusz tárolóhely hozzáadása
+        </button>
       </div>
 
       <div class="app-error" *ngIf="errorText">{{ errorText }}</div>
 
       <div class="app-form-actions">
         <a routerLink="/products" class="btn btn-outline-secondary">Vissza</a>
+
         <button type="submit" class="btn btn-success" [disabled]="saving">
           {{ saving ? 'Létrehozás folyamatban...' : 'Létrehozás' }}
         </button>

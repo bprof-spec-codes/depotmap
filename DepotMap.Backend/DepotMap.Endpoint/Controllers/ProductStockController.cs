@@ -1,8 +1,10 @@
 ﻿using DepotMap.Logics.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductStockController : ControllerBase
