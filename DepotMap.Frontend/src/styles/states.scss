@@ -1,0 +1,20 @@
+.app-loading,
+.app-empty,
+.app-error {
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: 14px;
+}
+
+.app-loading,
+.app-empty {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.app-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid rgba(220, 38, 38, 0.18);
+}

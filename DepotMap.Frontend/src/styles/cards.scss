@@ -1,0 +1,17 @@
+.app-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+}
+
+.app-card--soft {
+  background: var(--color-surface-muted);
+}
+
+.app-card-title {
+  margin: 0 0 var(--space-4);
+  font-size: 18px;
+  font-weight: 700;
+}

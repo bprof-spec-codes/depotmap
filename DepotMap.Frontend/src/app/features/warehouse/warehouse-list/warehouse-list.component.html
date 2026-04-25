@@ -1,59 +1,67 @@
-<div class="warehouse-list">
-  <div class="header">
-    <h2>Raktárak</h2>
-    <button class="btn btn-primary" (click)="toggleCreateForm()">
-      {{ showCreateForm ? 'Mégse' : 'Új raktár' }}
-    </button>
-  </div>
-
-  <div class="create-form" *ngIf="showCreateForm">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="wh-name">Név</label>
-        <input id="wh-name" type="text" class="form-control" placeholder="Raktár neve"
-               [(ngModel)]="newName" />
-      </div>
-      <div class="form-group form-group-sm">
-        <label for="wh-width">Szélesség</label>
-        <input id="wh-width" type="number" class="form-control" min="1" max="200"
-               [(ngModel)]="newGridWidth" />
-      </div>
-      <div class="form-group form-group-sm">
-        <label for="wh-height">Magasság</label>
-        <input id="wh-height" type="number" class="form-control" min="1" max="200"
-               [(ngModel)]="newGridHeight" />
-      </div>
-      <button class="btn btn-success btn-create" (click)="createWarehouse()" [disabled]="creating">
-        {{ creating ? 'Létrehozás...' : 'Létrehozás' }}
+<div class="app-page app-page--full">
+  <app-page-header title="Raktárak" subtitle="A raktárak kezelése és új raktár létrehozása" [hasActions]="true">
+    <div header-actions>
+      <button class="btn btn-primary" (click)="toggleCreateForm()">
+        {{ showCreateForm ? 'Mégse' : 'Új raktár' }}
       </button>
     </div>
-  </div>
+  </app-page-header>
 
-  <ng-container *ngIf="warehousesVm$ | async as vm">
-    <div *ngIf="vm.loading" class="spinner">Betöltés...</div>
-    <div *ngIf="!vm.loading && vm.error" class="error-text">
-      A raktárak nem töltődtek be. Ellenőrizd, hogy a backend fut-e.
-    </div>
+  <app-content-card title="Raktárlista">
+    <div class="warehouse-create-panel" *ngIf="showCreateForm">
+      <div class="warehouse-create-grid">
+        <div class="form-group">
+          <label for="wh-name">Név</label>
+          <input id="wh-name" type="text" class="form-control" placeholder="Raktár neve" [(ngModel)]="newName" />
+        </div>
 
-    <div *ngIf="!vm.loading && !vm.error && vm.items.length === 0" class="empty-text">
-      Még nincs raktár. Hozz létre egyet az „Új raktár" gombbal!
-    </div>
+        <div class="form-group form-group-sm">
+          <label for="wh-width">Szélesség</label>
+          <input id="wh-width" type="number" class="form-control" min="1" max="200" [(ngModel)]="newGridWidth" />
+        </div>
 
-    <div class="cards">
-      <div class="card" *ngFor="let w of vm.items" (click)="openWarehouse(w.id)">
-        <div class="card-body">
-          <h5 class="card-title">{{ w.name }}</h5>
-          <p class="card-meta">{{ w.gridWidth }} × {{ w.gridHeight }} cella</p>
-          <div class="card-actions">
-            <button class="btn btn-sm btn-outline-secondary" (click)="openWarehouse(w.id); $event.stopPropagation()">
-              Megnyitás
-            </button>
-            <button class="btn btn-sm btn-danger" (click)="deleteWarehouse(w.id, $event)">
-              Törlés
-            </button>
-          </div>
+        <div class="form-group form-group-sm">
+          <label for="wh-height">Magasság</label>
+          <input id="wh-height" type="number" class="form-control" min="1" max="200" [(ngModel)]="newGridHeight" />
+        </div>
+
+        <div class="warehouse-create-actions">
+          <button class="btn btn-primary warehouse-create-btn" (click)="createWarehouse()" [disabled]="creating">
+            {{ creating ? 'Létrehozás...' : 'Létrehozás' }}
+          </button>
         </div>
       </div>
     </div>
-  </ng-container>
+
+    <ng-container *ngIf="warehousesVm$ | async as vm">
+      <div *ngIf="vm.loading" class="app-loading">Betöltés...</div>
+
+      <div *ngIf="!vm.loading && vm.error" class="app-error">
+        A raktárak nem töltődtek be. Ellenőrizd, hogy a backend fut-e.
+      </div>
+
+      <div *ngIf="!vm.loading && !vm.error && vm.items.length === 0" class="app-empty">
+        Még nincs raktár. Hozz létre egyet az „Új raktár” gombbal.
+      </div>
+
+      <div class="warehouse-grid" *ngIf="!vm.loading && !vm.error && vm.items.length">
+        <div class="warehouse-card" *ngFor="let w of vm.items" (click)="openWarehouse(w.id)">
+          <div class="warehouse-card-body">
+            <h3 class="warehouse-card-title">{{ w.name }}</h3>
+            <p class="warehouse-card-meta">{{ w.gridWidth }} × {{ w.gridHeight }} cella</p>
+
+            <div class="warehouse-card-actions" (click)="$event.stopPropagation()">
+              <button class="btn btn-sm btn-outline-secondary" (click)="openWarehouse(w.id)">
+                Megnyitás
+              </button>
+
+              <button class="btn btn-sm btn-danger" (click)="deleteWarehouse(w.id, $event)">
+                Törlés
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </app-content-card>
 </div>

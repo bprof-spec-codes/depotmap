@@ -1,0 +1,13 @@
+<div class="app-page-header-row">
+  <div class="app-page-title-wrap">
+    <h1 class="app-page-title">{{ title }}</h1>
+
+    <p class="app-page-subtitle" *ngIf="subtitle">
+      {{ subtitle }}
+    </p>
+  </div>
+
+  <div class="app-toolbar" *ngIf="hasActions">
+    <ng-content select="[header-actions]"></ng-content>
+  </div>
+</div>

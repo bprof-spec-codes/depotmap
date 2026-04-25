@@ -1,105 +1,237 @@
-.product-create-container {
-  padding: 18px;
-  max-width: 900px;
-  margin: 0 auto;
+:host {
+  display: block;
 }
 
-.header {
-  margin-bottom: 24px;
-  h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-  }
+.order-create-page {
+  max-width: 980px;
 }
 
-.spinner {
-  color: #4c91d4;
-  font-weight: bold;
-  font-size: 16px;
-  padding: 20px 0;
+.section-header {
+  margin-bottom: var(--space-4);
 }
 
-.form-container {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f1f35;
 }
 
-.alert-info {
-  background-color: #e9f5ff;
-  color: #0b223c;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border-left: 4px solid #4c91d4;
-}
-
-/* Már mentett sorok stílusa */
-.saved-row {
+.added-items-section,
+.new-item-section {
   display: flex;
-  align-items: center;
-  gap: 20px;
-  background: #f8fbff;
-  padding: 12px 16px;
-  border: 1px solid #d7e6f8;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  
-  .row-num {
-    font-weight: bold;
-    color: #4c91d4;
-    width: 20px;
-  }
-  .col-data {
-    flex: 1;
-    font-size: 14px;
-    color: #333;
-  }
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-/* Aktív kitöltő sor (3 rublika egymás mellett) */
+.new-item-section {
+  margin-top: var(--space-6);
+}
+
+.added-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.saved-row {
+  display: grid;
+  grid-template-columns: 48px 1.5fr 1fr 1.2fr auto;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(180deg, #f9fbff 0%, #f4f8ff 100%);
+  padding: 14px 16px;
+  border: 1px solid #d9e7f7;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(18, 54, 97, 0.05);
+}
+
+.row-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #eaf3ff;
+  color: #2463a6;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.col-data {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.data-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.col-data strong {
+  color: #0f1f35;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.row-remove-btn {
+  justify-self: end;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
 .active-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 2fr; /* Arányok a 3 mezőnek */
+  grid-template-columns: 2fr 1fr 2fr;
   gap: 20px;
-  background: #ffffff;
-  padding: 16px;
-  border: 2px dashed #b6c2cf;
-  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  padding: 18px;
+  border: 1px dashed #c7d8eb;
+  border-radius: 16px;
+}
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    
-    label {
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 6px;
-      font-size: 13px;
-    }
-    
-    .form-control {
-      padding: 10px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-      &:focus {
-        border-color: #4c91d4;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(76, 145, 212, 0.15);
-      }
-    }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f1f35;
+  letter-spacing: 0.01em;
+}
+
+.form-group .form-control {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #cfe0f5;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 15px;
+  box-shadow: inset 0 1px 2px rgba(15, 31, 53, 0.03);
+}
+
+.form-group .form-control::placeholder {
+  color: #8aa0b8;
+}
+
+.form-group .form-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.add-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.link-btn {
+  border: 1px solid rgba(26, 115, 200, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
+  color: #0f5da9;
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  font-weight: 700;
+}
+
+.link-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(26, 115, 200, 0.34);
+  box-shadow: 0 10px 20px rgba(18, 54, 97, 0.09);
+}
+
+.link-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 115, 200, 0.18), 0 10px 20px rgba(18, 54, 97, 0.09);
+}
+
+.add-item-btn {
+  width: 100%;
+  display: block;
+}
+
+.order-create-actions {
+  margin-top: var(--space-6);
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-create-actions .btn {
+  min-width: 170px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.order-create-actions .btn-success {
+  box-shadow: 0 10px 22px rgba(14, 159, 87, 0.18);
+}
+
+.order-create-actions .btn-danger {
+  box-shadow: 0 10px 22px rgba(220, 38, 38, 0.12);
+}
+
+::ng-deep app-content-card .app-card {
+  border-radius: 18px;
+  border: 1px solid #cdddf1;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(18, 54, 97, 0.1);
+  padding: 24px;
+}
+
+::ng-deep app-content-card .app-card--soft {
+  background: #ffffff;
+}
+
+::ng-deep app-content-card .app-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f1f35;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 900px) {
+  .saved-row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .row-remove-btn {
+    justify-self: start;
+  }
+
+  .active-row {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .active-row {
-    grid-template-columns: 1fr; /* Mobilon egymás alá esnek a mezők */
+  .order-create-page {
+    max-width: 100%;
   }
-  .saved-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+
+  .order-create-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .order-create-actions .btn,
+  .add-item-btn {
+    width: 100%;
+  }
+
+  ::ng-deep app-content-card .app-card {
+    padding: 16px;
   }
 }

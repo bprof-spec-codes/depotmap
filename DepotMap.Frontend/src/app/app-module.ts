@@ -25,6 +25,8 @@ import { authInterceptor } from './core/interceptors/auth-interceptor';
 import { ProductStockListComponent } from './features/stock/stock-list/stock-list';
 import { StockMovementListComponent } from './features/stock/stockmovement/stockmovement';
 import { MovementsComponent } from './features/stock/movements/movements';
+import { PageHeader } from './shared/components/page-header/page-header';
+import { ContentCard } from './shared/components/content-card/content-card';
 
 @NgModule({
   declarations: [
@@ -47,7 +49,9 @@ import { MovementsComponent } from './features/stock/movements/movements';
     AdminView,
     ProductStockListComponent,
     StockMovementListComponent,
-    MovementsComponent
+    MovementsComponent,
+    PageHeader,
+    ContentCard
   ],
   imports: [
     BrowserModule,

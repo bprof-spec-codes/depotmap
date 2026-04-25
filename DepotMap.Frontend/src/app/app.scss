@@ -5,9 +5,10 @@
 .app-content {
   margin-left: 272px;
   min-height: 100vh;
-  padding: 24px;
+  padding: 0;
   transition: margin-left 0.25s ease;
   box-sizing: border-box;
+  background: var(--color-bg);
 }
 
 .app-content.sidebar-collapsed {
