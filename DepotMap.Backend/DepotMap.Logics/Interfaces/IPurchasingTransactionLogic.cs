@@ -22,7 +22,7 @@ namespace DepotMap.Logics.Interfaces
 		);
 		Task<PurchasingTransactionViewDto?> GetByIdAsync(string id);
 		Task<PurchasingTransactionViewDto> CreateAsync(CreatePurchasingTransactionDto dto);
-		Task<PurchasingTransactionViewDto?> UpdateAsync(string id, UpdatePurchasingTransactionDto dto);
+		Task<PurchasingTransactionViewDto?> UpdateAsync(string id, UpdatePurchasingTransactionDto dto, string userRole);
 		Task<bool> DeleteAsync(string id);
 	}
 }
