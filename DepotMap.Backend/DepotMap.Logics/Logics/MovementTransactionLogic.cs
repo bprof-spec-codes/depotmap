@@ -165,7 +165,7 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<MovementTransactionViewDto>(transaction);
         }
 
-        public async Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto, string? userRole = null)
+        public async Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto, string userRole)
         {
             var transaction = await _context.Transactions
                 .Include(t => t.Items)
@@ -182,7 +182,18 @@ namespace DepotMap.Logics.Logics
                 throw new InvalidOperationException("Lezárt mozgatás nem szerkeszthető.");
             }
 
-          
+            if (userRole == "Operator")
+            {
+                if (dto.Items != null)
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak a mozgatás státuszát zárhatod le.");
+                }
+
+                if (!(transaction.Status == "Active" && dto.Status == "Closed"))
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak összekészített mozgatást zárhatsz le.");
+                }
+            }
 
             if (dto.Items == null && string.IsNullOrWhiteSpace(dto.Status))
             {

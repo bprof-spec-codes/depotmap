@@ -17,7 +17,7 @@ namespace DepotMap.Logics.Interfaces
             int? quantity = null);
         Task<MovementTransactionViewDto?> GetByIdAsync(string id);
         Task<MovementTransactionViewDto> CreateAsync(CreateMovementTransactionDto dto);
-        Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto);
+        Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto, string userRole);
         Task<bool> DeleteAsync(string id);
     }
 }
