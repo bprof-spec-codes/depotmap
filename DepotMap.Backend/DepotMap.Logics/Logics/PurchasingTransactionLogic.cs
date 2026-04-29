@@ -180,7 +180,7 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<PurchasingTransactionViewDto>(transaction);
         }
 
-        public async Task<PurchasingTransactionViewDto?> UpdateAsync(string id, UpdatePurchasingTransactionDto dto)
+        public async Task<PurchasingTransactionViewDto?> UpdateAsync(string id, UpdatePurchasingTransactionDto dto, string userRole)
         {
             var transaction = await _context.Transactions
                 .Include(t => t.Items)
@@ -195,6 +195,19 @@ namespace DepotMap.Logics.Logics
             if (transaction.Status == "Closed")
             {
                 throw new InvalidOperationException("Lezárt beszerzés nem szerkeszthető.");
+            }
+
+            if (userRole == "Operator")
+            {
+                if (dto.Items != null)
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak a beszerzés státuszát zárhatod le.");
+                }
+
+                if (!(transaction.Status == "Active" && dto.Status == "Closed"))
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak összekészített beszerzést zárhatsz le.");
+                }
             }
 
             if (dto.Items == null && string.IsNullOrWhiteSpace(dto.Status))

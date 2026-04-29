@@ -1,7 +1,7 @@
 <div class="movements">
   <h2>Mozgatások</h2>
 
-  <div class="form-card">
+  <div class="form-card" *ngIf="canManageMovements(); else readOnlyInfo">
     <h3>{{ isEditing() ? 'Mozgatás szerkesztése' : 'Új mozgatás' }}</h3>
 
     <div *ngIf="errorText" class="error-text">{{ errorText }}</div>
@@ -64,6 +64,12 @@
       <button type="button" class="btn btn-secondary" *ngIf="isEditing()" (click)="resetForm()">Új létrehozása</button>
     </div>
   </div>
+
+  <ng-template #readOnlyInfo>
+    <div class="error-text" style="margin-bottom: 16px;">
+      Raktárosként csak a lista nézet és a státuszfrissítés érhető el.
+    </div>
+  </ng-template>
 
   <div *ngIf="loading" class="loading-text">Betöltés...</div>
 
@@ -183,14 +189,14 @@
                 <td>{{ row.toCompartmentId }}</td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button type="button" class="icon-btn" [disabled]="transaction.isClosed"
+                  <button *ngIf="canManageMovements()" type="button" class="icon-btn" [disabled]="transaction.isClosed"
                     (click)="editTransaction(transaction)" title="Szerkesztés">
                     <i class="bi bi-pencil"></i>
                   </button>
                 </td>
 
                 <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button type="button" class="icon-btn danger" [disabled]="transaction.isDeleteBlocked"
+                  <button *ngIf="canManageMovements()" type="button" class="icon-btn danger" [disabled]="transaction.isDeleteBlocked"
                     (click)="deleteTransaction(transaction)" title="Törlés">
                     <i class="bi bi-trash"></i>
                   </button>

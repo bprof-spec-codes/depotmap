@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, finalize } from 'rxjs';
+import { AuthService } from '../../../core/services/auth-service';
 import {
 	CreatePurchasingTransactionDto,
 	CreatePurchasingTransactionItemDto,
@@ -42,6 +43,7 @@ export class ProcurementPageComponent implements OnInit {
 	productsLoading = false;
 	editingTransactionId: string | null = null;
 	statusUpdatingId: string | null = null;
+	userRole: string | null = null;
 	tableFilters = {
 		date: '',
 		status: '',
@@ -60,15 +62,22 @@ export class ProcurementPageComponent implements OnInit {
 	constructor(
 		private purchasingService: PurchasingTransactionsService,
 		private productService: ProductService,
-		private compartmentService: CompartmentService
+		private compartmentService: CompartmentService,
+		private authService: AuthService
 	) { }
 
 	ngOnInit(): void {
+		this.userRole = this.authService.getRole();
 		// oldal indulaskor termeklista + elso tabla lekeres
 		this.loadCompartments();
 		this.loadAvailableProducts();
 		this.loadTransactions(true);
 	}
+
+	canManagePurchasing(): boolean {
+		return this.userRole === 'Manager' || this.userRole === 'Officer';
+	}
+
 	private loadCompartments(): void {
 		this.compartmentsLoading = true;
 		this.compartmentService.getAll().subscribe({

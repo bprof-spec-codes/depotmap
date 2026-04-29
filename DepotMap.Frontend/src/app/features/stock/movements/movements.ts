@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, finalize } from 'rxjs';
+import { AuthService } from '../../../core/services/auth-service';
 import {
   CreateMovementTransactionItemDto,
   CreateMovementTransactionDto,
@@ -70,6 +71,7 @@ export class MovementsComponent implements OnInit {
   successText = '';
   editingTransactionId: string | null = null;
   statusUpdatingId: string | null = null;
+  userRole: string | null = null;
 
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
@@ -92,13 +94,19 @@ export class MovementsComponent implements OnInit {
   constructor(
     private movementsService: MovementsService,
     private productService: ProductService,
-    private compartmentService: CompartmentService
+    private compartmentService: CompartmentService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.userRole = this.authService.getRole();
     this.loadAvailableProducts();
     this.loadCompartments();
     this.loadTransactions(true);
+  }
+
+  canManageMovements(): boolean {
+    return this.userRole === 'Manager' || this.userRole === 'Officer';
   }
 
   private loadCompartments(): void {

@@ -1,7 +1,7 @@
 <div class="procurement-page">
   <h2>Beszerzések</h2>
 
-  <div class="form-card">
+  <div class="form-card" *ngIf="canManagePurchasing(); else readOnlyInfo">
     <h3>{{ isEditing() ? 'Beszerzés szerkesztése' : 'Új beszerzés' }}</h3>
 
     <div *ngIf="errorText" class="error-text">{{ errorText }}</div>
@@ -57,6 +57,12 @@
   </div>
 
   <div *ngIf="loading" class="loading-text">Betöltés...</div>
+
+  <ng-template #readOnlyInfo>
+    <div class="error-text" style="margin-bottom: 16px;">
+      Raktárosként csak a lista nézet és a státuszfrissítés érhető el.
+    </div>
+  </ng-template>
 
   <div class="table-wrap">
     <table class="procurement-table">
