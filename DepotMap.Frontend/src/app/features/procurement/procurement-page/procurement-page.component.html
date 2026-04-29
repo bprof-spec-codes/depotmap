@@ -68,13 +68,29 @@
     <table class="procurement-table">
       <thead>
         <tr>
-          <th colspan="9" style="text-align:right;">
-            <label class="field" style="display:inline-flex; align-items:center; gap:6px; margin:0;">
-              <span>Megjelenítés</span>
-              <select [ngModel]="tablePageSize" (ngModelChange)="onTablePageSizeChange($event)">
-                <option *ngFor="let size of tablePageSizeOptions" [ngValue]="size">{{ size }}</option>
-              </select>
-            </label>
+          <th colspan="9" style="vertical-align: middle;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+              <div class="procurement-search-box" style="margin:0;">
+                <span class="procurement-search-icon">
+                  <i class="bi bi-search"></i>
+                </span>
+
+                <input
+                  type="text"
+                  class="form-control procurement-search-input"
+                  placeholder="Keresés"
+                  [ngModel]="searchTerm"
+                  (ngModelChange)="onSearchChange($event)"
+                />
+              </div>
+
+              <label class="field" style="display:inline-flex; align-items:center; gap:6px; margin:0;">
+                <span>Megjelenítés</span>
+                <select [ngModel]="tablePageSize" (ngModelChange)="onTablePageSizeChange($event)">
+                  <option *ngFor="let size of tablePageSizeOptions" [ngValue]="size">{{ size }}</option>
+                </select>
+              </label>
+            </div>
           </th>
         </tr>
         <tr>
@@ -110,38 +126,6 @@
           </th>
           <th><i class="bi bi-pencil"></i></th>
           <th><i class="bi bi-trash"></i></th>
-        </tr>
-        <tr>
-          <th>
-            <input type="date" [(ngModel)]="tableFilters.date" />
-          </th>
-          <th>
-            <select [(ngModel)]="tableFilters.status">
-              <option value="">Összes</option>
-              <option value="Planning">Tervezés</option>
-              <option value="Active">Összekészítés</option>
-              <option value="Closed">Lezárva</option>
-            </select>
-          </th>
-          <th></th>
-          <th>
-            <input type="text" placeholder="Felhasználó" [(ngModel)]="tableFilters.createdByUserId" />
-          </th>
-          <th>
-            <input type="text" placeholder="Cikkszám" [(ngModel)]="tableFilters.productId" />
-          </th>
-          <th>
-            <input type="text" placeholder="Rekesz" [(ngModel)]="tableFilters.toCompartmentId" />
-          </th>
-          <th>
-            <input type="number" min="1" placeholder="Darab" [(ngModel)]="tableFilters.quantity" />
-          </th>
-          <th>
-            <button type="button" class="btn btn-secondary" (click)="applyTableFilters()">Szűrés</button>
-          </th>
-          <th>
-            <button type="button" class="btn btn-secondary" (click)="clearTableFilters()">Törlés</button>
-          </th>
         </tr>
       </thead>
 
