@@ -235,7 +235,7 @@ export class ProcurementPageComponent implements OnInit {
 
 	getSortIndicator(column: ProcurementSortColumn): string {
 		if (this.sortColumn !== column) {
-			return '';
+			return '↕';
 		}
 
 		return this.sortDirection === 'desc' ? '↓' : '↑';
