@@ -61,8 +61,8 @@ export class MovementsComponent implements OnInit {
 
   tablePageSize = 100;
   currentPage = 1;
-  sortColumn: MovementSortColumn | null = null;
-  sortDirection: 'desc' | 'asc' = 'desc';
+  sortColumn: MovementSortColumn | null = 'timestamp';
+  sortDirection: 'desc' | 'asc' = 'desc'; 
 
   saving = false;
   loading = false;
@@ -101,6 +101,8 @@ export class MovementsComponent implements OnInit {
 
   ngOnInit(): void {
     this.userRole = this.authService.getRole();
+    this.sortColumn = 'timestamp';
+    this.sortDirection = 'desc';
     this.loadAvailableProducts();
     this.loadCompartments();
     this.loadTransactions(true);
@@ -218,7 +220,7 @@ export class MovementsComponent implements OnInit {
 
   getSortIndicator(column: MovementSortColumn): string {
     if (this.sortColumn !== column) {
-      return '';
+      return '↕';
     }
 
     return this.sortDirection === 'desc' ? '↓' : '↑';
