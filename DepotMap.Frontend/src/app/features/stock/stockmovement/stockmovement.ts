@@ -55,15 +55,19 @@ export class StockMovementListComponent implements OnInit {
 
         if (search) {
           const s = search.toLowerCase();
-          result = result.filter(item => 
-            item.productSKU?.toLowerCase().includes(s) ||
+          result = result.filter(item => {
+            const dateDotFormat = item.timestamp ? item.timestamp.replace(/-/g, '.') : '';
+            
+            return item.productSKU?.toLowerCase().includes(s) ||
             item.productId?.toLowerCase().includes(s) ||
             item.compartmentCode?.toLowerCase().includes(s) ||
             item.movementType?.toLowerCase().includes(s) ||
             item.userName?.toLowerCase().includes(s) ||
             item.transactionId?.toLowerCase().includes(s) ||
-            item.quantityChange.toString().includes(s)
-          );
+            item.quantityChange.toString().includes(s)||
+            item.timestamp?.toLowerCase().includes(s) || 
+            dateDotFormat.toLowerCase().includes(s);
+          });
         }
 
         result.sort((a, b) => {
