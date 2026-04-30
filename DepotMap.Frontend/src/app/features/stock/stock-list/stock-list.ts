@@ -56,13 +56,26 @@ export class ProductStockListComponent implements OnInit {
 
         if (search) {
           const s = search.toLowerCase();
-          result = result.filter(item => 
-            item.productName.toLowerCase().includes(s) || 
-            item.sku.toLowerCase().includes(s) ||         
-            item.compartments.some(c => c.compartmentCode?.toLowerCase().includes(s)) ||
-            item.totalQuantity.toString().includes(s)
-          );
-        }
+          result = result.filter(item => {
+            const totalQtyStr = `${item.totalQuantity} db ${item.totalQuantity}db`;
+
+            const inMain =
+              item.productName.toLowerCase().includes(s) || 
+              item.sku.toLowerCase().includes(s) ||         
+              item.compartments.some(c => c.compartmentCode?.toLowerCase().includes(s)) ||
+              totalQtyStr.includes(s);
+            
+              const inCompartments = item.compartments.some(c => {
+              const compQtyStr = `${c.quantity} db ${c.quantity}db`;
+              
+              return c.compartmentCode?.toLowerCase().includes(s) ||
+                     c.quantity.toString().includes(s) ||
+                     compQtyStr.includes(s);
+              
+          });
+          return inMain || inCompartments;
+        });
+      }
 
         result.sort((a, b) => {
           let valA: any, valB: any;
