@@ -5,7 +5,7 @@ import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { RoutePdfService, RouteStep } from '../../../core/services/warehouse-route-pdf-service';
 
-export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName';
+export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName' | 'itemCount';
 
 @Component({
   selector: 'app-order-list',
@@ -38,7 +38,6 @@ export class OrderList implements OnInit {
       shareReplay(1)
     );
 
-    // 2. Keresés és Rendezés összekötése a memóriában
     this.ordersVm$ = combineLatest([
       rawData$,
       this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()),
@@ -50,40 +49,55 @@ export class OrderList implements OnInit {
 
         let result = [...rawItems];
 
-        // --- KERESÉS ---
         if (search) {
           const s = search.toLowerCase();
           result = result.filter(order => {
-            // A. Fő rendelés adatokban keresés
+            const translatedStatus = this.translateStatus(order.status).toLowerCase();
+            const dateDotFormat = order.timestamp ? order.timestamp.replace(/-/g, '.') : '';
+            
+            const itemCount = order.items?.length || 0;
+            const itemCountStr = `${itemCount} tétel ${itemCount}tétel`;
+            
             const inMain =
               order.id?.toLowerCase().includes(s) ||
               order.status?.toLowerCase().includes(s) ||
+              translatedStatus.includes(s) ||
               order.userIdentifier?.toLowerCase().includes(s) ||
               order.userName?.toLowerCase().includes(s) ||
-              order.timestamp?.includes(s);
+              order.timestamp?.toLowerCase().includes(s) ||
+              dateDotFormat.toLowerCase().includes(s) ||
+              itemCount.toString().includes(s) ||
+              itemCountStr.includes(s);
 
-            // B. A rendelés BELSŐ TÉTELEIBEN (cikkszám, kód) való keresés!
             const inItems = order.items?.some(item =>
-              item.productSKU?.toLowerCase().includes(s) ||
+            {
+              const qtyStr = `${item.quantity} db ${item.quantity}db`;
+              return item.productSKU?.toLowerCase().includes(s) ||
               item.fromCompartmentCode?.toLowerCase().includes(s) ||
-              item.quantity.toString().includes(s)
-            );
-
-            // Ha bármelyikben benne van, a rendelés megjelenik!
+              item.quantity.toString().includes(s) ||
+              qtyStr.includes(s);
+            });
             return inMain || inItems;
           });
         }
 
-        // --- RENDEZÉS ---
         result.sort((a, b) => {
-          let valA: any = a[sortBy];
-          let valB: any = b[sortBy];
-
-          // Dátumok összehasonlítása
-          if (sortBy === 'timestamp') {
-            valA = new Date(a.timestamp).getTime();
-            valB = new Date(b.timestamp).getTime();
+          let valA: any;
+          let valB: any;
+          
+          if (sortBy === 'itemCount') {
+            valA = a.items?.length || 0;
+            valB = b.items?.length || 0;
           }
+          else {
+            valA = (a as any)[sortBy];
+            valB = (b as any)[sortBy];
+            if (sortBy === 'timestamp') {
+              valA = new Date(a.timestamp).getTime();
+              valB = new Date(b.timestamp).getTime();
+            }
+          }
+          
 
           if (valA == null) valA = '';
           if (valB == null) valB = '';
@@ -97,7 +111,7 @@ export class OrderList implements OnInit {
 
         return { items: result, loading: false, error: false };
       }),
-      startWith({ items: [], loading: true, error: false }) // Betöltés alatti állapot
+      startWith({ items: [], loading: true, error: false }) 
     );
   }
 
@@ -121,7 +135,7 @@ export class OrderList implements OnInit {
       this.sortDirection$.next(this.sortDirection$.value === 'asc' ? 'desc' : 'asc');
     } else {
       this.sortBy$.next(column);
-      this.sortDirection$.next('desc'); // Új oszlopnál legyen csökkenő a kezdő (pl legújabb, vagy Z-A)
+      this.sortDirection$.next('desc'); 
     }
   }
 

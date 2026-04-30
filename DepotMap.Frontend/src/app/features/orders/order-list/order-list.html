@@ -33,6 +33,10 @@
           (click)="onSortChange('userName')">
           Felhasználó {{ getSortIcon('userName') }}
         </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'itemCount'"
+          (click)="onSortChange('itemCount')">
+          Tételek száma {{ getSortIcon('itemCount') }}
+        </button>
       </div>
     </div>
 
