@@ -16,7 +16,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Raktárvezető,Irodista")]
+        [Authorize(Roles = "")]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
         {
 
@@ -25,7 +25,7 @@ namespace DepotMap.Endpoint.Controllers
 
         }
         [HttpGet]
-        [Authorize(Roles = "Raktárvezető,Irodista,Raktáros")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productsLogic.GetAllProductsAsync();
@@ -33,7 +33,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Raktárvezető,Irodista,Raktáros")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetProductById(string id)
         {
             var product = await _productsLogic.GetProductByIdAsync(id);
@@ -43,14 +43,14 @@ namespace DepotMap.Endpoint.Controllers
             return Ok(product);
         }
         [HttpGet("history")]
-        [Authorize(Roles = "Raktárvezető,Irodista,Raktáros")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetHistory([FromQuery] string? productId)
         {
             var historyDtos = await _productsLogic.GetProductHistoryAsync(productId);
             return Ok(historyDtos);
         }
         [HttpPut("{id}")]
-        [Authorize(Roles = "Raktárvezető,Irodista")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> UpdateProduct(string id, [FromBody] CreateProductDto dto)
         {
             var userId = "seed-admin-001"; // User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -59,7 +59,7 @@ namespace DepotMap.Endpoint.Controllers
             return Ok("Product updated successfully.");
         }
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Raktárvezető,Irodista")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> DeleteProduct(string id)
         {
             var userId = "seed-admin-001"; //User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
