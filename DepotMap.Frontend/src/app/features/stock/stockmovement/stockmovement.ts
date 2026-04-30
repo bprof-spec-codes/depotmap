@@ -57,6 +57,9 @@ export class StockMovementListComponent implements OnInit {
           const s = search.toLowerCase();
           result = result.filter(item => {
             const dateDotFormat = item.timestamp ? item.timestamp.replace(/-/g, '.') : '';
+
+            const sign = item.quantityChange > 0 ? '+' : '';
+            const qtyStr = `${sign}${item.quantityChange} db ${sign}${item.quantityChange}db ${item.quantityChange} db ${item.quantityChange}db`;
             
             return item.productSKU?.toLowerCase().includes(s) ||
             item.productId?.toLowerCase().includes(s) ||
@@ -66,7 +69,8 @@ export class StockMovementListComponent implements OnInit {
             item.transactionId?.toLowerCase().includes(s) ||
             item.quantityChange.toString().includes(s)||
             item.timestamp?.toLowerCase().includes(s) || 
-            dateDotFormat.toLowerCase().includes(s);
+            dateDotFormat.toLowerCase().includes(s) ||
+            qtyStr.includes(s);
           });
         }
 
