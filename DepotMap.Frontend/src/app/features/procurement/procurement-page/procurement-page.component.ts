@@ -44,6 +44,7 @@ export class ProcurementPageComponent implements OnInit {
 	editingTransactionId: string | null = null;
 	statusUpdatingId: string | null = null;
 	userRole: string | null = null;
+	searchTerm = '';
 	tableFilters = {
 		date: '',
 		status: '',
@@ -85,6 +86,17 @@ export class ProcurementPageComponent implements OnInit {
 			error: () => { this.compartmentsLoading = false; }
 		});
 	}
+
+	onSearchChange(value: string): void {
+		this.searchTerm = value ?? '';
+		this.currentPage = 1;
+		this.ensureCurrentPageInRange();
+	}
+
+	clearSearch(): void {
+		this.onSearchChange('');
+	}
+
 	private loadAvailableProducts(): void {
 		this.productsLoading = true;
 
@@ -191,8 +203,24 @@ export class ProcurementPageComponent implements OnInit {
 
 	get pagedTransactions(): ProcurementTableTransaction[] {
 		const start = (this.currentPage - 1) * this.tablePageSize;
-		const sorted = this.getSortedTransactions(this.transactions$.value);
+		const sorted = this.getSortedTransactions(this.filteredTransactions);
 		return sorted.slice(start, start + this.tablePageSize);
+	}
+
+	get filteredTransactions(): ProcurementTableTransaction[] {
+		const query = this.searchTerm.trim().toLowerCase();
+		const sorted = this.getSortedTransactions(this.transactions$.value);
+
+		if (!query) {
+			return sorted;
+		}
+
+		return sorted
+			.map(transaction => ({
+				...transaction,
+				items: transaction.items.filter(item => this.matchesSearch(transaction, item, query))
+			}))
+			.filter(transaction => transaction.items.length > 0);
 	}
 
 	toggleSort(column: ProcurementSortColumn): void {
@@ -207,14 +235,14 @@ export class ProcurementPageComponent implements OnInit {
 
 	getSortIndicator(column: ProcurementSortColumn): string {
 		if (this.sortColumn !== column) {
-			return '';
+			return '↕';
 		}
 
 		return this.sortDirection === 'desc' ? '↓' : '↑';
 	}
 
 	get totalPages(): number {
-		const total = this.transactions$.value.length;
+		const total = this.filteredTransactions.length;
 		return total > 0 ? Math.ceil(total / this.tablePageSize) : 1;
 	}
 
@@ -282,6 +310,35 @@ export class ProcurementPageComponent implements OnInit {
 			toCompartmentId: this.tableFilters.toCompartmentId.trim() || undefined,
 			quantity: typeof quantity === 'number' && Number.isFinite(quantity) ? quantity : undefined
 		};
+	}
+
+	private matchesSearch(transaction: ProcurementTableTransaction, item: ProcurementTableItem, query: string): boolean {
+		const timestamp = new Date(transaction.timestamp);
+		const isoDate = Number.isNaN(timestamp.getTime())
+			? ''
+			: `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}`;
+		const formattedDateTime = Number.isNaN(timestamp.getTime())
+			? ''
+			: `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}. ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
+		const yearOnly = Number.isNaN(timestamp.getTime()) ? '' : String(timestamp.getFullYear());
+
+		const haystack = [
+			transaction.timestamp,
+			timestamp.toLocaleString('hu-HU'),
+			isoDate,
+			formattedDateTime,
+			yearOnly,
+			transaction.status,
+			transaction.statusLabel,
+			transaction.createdByUserId,
+			item.productId,
+			this.getProductLabel(item.productId),
+			item.toCompartmentId,
+			this.getCompartmentCode(item.toCompartmentId),
+			String(item.quantity)
+		].join(' ').toLowerCase();
+
+		return haystack.includes(query);
 	}
 
 	private ensureCurrentPageInRange(): void {
@@ -355,7 +412,7 @@ export class ProcurementPageComponent implements OnInit {
 		this.errorText = '';
 
 		this.purchasingService
-			.getTableRows(0, this.pageSize, this.buildTableFilters())
+			.getTableRows(0, this.pageSize)
 			.pipe(finalize(() => (this.loading = false)))
 			.subscribe({
 				next: rows => {
