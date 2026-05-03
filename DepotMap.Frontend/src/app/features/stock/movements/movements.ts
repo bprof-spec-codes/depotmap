@@ -123,6 +123,7 @@ export class MovementsComponent implements OnInit {
   }
 
   private loadCompartments(): void {
+    // na itt jonnek be a rekeszek, hogy legyen mibol valasztani
     this.compartmentsLoading = true;
 
     this.compartmentService.getAll()
@@ -131,14 +132,113 @@ export class MovementsComponent implements OnInit {
         this.compartmentOptions = items;
       });
   }
-  getAvailableFromCompartments(selectedToCompartmentId: string): CompartmentOptionDto[] {
-    return this.compartmentOptions.filter(c => c.id !== selectedToCompartmentId);
+
+  getCompartmentsForProduct(productId: string): CompartmentOptionDto[] {
+    if (!productId) {
+      return [];
+    }
+
+    const product = this.availableProducts.find(p => p.id === productId);
+    if (!product || !product.productStocks || product.productStocks.length === 0) {
+      return [];
+    }
+
+    const allowedCompartments: CompartmentOptionDto[] = [];
+
+    for (const compartment of this.compartmentOptions) {
+      for (const stock of product.productStocks) {
+        if (stock.compartmentId === compartment.id) {
+          allowedCompartments.push(compartment);
+          break;
+        }
+      }
+    }
+
+    return allowedCompartments;
   }
 
-  getAvailableToCompartments(selectedFromCompartmentId: string): CompartmentOptionDto[] {
-    return this.compartmentOptions.filter(c => c.id !== selectedFromCompartmentId);
+  getAvailableFromCompartments(productId: string, selectedToCompartmentId: string): CompartmentOptionDto[] {
+    const productCompartments = this.getCompartmentsForProduct(productId);
+    const availableCompartments: CompartmentOptionDto[] = [];
+
+    for (const compartment of productCompartments) {
+      if (compartment.id !== selectedToCompartmentId) {
+        availableCompartments.push(compartment);
+      }
+    }
+
+    return availableCompartments;
+  }
+
+  getAvailableToCompartments(productId: string, selectedFromCompartmentId: string): CompartmentOptionDto[] {
+    const productCompartments = this.getCompartmentsForProduct(productId);
+    const availableCompartments: CompartmentOptionDto[] = [];
+
+    for (const compartment of productCompartments) {
+      if (compartment.id !== selectedFromCompartmentId) {
+        availableCompartments.push(compartment);
+      }
+    }
+
+    return availableCompartments;
+  }
+
+  onProductChange(item: MovementFormItem): void {
+    const fromCompartments = this.getAvailableFromCompartments(item.productId, item.toCompartmentId);
+
+    if (fromCompartments.length === 0) {
+      item.fromCompartmentId = '';
+      item.toCompartmentId = '';
+      return;
+    }
+
+    let foundFrom = false;
+
+    for (const compartment of fromCompartments) {
+      if (compartment.id === item.fromCompartmentId) {
+        foundFrom = true;
+        break;
+      }
+    }
+
+    if (!foundFrom) {
+      item.fromCompartmentId = fromCompartments[0].id;
+    }
+
+    const toCompartments = this.getAvailableToCompartments(item.productId, item.fromCompartmentId);
+
+    let foundTo = false;
+
+    for (const compartment of toCompartments) {
+      if (compartment.id === item.toCompartmentId) {
+        foundTo = true;
+        break;
+      }
+    }
+
+    if (item.toCompartmentId && !foundTo) {
+      item.toCompartmentId = '';
+    }
+  }
+
+  onFromCompartmentChange(item: MovementFormItem): void {
+    const toCompartments = this.getAvailableToCompartments(item.productId, item.fromCompartmentId);
+
+    let foundTo = false;
+
+    for (const compartment of toCompartments) {
+      if (compartment.id === item.toCompartmentId) {
+        foundTo = true;
+        break;
+      }
+    }
+
+    if (item.toCompartmentId && !foundTo) {
+      item.toCompartmentId = '';
+    }
   }
   private loadAvailableProducts(): void {
+    // ide toltjuk be a termekeket, mert kulonben nem tudunk mit kivalasztani
     this.productsLoading = true;
 
     this.productService
@@ -193,6 +293,7 @@ export class MovementsComponent implements OnInit {
   }
 
   get filteredTransactions(): MovementTableTransaction[] {
+    //rendezzuk, aztan ha kell, szurjuk is
     const query = this.searchTerm.trim().toLowerCase();
     const sorted = this.getSortedTransactions(this.transactions$.value);
 
@@ -209,6 +310,7 @@ export class MovementsComponent implements OnInit {
   }
 
   toggleSort(column: MovementSortColumn): void {
+    // ha masik oszlopra kattintok, akkor ujra indul a rendezes
     if (this.sortColumn !== column) {
       this.sortColumn = column;
       this.sortDirection = 'desc';
@@ -288,6 +390,7 @@ export class MovementsComponent implements OnInit {
 
   private buildTableFilters(): MovementTransactionTableFilters {
     const quantity = this.tableFilters.quantity;
+    // itt csinalunk a formbol normalis filtert
     return {
       date: this.tableFilters.date.trim() || undefined,
       status: this.tableFilters.status.trim() || undefined,
@@ -309,6 +412,7 @@ export class MovementsComponent implements OnInit {
       : `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}. ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
     const yearOnly = Number.isNaN(timestamp.getTime()) ? '' : String(timestamp.getFullYear());
 
+    // ide bedobjuk az osszes mezot, aztan keresunk benne
     const haystack = [
       transaction.timestamp,
       timestamp.toLocaleString('hu-HU'),
@@ -328,6 +432,7 @@ export class MovementsComponent implements OnInit {
   }
 
   private ensureCurrentPageInRange(): void {
+    // ne csusszon ki az oldal a tartomanybol
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
     }
@@ -455,6 +560,7 @@ export class MovementsComponent implements OnInit {
   }
 
   loadTransactions(reset = true): void {
+
     if (this.loading) {
       return;
     }
@@ -498,6 +604,7 @@ export class MovementsComponent implements OnInit {
     this.successText = '';
     this.saving = true;
 
+    // szerkesztesnel elobb be kell huzni a teljes adatot
     this.movementsService
       .getById(transaction.id)
       .pipe(finalize(() => (this.saving = false)))
@@ -521,6 +628,7 @@ export class MovementsComponent implements OnInit {
     this.errorText = '';
     this.statusUpdatingId = transaction.id;
 
+    // a kovetkezo statuszt kulon kiszamoljuk
     this.movementsService
       .update(transaction.id, { status: nextStatus })
       .pipe(finalize(() => (this.statusUpdatingId = null)))
@@ -562,6 +670,7 @@ export class MovementsComponent implements OnInit {
       return;
     }
 
+    // ha torolheto, akkor meg rakerdezunk, biztos-e
     this.errorText = '';
     this.successText = '';
     this.saving = true;
@@ -587,6 +696,7 @@ export class MovementsComponent implements OnInit {
   private mapTableRowsToTransactions(rows: MovementTransactionTableRowDto[]): MovementTableTransaction[] {
     const mapById = new Map<string, MovementTableTransaction>();
 
+    // itt a nyers sorokat osszerakjuk rendes tranzakciova
     for (const row of rows as unknown[]) {
       const rowData = row as Record<string, unknown>;
 
@@ -683,6 +793,7 @@ export class MovementsComponent implements OnInit {
   }
 
   private getNextStatus(status: string): string | null {
+    // itt megy a kovetkezo allapot lepesenkent
     const value = status.toLowerCase();
 
     if (value === 'planning') {
@@ -697,6 +808,7 @@ export class MovementsComponent implements OnInit {
   }
 
   private fillFormFromTransaction(transaction: MovementTransactionViewDto): void {
+    // szerkesztesnel elobb be kell huzni a teljes adatot
     const items = transaction.items.map(item => ({
       productId: item.productId,
       quantity: item.quantity,
@@ -709,9 +821,14 @@ export class MovementsComponent implements OnInit {
       status: this.normalizeStatus(transaction.status),
       items: items.length ? items : [this.createEmptyItem()]
     };
+
+    for (const item of this.form.items) {
+      this.onProductChange(item);
+    }
   }
 
   private normalizeStatus(status: string): string {
+    // a backend statuszat atforditjuk a mi formankra
     const value = status.toLowerCase();
 
     if (value === 'closed') {
@@ -728,6 +845,7 @@ export class MovementsComponent implements OnInit {
   private buildItemsPayload(): { ok: true; items: CreateMovementTransactionItemDto[] } | { ok: false; error: string } {
     const rows = this.form.items;
 
+    // kitoltes ellenorzese
     const hasAnyFilledRow = rows.some(
       r =>
         r.productId.trim() !== '' ||
