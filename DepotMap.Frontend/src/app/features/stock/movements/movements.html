@@ -31,7 +31,7 @@
     </div>
 
     <div class="item-row" *ngFor="let item of form.items; let i = index">
-      <select [(ngModel)]="item.productId" [disabled]="productsLoading">
+      <select [(ngModel)]="item.productId" [disabled]="productsLoading" (ngModelChange)="onProductChange(item)">
         <option value="">Válassz terméket...</option>
         <option *ngFor="let product of availableProducts; trackBy: trackByProductId" [value]="product.id">
           {{ product.sku ? product.sku + ' - ' : '' }}{{ product.name }}
@@ -40,16 +40,16 @@
 
       <input type="number" min="1" placeholder="Darabszám" [(ngModel)]="item.quantity" />
 
-      <select [(ngModel)]="item.fromCompartmentId" [disabled]="compartmentsLoading">
+      <select [(ngModel)]="item.fromCompartmentId" [disabled]="compartmentsLoading" (ngModelChange)="onFromCompartmentChange(item)">
         <option value="">Forrás rekesz...</option>
-        <option *ngFor="let compartment of getAvailableFromCompartments(item.toCompartmentId)" [value]="compartment.id">
+        <option *ngFor="let compartment of getAvailableFromCompartments(item.productId, item.toCompartmentId)" [value]="compartment.id">
           {{ compartment.code }}
         </option>
       </select>
 
       <select [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading">
         <option value="">Cél rekesz...</option>
-        <option *ngFor="let compartment of getAvailableToCompartments(item.fromCompartmentId)" [value]="compartment.id">
+        <option *ngFor="let compartment of getAvailableToCompartments(item.productId, item.fromCompartmentId)" [value]="compartment.id">
           {{ compartment.code }}
         </option>
       </select>
