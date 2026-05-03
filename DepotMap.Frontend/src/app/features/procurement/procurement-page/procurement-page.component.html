@@ -30,16 +30,16 @@
     </div>
 
     <div class="item-row" *ngFor="let item of form.items; let i = index">
-      <select [(ngModel)]="item.productId" [disabled]="productsLoading">
+      <select [(ngModel)]="item.productId" [disabled]="productsLoading" (ngModelChange)="onProductChange(item)">
         <option value="">Válassz terméket...</option>
         <option *ngFor="let product of availableProducts; trackBy: trackByProductId" [value]="product.id">
           {{ product.sku ? product.sku + ' - ' : '' }}{{ product.name }}
         </option>
       </select>
       <input type="number" min="1" placeholder="Darabszám" [(ngModel)]="item.quantity" />
-      <select [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading">
+      <select [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading || !item.productId">
         <option value="">Válassz rekeszt...</option>
-        <option *ngFor="let c of compartments" [value]="c.id">
+        <option *ngFor="let c of getCompartmentsForProduct(item.productId)" [value]="c.id">
           {{ c.code }}
         </option>
       </select>

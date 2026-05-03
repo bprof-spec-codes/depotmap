@@ -108,6 +108,50 @@ export class ProcurementPageComponent implements OnInit {
 			});
 	}
 
+	onProductChange(item: ProcurementFormItem): void {
+		// ha a termek valtozott, akkor nezzuk meg, a regi rekesz meg jo-e
+		const compartments = this.getCompartmentsForProduct(item.productId);
+		let found = false;
+
+		for (const compartment of compartments) {
+			if (compartment.id === item.toCompartmentId) {
+				found = true;
+				break;
+			}
+		}
+
+		if (item.toCompartmentId && !found) {
+			item.toCompartmentId = '';
+		}
+	}
+
+	getCompartmentsForProduct(productId: string): CompartmentOptionDto[] {
+		// ha nincs termek kivalasztva
+		if (!productId) {
+			return [];
+		}
+
+		const product = this.availableProducts.find(p => p.id === productId);
+		// ha nincs ilyen termek vagy nincs hozza rekesz, akkor ures lista
+		if (!product || !product.productStocks || product.productStocks.length === 0) {
+			return [];
+		}
+
+		const allowedCompartments: CompartmentOptionDto[] = [];
+
+		// itt most csak azt gyujtjuk ossze, ami a termekhez tenyleg tartozik
+		for (const compartment of this.compartments) {
+			for (const stock of product.productStocks) {
+				if (stock.compartmentId === compartment.id) {
+					allowedCompartments.push(compartment);
+					break;
+				}
+			}
+		}
+
+		return allowedCompartments;
+	}
+
 	private createEmptyItem(): ProcurementFormItem {
 		return {
 			productId: '',
