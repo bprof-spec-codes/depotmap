@@ -12,7 +12,7 @@ namespace DepotMap.Entities.Models.DTOs.Products
         public string SKU { get; set; } = null!;
         public int Price { get; set; }
 
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
         public int LowStockThreshold { get; set; }
         public List<InitialStockDto> InitialStocks { get; set; } = new();
 

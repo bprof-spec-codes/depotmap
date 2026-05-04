@@ -7,7 +7,7 @@
       <div class="app-form-grid">
         <label class="field">
           <span>Cikkszám</span>
-          <input type="text" name="sku" [(ngModel)]="form.sku" placeholder="Pl. MON-042" required />
+          <input type="text" name="sku" [ngModel]="form.sku" (ngModelChange)="onSkuChange($event)" placeholder="Pl. MON-042" required />
         </label>
 
         <label class="field">
@@ -17,7 +17,7 @@
 
         <label class="field">
           <span>Leírás</span>
-          <input type="text" name="description" [(ngModel)]="form.description" placeholder="Rövid leírás" required />
+          <input type="text" name="description" [(ngModel)]="form.description" placeholder="Rövid leírás" />
         </label>
 
         <div class="row-2">
@@ -42,7 +42,7 @@
               <select name="primaryStorageSelection" [(ngModel)]="primaryStorageSelection"
                 [disabled]="compartmentsVm.loading" required>
                 <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
-                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp">
+                <option *ngFor="let comp of getAvailableCompartments(compartmentsVm.items)" [ngValue]="comp">
                   {{ comp.code }}
                 </option>
               </select>
@@ -59,7 +59,7 @@
               <select [name]="'secondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
                 [disabled]="compartmentsVm.loading">
                 <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
-                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp">
+                <option *ngFor="let comp of getAvailableCompartments(compartmentsVm.items)" [ngValue]="comp">
                   {{ comp.code }}
                 </option>
               </select>

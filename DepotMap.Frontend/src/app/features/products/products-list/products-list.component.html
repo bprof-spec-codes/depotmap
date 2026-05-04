@@ -20,7 +20,7 @@
                 <i class="bi bi-search"></i>
               </span>
 
-              <input type="text" class="form-control products-search-input" placeholder="Keresés név vagy SKU alapján..."
+              <input type="text" class="form-control products-search-input" placeholder="Keresés név, SKU, mennyiség vagy hely alapján..."
                 [ngModel]="productSearch | async" (ngModelChange)="onProductSearchChange($event)" />
             </div>
           </div>
@@ -35,6 +35,7 @@
                 <div class="product-meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}} •
                   Hely:
                   {{ formatLocations(p) }}</div>
+                <div class="product-description">Leírás: {{ p.description || '-' }}</div>
               </div>
 
               <div class="product-actions">

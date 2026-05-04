@@ -41,7 +41,7 @@
               <select name="editPrimaryStorageSelection" [(ngModel)]="primaryStorageSelection"
                 [compareWith]="compareCompartments" [disabled]="compartmentsVm.loading" required>
                 <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
-                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp"
+                <option *ngFor="let comp of getAvailableCompartments(compartmentsVm.items)" [ngValue]="comp"
                   [disabled]="isPrimaryCompartmentDisabled(comp.id)">
                   {{ comp.code }}
                 </option>
@@ -59,7 +59,7 @@
               <select [name]="'editSecondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
                 [compareWith]="compareCompartments" [disabled]="compartmentsVm.loading">
                 <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
-                <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp"
+                <option *ngFor="let comp of getAvailableCompartments(compartmentsVm.items)" [ngValue]="comp"
                   [disabled]="isCompartmentUsedInSecondary(comp.id, i)">
                   {{ comp.code }}
                 </option>
