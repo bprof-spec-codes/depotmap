@@ -7,7 +7,7 @@ namespace DepotMap.Endpoint.Controllers
 {
     [ApiController]
     [Route("api/warehouses/{warehouseId}/cells")]
-    // [Authorize]
+    [Authorize]
     public class WarehouseCellController : ControllerBase
     {
         private readonly IWarehouseCellLogic _cellLogic;
@@ -18,6 +18,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<ActionResult<List<WarehouseCellDto>>> GetAll(string warehouseId)
         {
             var cells = await _cellLogic.GetCellsByWarehouseIdAsync(warehouseId);
@@ -25,6 +26,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{cellId}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<ActionResult<CellDetailDto>> GetDetail(string warehouseId, string cellId)
         {
             var cell = await _cellLogic.GetCellDetailAsync(cellId);
@@ -35,6 +37,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("{cellId}")]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<WarehouseCellDto>> UpdateCellType(string warehouseId, string cellId, [FromBody] UpdateCellTypeDto dto)
         {
             var cell = await _cellLogic.UpdateCellTypeAsync(cellId, dto);
@@ -45,6 +48,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("batch")]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<List<WarehouseCellDto>>> BatchUpdate(string warehouseId, [FromBody] BatchUpdateCellsDto dto)
         {
             var cells = await _cellLogic.BatchUpdateCellsAsync(warehouseId, dto);

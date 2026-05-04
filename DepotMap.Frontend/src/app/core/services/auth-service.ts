@@ -70,6 +70,10 @@ export class AuthService {
     return this.isLoggedIn$.asObservable();
   }
 
+  isManager(): boolean {
+    return this.getRole() === 'Manager';
+  }
+
   getRole(): string | null {
     const token = this.getToken();
     if (!token) return null;

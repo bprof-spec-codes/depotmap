@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { WarehouseApiService } from '../../../core/services/warehouse-api-service';
+import { AuthService } from '../../../core/services/auth-service';
 import { WarehouseListDto, CreateWarehouseDto } from '../../../core/models/warehouse.models';
 
 @Component({
@@ -22,10 +23,14 @@ export class WarehouseListComponent {
 
   private refresh$ = new BehaviorSubject<void>(undefined);
 
+  isManager = false;
+
   constructor(
     private warehouseApiService: WarehouseApiService,
-    private router: Router
+    private router: Router,
+    authService: AuthService
   ) {
+    this.isManager = authService.isManager();
     this.warehousesVm$ = this.refresh$.pipe(
       switchMap(() => this.warehouseApiService.getAll().pipe(
         map(items => ({ items, loading: false, error: false })),

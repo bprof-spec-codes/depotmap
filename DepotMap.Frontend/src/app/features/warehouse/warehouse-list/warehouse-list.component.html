@@ -1,7 +1,7 @@
 <div class="app-page app-page--full">
   <app-page-header title="Raktárak" subtitle="A raktárak kezelése és új raktár létrehozása" [hasActions]="true">
     <div header-actions>
-      <button class="btn btn-primary" (click)="toggleCreateForm()">
+      <button *ngIf="isManager" class="btn btn-primary" (click)="toggleCreateForm()">
         {{ showCreateForm ? 'Mégse' : 'Új raktár' }}
       </button>
     </div>
@@ -55,7 +55,7 @@
                 Megnyitás
               </button>
 
-              <button class="btn btn-sm btn-danger" (click)="deleteWarehouse(w.id, $event)">
+              <button *ngIf="isManager" class="btn btn-sm btn-danger" (click)="deleteWarehouse(w.id, $event)">
                 Törlés
               </button>
             </div>

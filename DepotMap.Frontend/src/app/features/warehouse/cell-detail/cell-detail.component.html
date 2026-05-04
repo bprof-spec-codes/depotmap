@@ -20,8 +20,11 @@
 
   <!-- Grid -->
   <div class="shelf-grid-wrapper" *ngIf="!loading && !error && cell">
-    <p class="grid-hint">
+    <p class="grid-hint" *ngIf="isManager">
       Kattints egy üres cellára új polc hozzáadásához, vagy egy meglévő polcra szerkesztéshez.
+    </p>
+    <p class="grid-hint" *ngIf="!isManager">
+      Csak megtekintés. Polc szerkesztéséhez Manager szerepkör szükséges.
     </p>
     <div class="shelf-grid"
          [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'"
@@ -43,7 +46,7 @@
         </ng-container>
         <ng-container *ngIf="!getShelfAt(pos.x, pos.y)">
           <div class="empty-cell">
-            <i class="bi bi-plus"></i>
+            <i class="bi bi-plus" *ngIf="isManager"></i>
           </div>
         </ng-container>
       </div>
