@@ -41,6 +41,31 @@ export class ProductCreateComponent {
     );
   }
 
+  onSkuChange(value: string): void {
+    this.form.sku = value ?? '';
+    this.pruneInvalidSelections();
+  }
+
+  getAvailableCompartments(compartments: CompartmentOptionDto[]): CompartmentOptionDto[] {
+    return compartments.filter(compartment => this.isCompartmentAllowed(compartment));
+  }
+
+  isCompartmentAllowed(compartment: CompartmentOptionDto): boolean {
+    const existingStocks = (compartment.productStocks ?? [])
+      .filter(stock => (stock.productId ?? '').trim().length > 0);
+    return existingStocks.length === 0;
+  }
+
+  private pruneInvalidSelections(): void {
+    if (this.primaryStorageSelection && !this.isCompartmentAllowed(this.primaryStorageSelection)) {
+      this.primaryStorageSelection = null;
+    }
+
+    this.secondaryStorageSelections = this.secondaryStorageSelections.map(selection =>
+      selection && this.isCompartmentAllowed(selection) ? selection : null
+    );
+  }
+
   addStorageSelection(): void {
     this.secondaryStorageSelections.push(null);
   }
@@ -70,7 +95,7 @@ export class ProductCreateComponent {
   create(): void {
     this.errorText = '';
 
-    if (!this.form.sku || !this.form.name || !this.form.description || this.form.price === null || this.form.lowStockThreshold === null) {
+    if (!this.form.sku || !this.form.name || this.form.price === null || this.form.lowStockThreshold === null) {
       this.errorText = 'Minden kötelező mezőt tölts ki.';
       return;
     }

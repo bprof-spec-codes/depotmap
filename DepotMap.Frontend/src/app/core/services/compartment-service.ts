@@ -8,6 +8,14 @@ export interface CompartmentOptionDto {
   code: string;
   levelIndex: number;
   slotIndex: number;
+  productStocks?: CompartmentProductStockDto[];
+}
+
+export interface CompartmentProductStockDto {
+  productId: string;
+  productName: string;
+  sku: string;
+  quantity: number;
 }
 
 @Injectable({
@@ -32,12 +40,27 @@ export class CompartmentService {
             const code = String(r['code'] ?? r['Code'] ?? '').trim();
             const levelIndex = Number(r['levelIndex'] ?? r['LevelIndex'] ?? 0);
             const slotIndex = Number(r['slotIndex'] ?? r['SlotIndex'] ?? 0);
+            const productStocksRaw = r['productStocks'] ?? r['ProductStocks'] ?? [];
+            const productStocks = Array.isArray(productStocksRaw)
+              ? productStocksRaw
+              : ((productStocksRaw as { $values?: unknown[] } | null)?.$values ?? []);
 
             return {
               id,
               code,
               levelIndex,
-              slotIndex
+              slotIndex,
+              productStocks: productStocks
+                .map(stock => {
+                  const s = stock as Record<string, unknown>;
+                  return {
+                    productId: String(s['productId'] ?? s['ProductId'] ?? '').trim(),
+                    productName: String(s['productName'] ?? s['ProductName'] ?? '').trim(),
+                    sku: String(s['sku'] ?? s['SKU'] ?? '').trim(),
+                    quantity: Number(s['quantity'] ?? s['Quantity'] ?? 0)
+                  } satisfies CompartmentProductStockDto;
+                })
+                .filter(stock => stock.productId.length > 0)
             } satisfies CompartmentOptionDto;
           })
           .filter(c => c.id.length > 0)

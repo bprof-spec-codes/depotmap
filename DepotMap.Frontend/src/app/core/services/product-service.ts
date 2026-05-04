@@ -7,6 +7,7 @@ export interface ProductShortDto {
   id: string;
   name: string;
   sku?: string;
+  description?: string;
   price?: number;
   quantity?: number;
   totalStock?: number;
@@ -43,7 +44,7 @@ export interface CreateProductDto {
   name: string;
   sku: string;
   price: number;
-  description: string;
+  description?: string;
   lowStockThreshold: number;
   initialStocks: ProductStockPlacementDto[];
 }

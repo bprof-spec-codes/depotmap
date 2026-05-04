@@ -141,6 +141,26 @@ export class ProductEditComponent implements OnInit {
     return (a?.id ?? null) === (b?.id ?? null);
   }
 
+  getAvailableCompartments(compartments: CompartmentOptionDto[]): CompartmentOptionDto[] {
+    return compartments.filter(compartment =>
+      this.isCompartmentEmpty(compartment) || this.isSelectedCompartment(compartment.id)
+    );
+  }
+
+  private isCompartmentEmpty(compartment: CompartmentOptionDto): boolean {
+    const existingStocks = (compartment.productStocks ?? [])
+      .filter(stock => (stock.productId ?? '').trim().length > 0);
+    return existingStocks.length === 0;
+  }
+
+  private isSelectedCompartment(compartmentId: string): boolean {
+    if (this.primaryStorageSelection?.id === compartmentId) {
+      return true;
+    }
+
+    return this.secondaryStorageSelections.some(selected => selected?.id === compartmentId);
+  }
+
   save(): void {
     this.errorText = '';
 
