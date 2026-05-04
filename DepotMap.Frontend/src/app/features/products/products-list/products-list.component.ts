@@ -72,7 +72,7 @@ export class ProductsListComponent implements OnInit {
         return {
           ...productsVm,
           items: productsVm.items.filter(product =>
-            (product.name ?? '').toLowerCase().includes(q)
+            `${product.name ?? ''} ${product.sku ?? ''}`.toLowerCase().includes(q)
           )
         };
       }),
