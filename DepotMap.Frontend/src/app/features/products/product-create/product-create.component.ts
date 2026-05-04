@@ -51,19 +51,9 @@ export class ProductCreateComponent {
   }
 
   isCompartmentAllowed(compartment: CompartmentOptionDto): boolean {
-    const sku = (this.form.sku ?? '').trim().toLowerCase();
     const existingStocks = (compartment.productStocks ?? [])
       .filter(stock => (stock.productId ?? '').trim().length > 0);
-
-    if (existingStocks.length === 0) {
-      return true;
-    }
-
-    if (!sku) {
-      return false;
-    }
-
-    return existingStocks.every(stock => (stock.sku ?? '').trim().toLowerCase() === sku);
+    return existingStocks.length === 0;
   }
 
   private pruneInvalidSelections(): void {
