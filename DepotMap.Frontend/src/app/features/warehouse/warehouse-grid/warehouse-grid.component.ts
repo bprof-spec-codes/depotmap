@@ -5,6 +5,7 @@ import { switchMap } from 'rxjs/operators';
 import Konva from 'konva';
 import { WarehouseApiService } from '../../../core/services/warehouse-api-service';
 import { CellApiService } from '../../../core/services/cell-api-service';
+import { AuthService } from '../../../core/services/auth-service';
 import {
   WarehouseDetailDto,
   WarehouseCellDto,
@@ -57,6 +58,8 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
   // Success feedback
   saveSuccess = false;
 
+  isManager = false;
+
   readonly cellTypes = ['corridor', 'shelf_area', 'wall', 'entrance'];
   readonly cellColors = CELL_COLORS;
   readonly cellTypeLabels = CELL_TYPE_LABELS;
@@ -83,8 +86,11 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
     private warehouseApiService: WarehouseApiService,
     private cellApiService: CellApiService,
     private cdr: ChangeDetectorRef,
-    private zone: NgZone
-  ) {}
+    private zone: NgZone,
+    authService: AuthService
+  ) {
+    this.isManager = authService.isManager();
+  }
 
   ngOnInit(): void {
     this.loadData();

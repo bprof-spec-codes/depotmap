@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ShelfApiService } from '../../../core/services/shelf-api-service';
+import { AuthService } from '../../../core/services/auth-service';
 import {
   ShelfDetailDto,
   CompartmentDto,
@@ -32,13 +33,18 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   formLadderRequiredFromLevel: number | null = null;
   saving = false;
 
+  isManager = false;
+
   private subscription: Subscription | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private shelfApiService: ShelfApiService
-  ) {}
+    private shelfApiService: ShelfApiService,
+    authService: AuthService
+  ) {
+    this.isManager = authService.isManager();
+  }
 
   ngOnInit(): void {
     this.returnTo = this.route.snapshot.queryParamMap.get('returnTo');

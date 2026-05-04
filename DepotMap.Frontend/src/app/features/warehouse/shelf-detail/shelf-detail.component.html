@@ -5,7 +5,7 @@
       <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
         <i class="bi bi-arrow-left"></i> Vissza
       </button>
-      <button class="btn btn-sm btn-outline-primary" *ngIf="shelf" (click)="openSettingsModal()">
+      <button class="btn btn-sm btn-outline-primary" *ngIf="shelf && isManager" (click)="openSettingsModal()">
         <i class="bi bi-gear"></i> Beállítások
       </button>
       <h2 *ngIf="shelf">
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Add / Remove buttons -->
-        <div class="level-actions">
+        <div class="level-actions" *ngIf="isManager">
           <button class="btn btn-sm btn-outline-primary"
                   (click)="addCompartment(level)"
                   [disabled]="actionLoading"

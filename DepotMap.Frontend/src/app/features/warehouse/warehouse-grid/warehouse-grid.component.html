@@ -8,7 +8,7 @@
       <h2>{{ warehouseName }}</h2>
     </div>
     <div class="grid-header-right">
-      <ng-container *ngIf="!isEditMode">
+      <ng-container *ngIf="!isEditMode && isManager">
         <button class="btn btn-primary" (click)="enterEditMode()" [disabled]="loading || error">
           <i class="bi bi-pencil"></i> Szerkesztés
         </button>
