@@ -1,6 +1,5 @@
 using DepotMap.Data.Context;
 using DepotMap.Data.DbSeeder;
-using DepotMap.Endpoint.Filters;
 using DepotMap.Entities.Models;
 using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
@@ -18,10 +17,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers(options =>
-        {
-            options.Filters.Add<ApiExceptionFilter>();
-        });
+        builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
