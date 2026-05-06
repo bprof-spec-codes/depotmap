@@ -1,6 +1,7 @@
 ﻿using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs.Admin;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -74,8 +75,9 @@ namespace DepotMap.Logics.Logics
         {
             var existingUser = await _context.Users
                 .AnyAsync(u => u.Identifier == dto.Identifier);
-            if (existingUser) return null;
 
+            if (existingUser)
+                throw new ConflictException("Ez az azonosító már használatban van!");
             var user = new User
             {
                 Id = Guid.NewGuid().ToString(),
