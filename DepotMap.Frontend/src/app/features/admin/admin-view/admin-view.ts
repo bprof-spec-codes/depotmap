@@ -3,6 +3,8 @@ import { UserAdminDto } from '../../../core/models/dtos/admin/user-admin-dto';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserAdminService } from '../../../core/services/user-admin-service';
 import { BehaviorSubject, catchError, combineLatest, debounceTime, distinctUntilChanged, EMPTY, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ProblemDetails } from '../../../core/models/problem-details';
 
 @Component({
   selector: 'app-admin-view',
@@ -47,7 +49,7 @@ export class AdminView {
   private refresh$ = new BehaviorSubject<void>(undefined);
   private destroy$ = new Subject<void>();
 
-  constructor(private userAdminService: UserAdminService) {}
+  constructor(private userAdminService: UserAdminService) { }
 
   ngOnInit(): void {
     this.users$ = combineLatest([
@@ -69,6 +71,20 @@ export class AdminView {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private getErrorMessage(error: HttpErrorResponse, fallback: string): string {
+    const problem = error.error as ProblemDetails | null;
+
+    if (problem?.detail) {
+      return problem.detail;
+    }
+
+    if (error.status === 0) {
+      return 'A szerver nem érhető el.';
+    }
+
+    return fallback;
   }
 
   private refreshUsers(): void {
@@ -148,26 +164,30 @@ export class AdminView {
 
     const request$ = this.isEditMode && this.selectedUser
       ? this.userAdminService.updateUser(this.selectedUser.id, {
-          identifier: val.identifier ?? undefined,
-          firstName: val.firstName ?? undefined,
-          lastName: val.lastName ?? undefined,
-          password: val.password || undefined,
-          role: this.toApiRole(val.role),
-          position: val.position ?? undefined,
-        })
+        identifier: val.identifier ?? undefined,
+        firstName: val.firstName ?? undefined,
+        lastName: val.lastName ?? undefined,
+        password: val.password || undefined,
+        role: this.toApiRole(val.role),
+        position: val.position ?? undefined,
+      })
       : this.userAdminService.createUser({
-          identifier: val.identifier ?? '',
-          firstName: val.firstName ?? '',
-          lastName: val.lastName ?? '',
-          password: val.password ?? '',
-          role: this.toApiRole(val.role) ?? 'Operator',
-          position: val.position ?? '',
-        });
+        identifier: val.identifier ?? '',
+        firstName: val.firstName ?? '',
+        lastName: val.lastName ?? '',
+        password: val.password ?? '',
+        role: this.toApiRole(val.role) ?? 'Operator',
+        position: val.position ?? '',
+      });
 
     request$.pipe(
       tap(() => { this.showModal = false; this.refreshUsers(); }),
-      catchError(() => {
-        this.errorMessage = this.isEditMode ? 'Hiba a frissítéskor' : 'Hiba a létrehozáskor';
+      catchError((error: HttpErrorResponse) => {
+        console.log('hiba teljesen:', error);
+        console.log('hiba body:', error.error);
+        console.log('hiba detail:', error.error?.detail);
+
+        this.errorMessage = error.error?.detail || 'Hiba a létrehozáskor.';
         return EMPTY;
       }),
       takeUntil(this.destroy$)
