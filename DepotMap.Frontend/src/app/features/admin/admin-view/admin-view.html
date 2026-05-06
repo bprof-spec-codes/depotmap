@@ -9,13 +9,8 @@
 
       <div class="row align-items-center mb-4">
         <div class="col-md-4">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Keresés"
-            [ngModel]="searchTerm$.value"
-            (ngModelChange)="onSearch($event)"
-          />
+          <input type="text" class="form-control" placeholder="Keresés" [ngModel]="searchTerm$.value"
+            (ngModelChange)="onSearch($event)" />
         </div>
         <div class="col d-flex justify-content-end">
           <button type="button" class="btn btn-primary text-nowrap" (click)="openCreateModal()">
@@ -136,7 +131,7 @@
           </div>
         </div>
 
-        <div class="alert alert-danger py-2 mt-3 mb-0" *ngIf="errorMessage">
+        <div class="alert alert-danger py-2 my-2" *ngIf="errorMessage">
           {{ errorMessage }}
         </div>
 

@@ -43,6 +43,8 @@ public class Program
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         builder.Services.AddScoped<DbSeeder>();
         builder.Services.AddScoped<JwtService>();
+        builder.Services.AddProblemDetails();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -82,6 +84,7 @@ public class Program
 
         app.UseCors("AllowAngular");
         app.UseHttpsRedirection();
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
 
