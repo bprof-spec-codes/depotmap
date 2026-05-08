@@ -1,22 +1,258 @@
-<div class="movements">
-  <h2>Mozgatások</h2>
+<div class="app-page app-page--full movements-page">
+  <app-page-header title="Mozgatások" subtitle="Termékmozgatások áttekintése, létrehozása és állapotkezelése"
+    [hasActions]="canManageMovements()">
+    <div header-actions *ngIf="canManageMovements()">
+      <button type="button" class="btn btn-primary" (click)="openCreateMovementModal()">
+        <i class="bi bi-plus-lg me-1"></i>
+        Új mozgatás
+      </button>
+    </div>
+  </app-page-header>
 
-  <div class="form-card" *ngIf="canManageMovements(); else readOnlyInfo">
-    <h3>{{ isEditing() ? 'Mozgatás szerkesztése' : 'Új mozgatás' }}</h3>
+  <div *ngIf="!canManageMovements()" class="app-error movements-readonly-info">
+    Raktárosként csak a lista nézet és a státuszfrissítés érhető el.
+  </div>
 
-    <div *ngIf="errorText" class="error-text">{{ errorText }}</div>
-    <div *ngIf="successText" class="success-text">{{ successText }}</div>
+  <app-content-card title="Mozgatáslista">
+    <div class="movements-toolbar">
+      <div class="movements-search-wrap">
+        <div class="movements-search-box">
+          <span class="movements-search-icon">
+            <i class="bi bi-search"></i>
+          </span>
 
-    <div class="form-grid">
-      <label class="field">
+          <input type="text" class="form-control movements-search-input" placeholder="Keresés..." [ngModel]="searchTerm"
+            (ngModelChange)="onSearchChange($event)" />
+        </div>
+      </div>
+
+      <label class="movements-page-size">
+        <span>Megjelenítés</span>
+
+        <select class="form-select form-select-sm" [ngModel]="tablePageSize"
+          (ngModelChange)="onTablePageSizeChange($event)">
+          <option *ngFor="let size of tablePageSizeOptions" [ngValue]="size">
+            {{ size }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <div *ngIf="errorText && !showMovementModal" class="app-error movements-message">
+      {{ errorText }}
+    </div>
+
+    <div *ngIf="successText && !showMovementModal" class="movements-success movements-message">
+      {{ successText }}
+    </div>
+
+    <div *ngIf="loading" class="app-loading">
+      Mozgatások betöltése...
+    </div>
+
+    <div class="app-table-wrap movements-table-wrap" *ngIf="!loading">
+      <table class="app-table movements-table">
+        <thead>
+          <tr>
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('timestamp')">
+                Létrehozás időpontja {{ getSortIndicator('timestamp') }}
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('status')">
+                Státusz {{ getSortIndicator('status') }}
+              </button>
+            </th>
+
+            <th class="movements-status-action-col"></th>
+
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('createdByUserId')">
+                Felhasználó azonosító {{ getSortIndicator('createdByUserId') }}
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('productId')">
+                Termék {{ getSortIndicator('productId') }}
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('quantity')">
+                Darabszám {{ getSortIndicator('quantity') }}
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('fromCompartmentId')">
+                Forrás rekesz {{ getSortIndicator('fromCompartmentId') }}
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="movements-sort-btn" (click)="toggleSort('toCompartmentId')">
+                Cél rekesz {{ getSortIndicator('toCompartmentId') }}
+              </button>
+            </th>
+
+            <th class="movements-edit-col">
+              Szerkesztés
+            </th>
+
+            <th class="movements-delete-col">
+              Törlés
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <ng-container *ngIf="pagedTransactions as transactions">
+            <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
+              <ng-container *ngIf="transaction.items as rows">
+                <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
+                  <td *ngIf="i === 0" [attr.rowspan]="rows.length">
+                    {{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}
+                  </td>
+
+                  <td *ngIf="i === 0" [attr.rowspan]="rows.length">
+                    <span class="status-chip" [ngClass]="getStatusClass(transaction.status)">
+                      {{ transaction.statusLabel }}
+                    </span>
+                  </td>
+
+                  <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="movements-status-next-cell">
+                    <button *ngIf="isStatusArrowVisible(transaction.status)" type="button"
+                      class="movement-icon-btn next-status" [disabled]="statusUpdatingId === transaction.id"
+                      (click)="advanceStatus(transaction)" title="Következő státusz">
+                      <i class="bi bi-arrow-right"></i>
+                    </button>
+                  </td>
+
+                  <td *ngIf="i === 0" [attr.rowspan]="rows.length">
+                    <code class="movements-user-id" [title]="transaction.createdByUserId">
+                      {{ transaction.createdByUserId }}
+                    </code>
+                  </td>
+
+                  <td>
+                    <span class="movement-cell-main" [title]="row.productId">
+                      {{ row.productId }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="movement-cell-main">
+                      {{ row.quantity }} db
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="movement-cell-muted" [title]="row.fromCompartmentId">
+                      {{ row.fromCompartmentId }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="movement-cell-muted" [title]="row.toCompartmentId">
+                      {{ row.toCompartmentId }}
+                    </span>
+                  </td>
+
+                  <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="movements-edit-cell">
+                    <button *ngIf="canManageMovements()" type="button"
+                      class="btn btn-sm btn-outline-secondary movement-action-button" [disabled]="transaction.isClosed"
+                      (click)="editTransaction(transaction)" title="Szerkesztés">
+                      Szerkesztés
+                    </button>
+                  </td>
+
+                  <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="movements-delete-cell">
+                    <button *ngIf="canManageMovements()" type="button"
+                      class="btn btn-sm btn-danger movement-action-button" [disabled]="transaction.isDeleteBlocked"
+                      (click)="deleteTransaction(transaction)" title="Törlés">
+                      Törlés
+                    </button>
+                  </td>
+                </tr>
+              </ng-container>
+            </ng-container>
+
+            <tr *ngIf="!loading && !transactions.length">
+              <td colspan="10" class="app-empty movements-empty-cell">
+                Nincs még mozgatás.
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+
+        <tfoot *ngIf="(transactions$ | async)?.length">
+          <tr>
+            <td colspan="10">
+              <div class="movements-pagination">
+                <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!canGoPrevPage"
+                  (click)="goToPrevPage()">
+                  Előző
+                </button>
+
+                <span>{{ currentPage }} / {{ totalPages }}</span>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!canGoNextPage"
+                  (click)="goToNextPage()">
+                  Következő
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </app-content-card>
+</div>
+
+<div class="app-modal-backdrop" *ngIf="showMovementModal" (click)="closeMovementModal()"></div>
+
+<div class="app-modal-wrap" *ngIf="showMovementModal">
+  <div class="app-modal movement-modal" (click)="$event.stopPropagation()">
+    <div class="app-modal-header">
+      <div>
+        <h2 class="app-modal-title">
+          {{ isEditing() ? 'Mozgatás szerkesztése' : 'Új mozgatás' }}
+        </h2>
+
+        <p class="app-modal-subtitle">
+          {{ isEditing() ? 'Módosítsd a mozgatás adatait.' : 'Add meg az új mozgatás tételeit.' }}
+        </p>
+      </div>
+
+      <button type="button" class="movement-modal-close" aria-label="Bezárás" (click)="closeMovementModal()">
+        ×
+      </button>
+    </div>
+
+    <div *ngIf="errorText" class="app-error movement-modal-message">
+      {{ errorText }}
+    </div>
+
+    <div *ngIf="successText" class="movements-success movement-modal-message">
+      {{ successText }}
+    </div>
+
+    <div class="movement-form-grid">
+      <label class="movement-field">
         <span>Felhasználó azonosító</span>
-        <input type="text" [ngModel]="form.createdByUserId" disabled />
+
+        <input type="text" class="form-control" [ngModel]="form.createdByUserId" disabled />
       </label>
 
-      <label class="field">
+      <label class="movement-field">
         <span>Státusz</span>
-        <select [(ngModel)]="form.status" [disabled]="!isEditing()">
+
+        <select class="form-select" [(ngModel)]="form.status" [disabled]="!isEditing()">
           <option value="Planning">Tervezés</option>
+
           <ng-container *ngIf="isEditing()">
             <option value="Active">Összekészítés</option>
             <option value="Closed">Lezárva</option>
@@ -25,187 +261,62 @@
       </label>
     </div>
 
-    <div class="items-head">
+    <div class="movement-items-head">
       <span>Tételek</span>
-      <button type="button" class="btn btn-secondary" (click)="addItemRow()">+ Tétel sor</button>
+
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addItemRow()">
+        <i class="bi bi-plus-lg me-1"></i>
+        Tétel sor
+      </button>
     </div>
 
-    <div class="item-row" *ngFor="let item of form.items; let i = index">
-      <select [(ngModel)]="item.productId" [disabled]="productsLoading" (ngModelChange)="onProductChange(item)">
-        <option value="">Válassz terméket...</option>
-        <option *ngFor="let product of availableProducts; trackBy: trackByProductId" [value]="product.id">
-          {{ product.sku ? product.sku + ' - ' : '' }}{{ product.name }}
-        </option>
-      </select>
+    <div class="movement-items">
+      <div class="movement-item-row" *ngFor="let item of form.items; let i = index">
+        <select class="form-select" [(ngModel)]="item.productId" [disabled]="productsLoading"
+          (ngModelChange)="onProductChange(item)">
+          <option value="">Válassz terméket...</option>
 
-      <input type="number" min="1" placeholder="Darabszám" [(ngModel)]="item.quantity" />
+          <option *ngFor="let product of availableProducts; trackBy: trackByProductId" [value]="product.id">
+            {{ product.sku ? product.sku + ' - ' : '' }}{{ product.name }}
+          </option>
+        </select>
 
-      <select [(ngModel)]="item.fromCompartmentId" [disabled]="compartmentsLoading" (ngModelChange)="onFromCompartmentChange(item)">
-        <option value="">Forrás rekesz...</option>
-        <option *ngFor="let compartment of getAvailableFromCompartments(item.productId, item.toCompartmentId)" [value]="compartment.id">
-          {{ compartment.code }}
-        </option>
-      </select>
+        <input type="number" min="1" class="form-control" placeholder="Darabszám" [(ngModel)]="item.quantity" />
 
-      <select [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading">
-        <option value="">Cél rekesz...</option>
-        <option *ngFor="let compartment of getAvailableToCompartments(item.productId, item.fromCompartmentId)" [value]="compartment.id">
-          {{ compartment.code }}
-        </option>
-      </select>
+        <select class="form-select" [(ngModel)]="item.fromCompartmentId" [disabled]="compartmentsLoading"
+          (ngModelChange)="onFromCompartmentChange(item)">
+          <option value="">Forrás rekesz...</option>
 
-      <button type="button" class="btn btn-danger" (click)="removeItemRow(i)">-</button>
+          <option *ngFor="let compartment of getAvailableFromCompartments(item.productId, item.toCompartmentId)"
+            [value]="compartment.id">
+            {{ compartment.code }}
+          </option>
+        </select>
+
+        <select class="form-select" [(ngModel)]="item.toCompartmentId" [disabled]="compartmentsLoading">
+          <option value="">Cél rekesz...</option>
+
+          <option *ngFor="let compartment of getAvailableToCompartments(item.productId, item.fromCompartmentId)"
+            [value]="compartment.id">
+            {{ compartment.code }}
+          </option>
+        </select>
+
+        <button type="button" class="btn btn-sm btn-danger movement-remove-row-btn" (click)="removeItemRow(i)"
+          title="Tétel törlése">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
     </div>
 
-    <div class="form-actions">
+    <div class="movement-form-actions">
+      <button type="button" class="btn btn-outline-secondary" (click)="closeMovementModal()">
+        Mégse
+      </button>
+
       <button type="button" class="btn btn-primary" [disabled]="saving" (click)="submit()">
         {{ isEditing() ? 'Mentés' : 'Létrehozás' }}
       </button>
-      <button type="button" class="btn btn-secondary" *ngIf="isEditing()" (click)="resetForm()">Új létrehozása</button>
     </div>
   </div>
-
-  <ng-template #readOnlyInfo>
-    <div class="error-text" style="margin-bottom: 16px;">
-      Raktárosként csak a lista nézet és a státuszfrissítés érhető el.
-    </div>
-  </ng-template>
-
-  <div *ngIf="loading" class="loading-text">Betöltés...</div>
-
-  <div class="table-wrap">
-    <table class="movements-table">
-      <thead>
-        <tr>
-          <th colspan="10" style="vertical-align: middle;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-              <div class="procurement-search-box" style="margin:0;">
-                <span class="procurement-search-icon">
-                  <i class="bi bi-search"></i>
-                </span>
-
-                <input
-                  type="text"
-                  class="form-control procurement-search-input"
-                  placeholder="Keresés"
-                  [ngModel]="searchTerm"
-                  (ngModelChange)="onSearchChange($event)"
-                />
-              </div>
-
-              <label class="field" style="display:inline-flex; align-items:center; gap:6px; margin:0;">
-                <span>Megjelenítés</span>
-                <select [ngModel]="tablePageSize" (ngModelChange)="onTablePageSizeChange($event)">
-                  <option *ngFor="let size of tablePageSizeOptions" [ngValue]="size">{{ size }}</option>
-                </select>
-              </label>
-            </div>
-          </th>
-        </tr>
-        <tr>
-          <th>
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('timestamp')">
-              Létrehozás időpontja {{ getSortIndicator('timestamp') }}
-            </button>
-          </th>
-          <th colspan="2">
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('status')">
-              Státusz {{ getSortIndicator('status') }}
-            </button>
-          </th>
-          <th>
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('createdByUserId')">
-              Felhasználó azonosító {{ getSortIndicator('createdByUserId') }}
-            </button>
-          </th>
-          <th>
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('productId')">
-              Termék {{ getSortIndicator('productId') }}
-            </button>
-          </th>
-          <th>
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('quantity')">
-              Darabszám {{ getSortIndicator('quantity') }}
-            </button>
-          </th>
-          <th>
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('fromCompartmentId')">
-              Forrás rekesz {{ getSortIndicator('fromCompartmentId') }}
-            </button>
-          </th>
-          <th>
-            <button type="button" style="all:unset; cursor:pointer;" (click)="toggleSort('toCompartmentId')">
-              Cél rekesz {{ getSortIndicator('toCompartmentId') }}
-            </button>
-          </th>
-          <th><i class="bi bi-pencil"></i></th>
-          <th><i class="bi bi-trash"></i></th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <ng-container *ngIf="pagedTransactions as transactions">
-          <ng-container *ngFor="let transaction of transactions; trackBy: trackByTransactionId">
-            <ng-container *ngIf="transaction.items as rows">
-              <tr *ngFor="let row of rows; let i = index; trackBy: trackByItemRow">
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.timestamp | date:'yyyy.MM.dd. HH:mm' }}
-                </td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">
-                  <span class="status-chip" [ngClass]="getStatusClass(transaction.status)">
-                    {{ transaction.statusLabel }}
-                  </span>
-                </td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button *ngIf="isStatusArrowVisible(transaction.status)" type="button" class="icon-btn next-status"
-                    [disabled]="statusUpdatingId === transaction.id" (click)="advanceStatus(transaction)"
-                    title="Következő státusz">
-                    <i class="bi bi-arrow-right"></i>
-                  </button>
-                </td>
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length">{{ transaction.createdByUserId }}</td>
-
-                <td>{{ row.productId }}</td>
-                <td>{{ row.quantity }}</td>
-                <td>{{ row.fromCompartmentId }}</td>
-                <td>{{ row.toCompartmentId }}</td>
-
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button *ngIf="canManageMovements()" type="button" class="icon-btn" [disabled]="transaction.isClosed"
-                    (click)="editTransaction(transaction)" title="Szerkesztés">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                </td>
-
-                <td *ngIf="i === 0" [attr.rowspan]="rows.length" class="action-cell">
-                  <button *ngIf="canManageMovements()" type="button" class="icon-btn danger" [disabled]="transaction.isDeleteBlocked"
-                    (click)="deleteTransaction(transaction)" title="Törlés">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </ng-container>
-          </ng-container>
-
-          <tr *ngIf="!loading && !transactions.length">
-            <td colspan="10" class="empty-cell">Nincs még mozgatás.</td>
-          </tr>
-        </ng-container>
-      </tbody>
-
-      <tfoot *ngIf="(transactions$ | async)?.length">
-        <tr>
-          <td colspan="10" style="text-align:center;">
-            <button type="button" class="btn btn-secondary" [disabled]="!canGoPrevPage" (click)="goToPrevPage()">
-              Előző
-            </button>
-            <span style="margin: 0 8px;">{{ currentPage }} / {{ totalPages }}</span>
-            <button type="button" class="btn btn-secondary" [disabled]="!canGoNextPage" (click)="goToNextPage()">
-              Következő
-            </button>
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
 </div>

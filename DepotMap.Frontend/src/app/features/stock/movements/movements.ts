@@ -62,8 +62,9 @@ export class MovementsComponent implements OnInit {
   tablePageSize = 100;
   currentPage = 1;
   sortColumn: MovementSortColumn | null = 'timestamp';
-  sortDirection: 'desc' | 'asc' = 'desc'; 
+  sortDirection: 'desc' | 'asc' = 'desc';
 
+  showMovementModal = false;
   saving = false;
   loading = false;
   productsLoading = false;
@@ -106,6 +107,15 @@ export class MovementsComponent implements OnInit {
     this.loadAvailableProducts();
     this.loadCompartments();
     this.loadTransactions(true);
+  }
+  openCreateMovementModal(): void {
+    this.resetForm();
+    this.showMovementModal = true;
+  }
+
+  closeMovementModal(): void {
+    this.showMovementModal = false;
+    this.resetForm();
   }
 
   canManageMovements(): boolean {
@@ -513,6 +523,7 @@ export class MovementsComponent implements OnInit {
         .subscribe({
           next: () => {
             this.successText = 'A mozgatás sikeresen mentve.';
+            this.showMovementModal = false;
             this.resetForm();
             this.loadTransactions(true);
           },
@@ -538,6 +549,7 @@ export class MovementsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.successText = 'A mozgatás sikeresen létrejött.';
+          this.showMovementModal = false;
           this.resetForm();
           this.loadTransactions(true);
         },
@@ -612,6 +624,7 @@ export class MovementsComponent implements OnInit {
         next: detail => {
           this.fillFormFromTransaction(detail);
           this.editingTransactionId = transaction.id;
+          this.showMovementModal = true;
         },
         error: (err: unknown) => {
           this.errorText = this.extractErrorMessage(err, 'A szerkesztéshez tartozó adatok nem tölthetők be.');
