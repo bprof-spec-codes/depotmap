@@ -1,149 +1,175 @@
-<div class="admin-page container py-4">
-  <div class="card shadow-sm border-0 admin-card">
-    <div class="card-body p-4">
+<div class="app-page app-page--full admin-page">
+  <app-page-header title="Felhasználók kezelése"
+    subtitle="Felhasználók létrehozása, szerkesztése és jogosultságok kezelése." [hasActions]="true">
+    <button header-actions type="button" class="btn btn-primary" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i> Új felhasználó
+    </button>
+  </app-page-header>
 
-      <div class="mb-3">
-        <h2 class="mb-1 admin-title">Felhasználók kezelése</h2>
-        <p class="text-muted mb-0">Felhasználók létrehozása, szerkesztése és jogosultságok kezelése.</p>
-      </div>
+  <app-content-card [soft]="true" title="Felhasználók">
+    <div class="admin-toolbar">
+      <div class="admin-search-wrap">
+        <div class="admin-search-box">
+          <span class="admin-search-icon">
+            <i class="bi bi-search"></i>
+          </span>
 
-      <div class="row align-items-center mb-4">
-        <div class="col-md-4">
-          <input type="text" class="form-control" placeholder="Keresés" [ngModel]="searchTerm$.value"
+          <input id="adminSearch" type="text" class="form-control admin-search-input"
+            placeholder="Keresés azonosító, név vagy pozíció alapján..." [ngModel]="searchTerm$ | async"
             (ngModelChange)="onSearch($event)" />
         </div>
-        <div class="col d-flex justify-content-end">
-          <button type="button" class="btn btn-primary text-nowrap" (click)="openCreateModal()">
-            + Új felhasználó
-          </button>
-        </div>
       </div>
-
-      <div class="alert alert-danger py-2" *ngIf="errorMessage && !showModal">
-        {{ errorMessage }}
-      </div>
-
-      <ng-container *ngIf="users$ | async as users">
-        <div *ngIf="users.length === 0" class="text-center text-muted py-4 border rounded bg-light">
-          Nincsenek felhasználók.
-        </div>
-
-        <div *ngIf="users.length > 0" class="table-responsive">
-          <table class="table align-middle admin-table">
-            <thead class="table-light">
-              <tr>
-                <th (click)="onSort('identifier')" style="cursor: pointer; user-select: none;">
-                  Azonosító {{ getSortIcon('identifier') }}
-                </th>
-                <th (click)="onSort('fullname')" style="cursor: pointer; user-select: none;">
-                  Név {{ getSortIcon('fullname') }}
-                </th>
-                <th (click)="onSort('role')" style="cursor: pointer; user-select: none;">
-                  Jogosultság {{ getSortIcon('role') }}
-                </th>
-                <th (click)="onSort('position')" style="cursor: pointer; user-select: none;">
-                  Pozíció {{ getSortIcon('position') }}
-                </th>
-                <th class="text-end">Műveletek</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let user of users">
-                <td><code>{{ user.identifier }}</code></td>
-                <td>{{ user.fullName }}</td>
-                <td>
-                  <span class="badge rounded-pill" [ngClass]="getRoleBadgeClass(user.role)">
-                    {{ displayRole(user.role) }}
-                  </span>
-                </td>
-                <td>{{ user.position || '-' }}</td>
-                <td class="text-end">
-                  <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="openEditModal(user)">
-                      Szerkesztés
-                    </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteUser(user.id)">
-                      Törlés
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </ng-container>
-
     </div>
-  </div>
+
+    <div class="app-error admin-message" *ngIf="errorMessage && !showModal">
+      {{ errorMessage }}
+    </div>
+
+    <ng-container *ngIf="users$ | async as users; else loading">
+      <div *ngIf="users.length === 0" class="app-empty">
+        Nincsenek felhasználók.
+      </div>
+
+      <div *ngIf="users.length > 0" class="app-table-wrap">
+        <table class="app-table admin-table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="onSort('identifier')">
+                Azonosító <span>{{ getSortIcon('identifier') }}</span>
+              </th>
+              <th class="sortable" (click)="onSort('fullname')">
+                Név <span>{{ getSortIcon('fullname') }}</span>
+              </th>
+              <th class="sortable" (click)="onSort('role')">
+                Jogosultság <span>{{ getSortIcon('role') }}</span>
+              </th>
+              <th class="sortable" (click)="onSort('position')">
+                Pozíció <span>{{ getSortIcon('position') }}</span>
+              </th>
+              <th class="admin-actions-col">Műveletek</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>
+                <code class="admin-identifier">{{ user.identifier }}</code>
+              </td>
+
+              <td class="admin-user-name">
+                {{ user.fullName }}
+              </td>
+
+              <td>
+                <span class="admin-role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+                  {{ displayRole(user.role) }}
+                </span>
+              </td>
+
+              <td>
+                {{ user.position || '-' }}
+              </td>
+
+              <td>
+                <div class="admin-actions">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="openEditModal(user)">
+                    Szerkesztés
+                  </button>
+
+                  <button type="button" class="btn btn-sm btn-danger" (click)="deleteUser(user.id)">
+                    Törlés
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </app-content-card>
 </div>
+
+<ng-template #loading>
+  <div class="app-page app-page--full">
+    <div class="app-loading">Felhasználók betöltése...</div>
+  </div>
+</ng-template>
 
 <div class="app-modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
 
 <div class="app-modal-wrap" *ngIf="showModal">
-  <div class="app-modal card shadow border-0" (click)="$event.stopPropagation()">
-    <div class="card-body p-4">
-      <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-        <div>
-          <h5 class="mb-1">
-            {{ isEditMode ? 'Felhasználó szerkesztése' : 'Új felhasználó' }}
-          </h5>
-          <p class="text-muted mb-0 small">
-            {{ isEditMode ? 'Módosítsd az adatokat, majd mentsd el.' : 'Add meg az új felhasználó adatait.' }}
-          </p>
-        </div>
-        <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+  <div class="app-modal" (click)="$event.stopPropagation()">
+    <div class="app-modal-header">
+      <div>
+        <h2 class="app-modal-title">
+          {{ isEditMode ? 'Felhasználó szerkesztése' : 'Új felhasználó' }}
+        </h2>
+
+        <p class="app-modal-subtitle">
+          {{ isEditMode ? 'Módosítsd az adatokat, majd mentsd el.' : 'Add meg az új felhasználó adatait.' }}
+        </p>
       </div>
 
-      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
-        <div class="mb-3">
-          <label class="form-label">Azonosító</label>
-          <input type="text" class="form-control" formControlName="identifier" placeholder="pl. raktaros001" />
-        </div>
-
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Keresztnév</label>
-            <input type="text" class="form-control" formControlName="firstName" placeholder="pl. János" />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Vezetéknév</label>
-            <input type="text" class="form-control" formControlName="lastName" placeholder="pl. Kovács" />
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <label class="form-label">
-            Jelszó {{ isEditMode ? '(hagyd üresen ha nem változtatod)' : '' }}
-          </label>
-          <input type="password" class="form-control" formControlName="password" placeholder="••••••••" />
-        </div>
-
-        <div class="row g-3 mt-0">
-          <div class="col-md-6">
-            <label class="form-label">Jogosultság</label>
-            <select class="form-select" formControlName="role">
-              <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Pozíció</label>
-            <input type="text" class="form-control" formControlName="position" placeholder="pl. Raktáros" />
-          </div>
-        </div>
-
-        <div class="alert alert-danger py-2 my-2" *ngIf="errorMessage">
-          {{ errorMessage }}
-        </div>
-
-        <div class="d-flex flex-column-reverse flex-md-row justify-content-between gap-2 mt-4">
-          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
-            Mégse
-          </button>
-          <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
-            {{ isEditMode ? 'Mentés' : 'Létrehozás' }}
-          </button>
-        </div>
-      </form>
+      <button type="button" class="admin-modal-close" aria-label="Bezárás" (click)="closeModal()">
+        ×
+      </button>
     </div>
+
+    <form class="admin-form" [formGroup]="userForm" (ngSubmit)="saveUser()">
+      <div class="form-group">
+        <label for="identifier" class="form-label">Azonosító</label>
+        <input id="identifier" type="text" class="form-control" formControlName="identifier"
+          placeholder="pl. raktaros001" />
+      </div>
+
+      <div class="admin-form-grid">
+        <div class="form-group">
+          <label for="firstName" class="form-label">Keresztnév</label>
+          <input id="firstName" type="text" class="form-control" formControlName="firstName" placeholder="pl. János" />
+        </div>
+
+        <div class="form-group">
+          <label for="lastName" class="form-label">Vezetéknév</label>
+          <input id="lastName" type="text" class="form-control" formControlName="lastName" placeholder="pl. Kovács" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">
+          Jelszó {{ isEditMode ? '(hagyd üresen, ha nem változtatod)' : '' }}
+        </label>
+        <input id="password" type="password" class="form-control" formControlName="password" placeholder="••••••••" />
+      </div>
+
+      <div class="admin-form-grid">
+        <div class="form-group">
+          <label for="role" class="form-label">Jogosultság</label>
+          <select id="role" class="form-select" formControlName="role">
+            <option *ngFor="let r of roles" [value]="r">
+              {{ r }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="position" class="form-label">Pozíció</label>
+          <input id="position" type="text" class="form-control" formControlName="position" placeholder="pl. Raktáros" />
+        </div>
+      </div>
+
+      <div class="app-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="admin-form-actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
+          Mégse
+        </button>
+
+        <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
+          {{ isEditMode ? 'Mentés' : 'Létrehozás' }}
+        </button>
+      </div>
+    </form>
   </div>
 </div>
