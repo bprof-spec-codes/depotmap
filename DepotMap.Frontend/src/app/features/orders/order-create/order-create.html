@@ -39,22 +39,38 @@
         <h3 class="section-title">Új tétel hozzáadása</h3>
       </div>
 
-      <div class="active-row">
-        <div class="form-group">
-          <label>Cikkszám (SKU) *</label>
-          <input type="text" class="form-control" placeholder="pl. PROD-1" [(ngModel)]="currentRow.productSKU" />
+      <div class="active-row d-flex flex-wrap gap-3 align-items-end">
+        
+        <div class="form-group flex-grow-1" style="min-width: 250px;">
+          <label>Termék kiválasztása *</label>
+          <select class="form-select" 
+                  [(ngModel)]="currentRow.productSKU" 
+                  (ngModelChange)="onProductChange()"
+                  [disabled]="productsLoading">
+            <option value="">Válassz terméket...</option>
+            <option *ngFor="let p of availableProducts" [value]="p.sku">
+              {{ p.sku }} - {{ p.name }}
+            </option>
+          </select>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="width: 120px;">
           <label>Mennyiség *</label>
           <input type="number" class="form-control" min="1" [(ngModel)]="currentRow.quantity" />
         </div>
 
-        <div class="form-group">
-          <label>Forrás rekesz</label>
-          <input type="text" class="form-control" placeholder="pl. COMP-1"
-            [(ngModel)]="currentRow.fromCompartmentCode" />
+        <div class="form-group flex-grow-1" style="min-width: 200px;">
+          <label>Forrás rekesz *</label>
+          <select class="form-select" 
+                  [(ngModel)]="currentRow.fromCompartmentCode" 
+                  [disabled]="compartmentsLoading || !currentRow.productSKU">
+            <option value="">Válassz rekeszt...</option>
+            <option *ngFor="let c of getCompartmentsForProductSKU(currentRow.productSKU)" [value]="c.code">
+              {{ c.code }}
+            </option>
+          </select>
         </div>
+
       </div>
 
       <div class="add-item-actions">
