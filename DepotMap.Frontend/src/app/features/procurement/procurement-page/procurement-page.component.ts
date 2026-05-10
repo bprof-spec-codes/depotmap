@@ -529,6 +529,7 @@ export class ProcurementPageComponent implements OnInit {
 				next: detail => {
 					this.fillFormFromTransaction(detail);
 					this.editingTransactionId = transaction.id;
+					this.showProcurementModal = true;
 				},
 				error: (err: unknown) => {
 					this.errorText = this.extractErrorMessage(err, 'A szerkesztéshez tartozó adatok nem tölthetők be.');
