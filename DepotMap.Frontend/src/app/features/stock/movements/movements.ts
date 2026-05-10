@@ -11,6 +11,7 @@ import {
 } from '../../../core/services/movements-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { UserAdminService } from '../../../core/services/user-admin-service';
 
 interface MovementFormItem {
   productId: string;
@@ -77,6 +78,7 @@ export class MovementsComponent implements OnInit {
 
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
+  userDisplayNames: Record<string, string> = {};
   tableFilters = {
     date: '',
     status: '',
@@ -97,6 +99,7 @@ export class MovementsComponent implements OnInit {
     private movementsService: MovementsService,
     private productService: ProductService,
     private compartmentService: CompartmentService,
+    private userAdminService: UserAdminService,
     private authService: AuthService
   ) { }
 
@@ -105,6 +108,7 @@ export class MovementsComponent implements OnInit {
     this.currentUserId = this.authService.getUserId() ?? '';
     this.sortColumn = 'timestamp';
     this.sortDirection = 'desc';
+    this.loadUserDisplayNames();
     this.loadAvailableProducts();
     this.loadCompartments();
     this.loadTransactions(true);
@@ -258,6 +262,27 @@ export class MovementsComponent implements OnInit {
       .subscribe(items => {
         this.availableProducts = items;
       });
+  }
+
+  private loadUserDisplayNames(): void {
+    this.userAdminService.getUsers().subscribe({
+      next: users => {
+        const map: Record<string, string> = {};
+
+        for (const user of users) {
+          map[user.id] = user.fullName || user.identifier || user.id;
+        }
+
+        this.userDisplayNames = map;
+      },
+      error: () => {
+        this.userDisplayNames = {};
+      }
+    });
+  }
+
+  getUserDisplayName(userId: string): string {
+    return this.userDisplayNames[userId] || userId || '-';
   }
 
   private createEmptyItem(): MovementFormItem {
