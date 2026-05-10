@@ -53,7 +53,7 @@ type MovementSortColumn =
   styleUrl: './movements.scss'
 })
 export class MovementsComponent implements OnInit {
-  private readonly seedUserId = 'seed-admin-001';
+  private currentUserId = '';
   private readonly pageSize = 500;
   readonly tablePageSizeOptions = [10, 50, 100, 500];
   compartmentOptions: CompartmentOptionDto[] = [];
@@ -88,7 +88,7 @@ export class MovementsComponent implements OnInit {
   };
 
   form = {
-    createdByUserId: this.seedUserId,
+    createdByUserId: this.currentUserId,
     status: 'Planning',
     items: [this.createEmptyItem()] as MovementFormItem[]
   };
@@ -102,6 +102,7 @@ export class MovementsComponent implements OnInit {
 
   ngOnInit(): void {
     this.userRole = this.authService.getRole();
+    this.currentUserId = this.authService.getUserId() ?? '';
     this.sortColumn = 'timestamp';
     this.sortDirection = 'desc';
     this.loadAvailableProducts();
@@ -286,7 +287,7 @@ export class MovementsComponent implements OnInit {
     this.errorText = '';
     this.successText = '';
     this.form = {
-      createdByUserId: this.seedUserId,
+      createdByUserId: this.currentUserId,
       status: 'Planning',
       items: [this.createEmptyItem()]
     };
@@ -830,7 +831,7 @@ export class MovementsComponent implements OnInit {
     }));
 
     this.form = {
-      createdByUserId: transaction.createdByUserId || this.seedUserId,
+      createdByUserId: transaction.createdByUserId || this.currentUserId,
       status: this.normalizeStatus(transaction.status),
       items: items.length ? items : [this.createEmptyItem()]
     };
