@@ -497,18 +497,11 @@ export class ProcurementPageComponent implements OnInit {
 			.pipe(finalize(() => (this.loading = false)))
 			.subscribe({
 				next: rows => {
-					const mapStart = performance.now();
 					const mapped = this.mapTableRowsToTransactions(rows);
 					this.transactions$.next(mapped);
 					this.initialLoadRetryCount = 0;
 
 					this.ensureCurrentPageInRange();
-
-					const elapsedMs = Math.round(performance.now() - mapStart);
-					console.log(
-						`[Procurement] Table mapped in ${elapsedMs} ms (apiRows=${rows.length}, transactions=${this.transactions$.value.length})`
-					);
-					console.log('[Procurement] First transaction preview:', this.transactions$.value[0]);
 				},
 				error: (err: unknown) => {
 					if (reset && this.initialLoadRetryCount < this.maxInitialLoadRetries) {
