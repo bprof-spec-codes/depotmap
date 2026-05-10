@@ -123,7 +123,7 @@
 
                   <td *ngIf="i === 0" [attr.rowspan]="rows.length">
                     <code class="procurement-user-id" [title]="transaction.createdByUserId">
-                      {{ transaction.createdByUserId }}
+                      {{ getUserDisplayName(transaction.createdByUserId) }}
                     </code>
                   </td>
 
@@ -224,7 +224,7 @@
       <label class="procurement-field">
         <span>Felhasználó azonosító</span>
 
-        <input type="text" class="form-control" [ngModel]="form.createdByUserId" disabled />
+        <input type="text" class="form-control" [value]="getUserDisplayName(form.createdByUserId)" disabled />
       </label>
 
       <label class="procurement-field">

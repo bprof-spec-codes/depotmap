@@ -11,6 +11,7 @@ import {
 } from '../../../core/services/purchasing-transactions-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { UserAdminService } from '../../../core/services/user-admin-service';
 import { ProcurementFormItem, ProcurementSortColumn, ProcurementTableItem, ProcurementTableTransaction } from '../../../core/models/procurements.models';
 
 
@@ -40,6 +41,7 @@ export class ProcurementPageComponent implements OnInit {
 	errorText = '';
 	//async pipe 
 	transactions$ = new BehaviorSubject<ProcurementTableTransaction[]>([]);
+	userDisplayNames: Record<string, string> = {};
 	availableProducts: ProductShortDto[] = [];
 	productsLoading = false;
 	editingTransactionId: string | null = null;
@@ -65,6 +67,7 @@ export class ProcurementPageComponent implements OnInit {
 		private purchasingService: PurchasingTransactionsService,
 		private productService: ProductService,
 		private compartmentService: CompartmentService,
+		private userAdminService: UserAdminService,
 		private authService: AuthService
 	) { }
 
@@ -72,6 +75,7 @@ export class ProcurementPageComponent implements OnInit {
 		this.userRole = this.authService.getRole();
 		this.currentUserId = this.authService.getUserId() ?? '';
 		// oldal indulaskor termeklista + elso tabla lekeres
+		this.loadUserDisplayNames();
 		this.loadCompartments();
 		this.loadAvailableProducts();
 		this.loadTransactions(true);
@@ -118,6 +122,27 @@ export class ProcurementPageComponent implements OnInit {
 			.subscribe(items => {
 				this.availableProducts = items;
 			});
+	}
+
+	private loadUserDisplayNames(): void {
+		this.userAdminService.getUsers().subscribe({
+			next: users => {
+				const map: Record<string, string> = {};
+
+				for (const user of users) {
+					map[user.id] = user.fullName || user.identifier || user.id;
+				}
+
+				this.userDisplayNames = map;
+			},
+			error: () => {
+				this.userDisplayNames = {};
+			}
+		});
+	}
+
+	getUserDisplayName(userId: string): string {
+		return this.userDisplayNames[userId] || userId || '-';
 	}
 
 	onProductChange(item: ProcurementFormItem): void {
