@@ -2,6 +2,14 @@
   display: block;
 }
 
+.order-id-banner {
+  background-color: #f8f9fa;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  border-left: 4px solid #0d6efd;
+  margin-bottom: 2rem;
+}
+
 .order-edit-page {
   max-width: 980px;
 }
@@ -50,6 +58,7 @@
   gap: 16px;
   padding: 18px;
   border-radius: 16px;
+  align-items: end;
 }
 
 .edit-row {
@@ -76,7 +85,8 @@
   letter-spacing: 0.01em;
 }
 
-.form-group .form-control {
+.form-group .form-control,
+.form-group .form-select {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid #cfe0f5;
@@ -84,13 +94,16 @@
   background: #fff;
   font-size: 15px;
   box-shadow: inset 0 1px 2px rgba(15, 31, 53, 0.03);
+  box-sizing: border-box;
 }
 
-.form-group .form-control::placeholder {
+.form-group .form-control::placeholder,
+.form-group .form-select::placeholder {
   color: #8aa0b8;
 }
 
-.form-group .form-control:focus {
+.form-group .form-control:focus,
+.form-group .form-select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
@@ -110,12 +123,14 @@
 
 .order-edit-actions {
   margin-top: var(--space-6);
+  display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .order-edit-actions .btn {
   min-width: 180px;
+  height: 48px;
   border-radius: 12px;
   font-weight: 700;
 }
@@ -171,6 +186,7 @@
   .order-edit-actions {
     flex-direction: column-reverse;
     align-items: stretch;
+    gap: 12px;
   }
 
   .order-edit-actions .btn {
