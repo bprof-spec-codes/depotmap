@@ -70,7 +70,7 @@
 
             <th>
               <button type="button" class="movements-sort-btn" (click)="toggleSort('createdByUserId')">
-                Felhasználó azonosító {{ getSortIndicator('createdByUserId') }}
+                Felhasználó {{ getSortIndicator('createdByUserId') }}
               </button>
             </th>
 
@@ -133,7 +133,7 @@
 
                   <td *ngIf="i === 0" [attr.rowspan]="rows.length">
                     <code class="movements-user-id" [title]="transaction.createdByUserId">
-                      {{ transaction.createdByUserId }}
+                      {{ getUserDisplayName(transaction.createdByUserId) }}
                     </code>
                   </td>
 
@@ -242,9 +242,9 @@
 
     <div class="movement-form-grid">
       <label class="movement-field">
-        <span>Felhasználó azonosító</span>
+        <span>Felhasználó</span>
 
-        <input type="text" class="form-control" [ngModel]="form.createdByUserId" disabled />
+        <input type="text" class="form-control" [value]="getUserDisplayName(form.createdByUserId)" disabled />
       </label>
 
       <label class="movement-field">

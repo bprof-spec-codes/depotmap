@@ -11,6 +11,7 @@ import {
 } from '../../../core/services/movements-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { UserAdminService } from '../../../core/services/user-admin-service';
 
 interface MovementFormItem {
   productId: string;
@@ -53,7 +54,7 @@ type MovementSortColumn =
   styleUrl: './movements.scss'
 })
 export class MovementsComponent implements OnInit {
-  private readonly seedUserId = 'seed-admin-001';
+  private currentUserId = '';
   private readonly pageSize = 500;
   readonly tablePageSizeOptions = [10, 50, 100, 500];
   compartmentOptions: CompartmentOptionDto[] = [];
@@ -77,6 +78,7 @@ export class MovementsComponent implements OnInit {
 
   transactions$ = new BehaviorSubject<MovementTableTransaction[]>([]);
   availableProducts: ProductShortDto[] = [];
+  userDisplayNames: Record<string, string> = {};
   tableFilters = {
     date: '',
     status: '',
@@ -88,7 +90,7 @@ export class MovementsComponent implements OnInit {
   };
 
   form = {
-    createdByUserId: this.seedUserId,
+    createdByUserId: this.currentUserId,
     status: 'Planning',
     items: [this.createEmptyItem()] as MovementFormItem[]
   };
@@ -97,13 +99,16 @@ export class MovementsComponent implements OnInit {
     private movementsService: MovementsService,
     private productService: ProductService,
     private compartmentService: CompartmentService,
+    private userAdminService: UserAdminService,
     private authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.userRole = this.authService.getRole();
+    this.currentUserId = this.authService.getUserId() ?? '';
     this.sortColumn = 'timestamp';
     this.sortDirection = 'desc';
+    this.loadUserDisplayNames();
     this.loadAvailableProducts();
     this.loadCompartments();
     this.loadTransactions(true);
@@ -259,6 +264,27 @@ export class MovementsComponent implements OnInit {
       });
   }
 
+  private loadUserDisplayNames(): void {
+    this.userAdminService.getUsers().subscribe({
+      next: users => {
+        const map: Record<string, string> = {};
+
+        for (const user of users) {
+          map[user.id] = user.fullName || user.identifier || user.id;
+        }
+
+        this.userDisplayNames = map;
+      },
+      error: () => {
+        this.userDisplayNames = {};
+      }
+    });
+  }
+
+  getUserDisplayName(userId: string): string {
+    return this.userDisplayNames[userId] || userId || '-';
+  }
+
   private createEmptyItem(): MovementFormItem {
     return {
       productId: '',
@@ -286,7 +312,7 @@ export class MovementsComponent implements OnInit {
     this.errorText = '';
     this.successText = '';
     this.form = {
-      createdByUserId: this.seedUserId,
+      createdByUserId: this.currentUserId,
       status: 'Planning',
       items: [this.createEmptyItem()]
     };
@@ -830,7 +856,7 @@ export class MovementsComponent implements OnInit {
     }));
 
     this.form = {
-      createdByUserId: transaction.createdByUserId || this.seedUserId,
+      createdByUserId: transaction.createdByUserId || this.currentUserId,
       status: this.normalizeStatus(transaction.status),
       items: items.length ? items : [this.createEmptyItem()]
     };
