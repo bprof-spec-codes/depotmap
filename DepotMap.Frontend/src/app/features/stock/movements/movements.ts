@@ -285,6 +285,11 @@ export class MovementsComponent implements OnInit {
     return this.userDisplayNames[userId] || userId || '-';
   }
 
+  getCompartmentCode(compartmentId: string): string {
+    const compartment = this.compartmentOptions.find(item => item.id === compartmentId);
+    return compartment?.code || compartmentId || '-';
+  }
+
   private createEmptyItem(): MovementFormItem {
     return {
       productId: '',
