@@ -316,12 +316,15 @@ namespace DepotMap.Logics.Logics
         {
             foreach (var item in transaction.Items)
             {
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
                 var fromStock = await _context.ProductStocks
                     .FirstOrDefaultAsync(ps => ps.CompartmentId == item.FromCompartmentId && ps.ProductId == item.ProductId);
+                var productCode = product?.SKU ?? item.ProductId;
+                var availableQuantity = fromStock?.Quantity ?? 0;
 
                 if (fromStock == null || fromStock.Quantity < item.Quantity)
                 {
-                    throw new InvalidOperationException($"Nincs elegendő készlet a(z) {item.ProductId} termékből a forrás rekeszben.");
+                    throw new InvalidOperationException($"Nincs elegendő készlet a(z) {productCode} termékből a forrás rekeszben. Jelenleg {availableQuantity} db érhető el.");
                 }
             }
 
