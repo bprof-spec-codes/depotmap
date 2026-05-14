@@ -1,5 +1,5 @@
 using DepotMap.Data.Context;
-using DepotMap.Data.DbSeeder;
+using DepotMap.Endpoint.DbSeeder;
 using DepotMap.Entities.Models;
 using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
@@ -13,7 +13,7 @@ using System.Text;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -93,9 +93,9 @@ public class Program
         using (var scope = app.Services.CreateScope())
         {
             var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
-            seeder.Seed();
+            await seeder.SeedAsync();
         }
 
-        app.Run();
+        await app.RunAsync();
     }
 }

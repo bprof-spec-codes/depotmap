@@ -118,7 +118,7 @@ namespace DepotMap.Tests
                 AccessibleFromBothSides = true
             });
             Assert.NotNull(shelf);
-            Assert.Equal("A", shelf.Code);
+            Assert.Equal("0-0", shelf.Code);
 
             // 5. Rekesz hozzáadása a polc ID-jával
             var shelfDetail = await shelfLogic.AddCompartmentToLevelAsync(shelf.Id, 0);
@@ -193,15 +193,17 @@ namespace DepotMap.Tests
             });
 
             var cells = await cellLogic.GetCellsByWarehouseIdAsync(warehouse.Id);
-            var cell = cells.First();
-            await cellLogic.UpdateCellTypeAsync(cell.Id, new UpdateCellTypeDto { CellType = "shelf_area" });
+            var cellA = cells.First(c => c.X == 0 && c.Y == 0);
+            var cellB = cells.First(c => c.X == 1 && c.Y == 0);
+            await cellLogic.UpdateCellTypeAsync(cellA.Id, new UpdateCellTypeDto { CellType = "shelf_area" });
+            await cellLogic.UpdateCellTypeAsync(cellB.Id, new UpdateCellTypeDto { CellType = "shelf_area" });
 
-            // 2 polcot hozunk létre
-            var shelfA = await shelfLogic.CreateShelfAsync(cell.Id, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
-            var shelfB = await shelfLogic.CreateShelfAsync(cell.Id, new CreateShelfDto { X = 1, Y = 0, Levels = 2 });
+            // 2 polcot hozunk létre, külön cellákban (1 polc / cella)
+            var shelfA = await shelfLogic.CreateShelfAsync(cellA.Id, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
+            var shelfB = await shelfLogic.CreateShelfAsync(cellB.Id, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
 
-            Assert.Equal("A", shelfA.Code);
-            Assert.Equal("B", shelfB.Code);
+            Assert.Equal("0-0", shelfA.Code);
+            Assert.Equal("1-0", shelfB.Code);
 
             // Rekeszeket adunk mindkét polchoz
             var detailA = await shelfLogic.AddCompartmentToLevelAsync(shelfA.Id, 0);
@@ -211,8 +213,8 @@ namespace DepotMap.Tests
             Assert.NotNull(detailB);
 
             // A rekesz kódok tartalmazzák a polc kódját
-            Assert.Contains("A", detailA.Compartments.First().Code);
-            Assert.Contains("B", detailB.Compartments.First().Code);
+            Assert.Contains(shelfA.Code, detailA.Compartments.First().Code);
+            Assert.Contains(shelfB.Code, detailB.Compartments.First().Code);
 
             // A két rekesz kódja különböző
             Assert.NotEqual(
