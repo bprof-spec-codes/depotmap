@@ -150,14 +150,14 @@
                   </td>
 
                   <td>
-                    <span class="movement-cell-muted" [title]="row.fromCompartmentId">
-                      {{ row.fromCompartmentId }}
+                    <span class="movement-cell-muted" [title]="getCompartmentCode(row.fromCompartmentId)">
+                      {{ getCompartmentCode(row.fromCompartmentId) }}
                     </span>
                   </td>
 
                   <td>
-                    <span class="movement-cell-muted" [title]="row.toCompartmentId">
-                      {{ row.toCompartmentId }}
+                    <span class="movement-cell-muted" [title]="getCompartmentCode(row.toCompartmentId)">
+                      {{ getCompartmentCode(row.toCompartmentId) }}
                     </span>
                   </td>
 

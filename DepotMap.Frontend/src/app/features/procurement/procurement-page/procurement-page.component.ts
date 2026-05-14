@@ -614,7 +614,7 @@ export class ProcurementPageComponent implements OnInit {
 			return;
 		}
 
-		const shouldDelete = confirm(`Biztosan törlöd ezt a beszerzést? (${transaction.id})`);
+		const shouldDelete = confirm(this.getDeleteConfirmationText(transaction));
 		if (!shouldDelete) {
 			return;
 		}
@@ -813,5 +813,28 @@ export class ProcurementPageComponent implements OnInit {
 		const product = this.availableProducts.find(p => p.id === productId);
 		if (!product) return productId; // fallback: ID ha még nem töltött be
 		return product.sku ? `${product.sku} - ${product.name}` : product.name;
+	}
+
+	private getDeleteConfirmationText(transaction: ProcurementTableTransaction): string {
+		const firstItem = transaction.items[0];
+		const timestamp = this.formatTimestamp(transaction.timestamp);
+		const productSku = firstItem ? this.getProductSku(firstItem.productId) : '-';
+		const quantity = firstItem ? `${firstItem.quantity} db` : '-';
+
+		return `Biztosan törlöd ezt a beszerzést? (${timestamp} | ${productSku} | ${quantity})`;
+	}
+
+	private getProductSku(productId: string): string {
+		const product = this.availableProducts.find(p => p.id === productId);
+		return product?.sku || productId || '-';
+	}
+
+	private formatTimestamp(timestampValue: string): string {
+		const timestamp = new Date(timestampValue);
+		if (Number.isNaN(timestamp.getTime())) {
+			return timestampValue || '-';
+		}
+
+		return `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}. ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
 	}
 }
