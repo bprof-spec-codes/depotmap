@@ -25,6 +25,7 @@ export class OrderList implements OnInit {
   routeErrorByOrderId: Record<string, string> = {};
   routeLoadingOrderId: string | null = null;
   routeLoadedOrderIds = new Set<string>();
+  errorMessage = '';
 
   constructor(private orderService: OrderService, private router: Router, private routePdfService: RoutePdfService) { }
 
@@ -173,12 +174,15 @@ export class OrderList implements OnInit {
   deleteOrder(id: string) {
     if (!confirm('Biztosan törölni szeretnéd a rendelést? Ezt nem lehet visszavonni!')) return;
 
+    this.errorMessage = '';
     this.orderService.deleteOrder(id).subscribe({
       next: () => {
-        console.log(`Order ${id} deleted.`);
         this.refresh$.next();
       },
-      error: (err) => alert('Nem sikerült törölni a rendelést.')
+      error: (err) => 
+      {
+        const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
+      }
     });
   }
 
@@ -193,12 +197,15 @@ export class OrderList implements OnInit {
       if (!confirm('Biztosan lezárod a rendelést? Ezzel fizikailag levonjuk a termékeket a polcról!')) return;
     }
 
+    this.errorMessage = '';
     this.orderService.updateOrderStatus(order.id, { status: nextStatus }).subscribe({
       next: () => {
-        console.log(`Order ${order.id} advanced to ${nextStatus}.`);
         this.refresh$.next();
       },
-      error: (err) => alert('Nem sikerült a státusz frissítése.')
+      error: (err) => 
+      {
+        const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
+      }
     });
   }
 

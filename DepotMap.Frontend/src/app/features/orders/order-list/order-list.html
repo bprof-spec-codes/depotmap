@@ -9,6 +9,10 @@
     </div>
   </app-page-header>
 
+  <div *ngIf="errorMessage" class="app-error mb-3">
+      {{ errorMessage }}
+    </div>
+
   <app-content-card title="Rendeléslista">
     <div class="orders-toolbar">
       <div class="orders-search-wrap">
