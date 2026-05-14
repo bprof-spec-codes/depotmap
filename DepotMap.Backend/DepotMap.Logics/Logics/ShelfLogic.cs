@@ -52,15 +52,10 @@ namespace DepotMap.Logics.Logics
 
             if (cell == null) throw new ArgumentException("Cell not found.");
 
-            // Auto-generate Code: "{cellX}-{cellY}{letter}", letter unique within the cell.
-            // Collision scope is the warehouse (unique index on WarehouseId + Code).
-            var existingLettersInCell = await _context.Shelves
-                .Where(s => s.WarehouseCellId == cellId)
-                .Select(s => s.Code)
-                .ToListAsync();
+            var alreadyHasShelf = await _context.Shelves.AnyAsync(s => s.WarehouseCellId == cellId);
+            if (alreadyHasShelf) throw new InvalidOperationException("A cellában már van polc.");
 
-            var letter = GenerateNextLetterForCell(cell.X, cell.Y, existingLettersInCell);
-            var code = $"{cell.X}-{cell.Y}{letter}";
+            var code = $"{cell.X}-{cell.Y}";
 
             var shelf = new Shelf
             {
@@ -221,36 +216,6 @@ namespace DepotMap.Logics.Logics
                         }).ToList()
                     }).ToList()
             };
-        }
-
-        private static string GenerateNextLetterForCell(int cellX, int cellY, List<string> existingCodesInCell)
-        {
-            // Existing codes are full "{x}-{y}{letters}". Extract the letter suffix.
-            var prefix = $"{cellX}-{cellY}";
-            var usedLetters = new HashSet<string>();
-            foreach (var full in existingCodesInCell)
-            {
-                if (full.StartsWith(prefix))
-                    usedLetters.Add(full.Substring(prefix.Length));
-            }
-
-            for (int i = 0; ; i++)
-            {
-                var letter = ToLetterCode(i);
-                if (!usedLetters.Contains(letter))
-                    return letter;
-            }
-        }
-
-        private static string ToLetterCode(int index)
-        {
-            var result = "";
-            do
-            {
-                result = (char)('A' + index % 26) + result;
-                index = index / 26 - 1;
-            } while (index >= 0);
-            return result;
         }
 
         // Format: [WarehouseName first char].[ShelfCode].[Level].[Slot]
