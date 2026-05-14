@@ -4,6 +4,7 @@
   </app-page-header>
 
   <app-content-card title="Rendelési adatok" [soft]="true">
+
     <div class="added-items-section" *ngIf="addedItems.length > 0">
       <div class="section-header">
         <h3 class="section-title">A rendelésbe szánt tételek</h3>
@@ -81,13 +82,17 @@
       </div>
     </div>
 
+    <div class="app-error mb-4 mt-3" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
     <div class="app-form-actions order-create-actions">
       <button class="btn btn-outline-secondary" type="button" [disabled]="isSaving" (click)="discardOrder()">
         Vissza
       </button>
 
       <button class="btn btn-primary" type="button" [disabled]="isSaving" (click)="saveOrder()">
-        {{ isSaving ? 'Mentés folyamatban...' : 'Mentése' }}
+        {{ isSaving ? 'Mentés folyamatban...' : 'Mentés' }}
       </button>
     </div>
   </app-content-card>

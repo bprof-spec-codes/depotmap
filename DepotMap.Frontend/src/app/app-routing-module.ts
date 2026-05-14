@@ -7,7 +7,7 @@ import { ProductEditComponent } from './features/products/product-edit/product-e
 import { ProcurementPageComponent } from './features/procurement/procurement-page/procurement-page.component';
 import { OrderList } from './features/orders/order-list/order-list';
 import { OrderCreate } from './features/orders/order-create/order-create';
-import { OrderEdit, orderEditGuard } from './features/orders/order-edit/order-edit';
+import { OrderEdit } from './features/orders/order-edit/order-edit';
 import { WarehouseListComponent } from './features/warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseGridComponent } from './features/warehouse/warehouse-grid/warehouse-grid.component';
 import { CellDetailComponent } from './features/warehouse/cell-detail/cell-detail.component';
@@ -46,7 +46,7 @@ const routes: Routes = [
   { path: 'stock-movements/:productId', component: StockMovementListComponent, canActivate: [authGuard] },
 
   { path: 'orders/create', component: OrderCreate, canActivate: [authGuard] },
-  { path: 'orders/edit/:id', component: OrderEdit, canActivate: [authGuard], canDeactivate: [orderEditGuard] },
+  { path: 'orders/edit/:id', component: OrderEdit, canActivate: [authGuard] },
   { path: 'orders', component: OrderList, canActivate: [authGuard] },
 
   { path: '', redirectTo: '/login', pathMatch: 'full' },

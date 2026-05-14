@@ -21,36 +21,24 @@ namespace DepotMap.Endpoint.Controllers
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> AddItemToOrder(string orderId, [FromBody] CreateOrderItemDto dto)
         {
-            try
-            {
-                var updatedOrder = await _orderItemLogic.AddItemToOrderAsync(orderId, dto);
+            var updatedOrder = await _orderItemLogic.AddItemToOrderAsync(orderId, dto);
 
-                if (updatedOrder == null) return NotFound(new { message = "A rendelés nem található." });
+            if (updatedOrder == null) 
+                return NotFound();
 
-                return Ok(updatedOrder);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok(updatedOrder);
         }
 
         [HttpDelete("{orderId}/items/{itemId}")]
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> DeleteItemFromOrder(string orderId, string itemId)
         {
-            try
-            {
-                var isDeleted = await _orderItemLogic.DeleteItemFromOrderAsync(orderId, itemId);
+            var isDeleted = await _orderItemLogic.DeleteItemFromOrderAsync(orderId, itemId);
 
-                if (!isDeleted) return NotFound(new { message = "A rendelés vagy a tétel nem található." });
+            if (!isDeleted) 
+                return NotFound();
 
-                return NoContent();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return NoContent();
         }
 
         [HttpGet("{orderId}/items/{itemId}")]
@@ -61,7 +49,7 @@ namespace DepotMap.Endpoint.Controllers
 
             if (item == null)
             {
-                return NotFound(new { message = "A rendelés vagy a tétel nem található." });
+                return NotFound();
             }
 
             return Ok(item);
@@ -71,20 +59,12 @@ namespace DepotMap.Endpoint.Controllers
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> UpdateOrderItem(string orderId, string itemId, [FromBody] UpdateOrderItemDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var updatedItem = await _orderItemLogic.UpdateOrderItemAsync(orderId, itemId, dto);
 
-            try
-            {
-                var updatedItem = await _orderItemLogic.UpdateOrderItemAsync(orderId, itemId, dto);
+            if (updatedItem == null) 
+                return NotFound();
 
-                if (updatedItem == null) return NotFound(new { message = "A frissíteni kívánt tétel vagy rendelés nem található." });
-
-                return Ok(updatedItem);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok(updatedItem);
         }
     }
 }
