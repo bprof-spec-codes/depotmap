@@ -32,7 +32,7 @@ namespace DepotMap.Endpoint.Controllers
 
             if (order == null)
             {
-                return NotFound(new { message = "A keresett rendelés nem található." });
+                return NotFound();
             }
 
             return Ok(order);
@@ -42,100 +42,51 @@ namespace DepotMap.Endpoint.Controllers
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                var createdOrder = await _orderLogic.CreateOrderAsync(dto);
-
-                return CreatedAtAction(nameof(GetOrderById), new { id = createdOrder.Id }, createdOrder);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var createdOrder = await _orderLogic.CreateOrderAsync(dto);
+            return CreatedAtAction(nameof(GetOrderById), new { id = createdOrder.Id }, createdOrder);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> UpdateOrder(string id, [FromBody] UpdateOrderDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var updatedOrder = await _orderLogic.UpdateOrderAsync(id, dto);
 
-            try
+            if (updatedOrder == null)
             {
-                var updatedOrder = await _orderLogic.UpdateOrderAsync(id, dto);
-
-                if (updatedOrder == null)
-                {
-                    return NotFound(new { message = "A frissíteni kívánt rendelés nem található." });
-                }
-
-                return Ok(updatedOrder);
+                return NotFound();
             }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            
+            return Ok(updatedOrder);
         }
 
         [HttpPatch("{id}/status")]
         [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> UpdateOrderStatus(string id, [FromBody] UpdateOrderStatusDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var userRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
 
-            try
+            var updatedOrder = await _orderLogic.UpdateOrderStatusAsync(id, dto, userRole!);
+            if (updatedOrder == null)
             {
-                var updatedOrder = await _orderLogic.UpdateOrderStatusAsync(id, dto, userRole!);
-
-                if (updatedOrder == null)
-                {
-                    return NotFound(new { message = "A rendelés nem található." });
-                }
-
-                return Ok(updatedOrder);
+                return NotFound();
             }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Forbid();
-            }
+            
+            return Ok(updatedOrder);
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> DeleteOrder(string id)
         {
-            try
+            var isDeleted = await _orderLogic.DeleteOrderAsync(id);
+            
+            if (!isDeleted)
             {
-                var isDeleted = await _orderLogic.DeleteOrderAsync(id);
-
-                if (!isDeleted)
-                {
-                    return NotFound(new { message = "A törölni kívánt rendelés nem található." });
-                }
-
-                return NoContent();
+                return NotFound(new { message = "A törölni kívánt rendelés nem található." });
             }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            
+            return NoContent();
         }
     }
 }
