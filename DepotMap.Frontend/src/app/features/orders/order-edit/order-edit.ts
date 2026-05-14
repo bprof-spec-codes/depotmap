@@ -16,6 +16,7 @@ orderId!: string;
   isLoading = true;
   isSaving = false;
   isSavedOrDiscarded = false;
+  errorMessage = '';
 
   availableProducts: ProductShortDto[] = [];
   compartments: CompartmentOptionDto[] = [];
@@ -148,8 +149,19 @@ orderId!: string;
   }
 
   addNewItem() {
-    if (!this.currentRow.productSKU) return alert('Kérlek, add meg a Termék ID-t!');
-    if (!this.currentRow.quantity || this.currentRow.quantity < 1) return alert('A darabszám legalább 1 kell legyen!');
+    this.errorMessage = '';
+    if (!this.currentRow.productSKU) {
+      this.errorMessage = 'Kérlek, válassz egy terméket!';
+      return;
+    }
+    if (!this.currentRow.quantity || this.currentRow.quantity < 1) {
+      this.errorMessage = 'A darabszám legalább 1 kell legyen!';
+      return;
+    }
+    if (!this.currentRow.fromCompartmentCode) {
+      this.errorMessage = 'Kérlek, válassz forrás rekeszt!';
+      return;
+    }
 
     this.editingItems.push({ ...this.currentRow });
     
@@ -161,12 +173,15 @@ orderId!: string;
   }
 
   saveOrder() {
+    this.errorMessage = '';
     if (this.currentRow.productSKU) {
       this.addNewItem();
+      if (this.errorMessage) return;
     }
 
     if (this.editingItems.length === 0) {
-      return alert('Egy rendelés nem lehet üres! Ha törölni akarod, használd a listaoldalon a Törlés gombot.');
+      this.errorMessage = 'Egy rendelés nem lehet üres! Ha törölni akarod, használd a listaoldalon a Törlés gombot.';
+      return;
     }
 
     this.isSaving = true;
@@ -178,27 +193,16 @@ orderId!: string;
         this.router.navigate(['/orders']);
       },
       error: (err) => {
-        alert('Hiba a szerkesztés mentésekor: ' + (err.error?.message || err.message));
+        this.errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a rendelés módosításához!' : 'Ismeretlen hiba történt a szerkesztés mentésekor.');
         this.isSaving = false;
       }
     });
   }
 
   discardOrder() {
-    if (!confirm('Biztosan elveted a módosításokat? A rendelés visszaáll az eredeti állapotába!')) return;
-    
     this.isSavedOrDiscarded = true;
     this.router.navigate(['/orders']);
   }
 }
 
 
-import { CanDeactivateFn } from '@angular/router';
-
-export const orderEditGuard: CanDeactivateFn<OrderEdit> = (component) => {
-  if (!component.isSavedOrDiscarded) {
-    alert('Kérlek, mentsd el vagy vesd el a szerkesztést az oldal alján lévő gombokkal, mielőtt elhagyod a felületet!');
-    return false;
-  }
-  return true;
-}

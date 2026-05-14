@@ -91,6 +91,10 @@
       </div>
     </div>
 
+    <div class="app-error mb-4 mt-3" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
     <div class="app-form-actions order-edit-actions">
       <button
         class="btn btn-danger"
