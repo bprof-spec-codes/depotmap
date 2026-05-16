@@ -28,5 +28,17 @@ namespace DepotMap.Endpoint.Controllers
 
             return Ok(result);
         }
+        [HttpGet("optimize-map/{orderId}")]
+        public async Task<ActionResult<PickingRouteMapDto>> GetOptimizedRouteMap(string orderId)
+        {
+            var result = await _pathFindingLogic.GetOrderPickingRouteMapAsync(orderId);
+
+            if (result.Route == null || result.Route.Count == 0)
+            {
+                return NotFound(new { Message = "Nem található kiszedhető tétel ehhez a rendeléshez." });
+            }
+
+            return Ok(result);
+        }
     }
 }
