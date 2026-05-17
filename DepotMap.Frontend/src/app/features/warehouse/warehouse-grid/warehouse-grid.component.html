@@ -44,6 +44,12 @@
     Változások sikeresen elmentve.
   </div>
 
+  <!-- Action error message -->
+  <div *ngIf="actionError" class="alert alert-danger d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ actionError }}
+  </div>
+
   <!-- Loading / Error states -->
   <div *ngIf="loading" class="state-msg">Betöltés...</div>
   <div *ngIf="error" class="state-msg error-text">

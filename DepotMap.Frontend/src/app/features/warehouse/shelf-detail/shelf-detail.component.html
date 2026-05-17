@@ -27,6 +27,12 @@
     A polc nem tölthető be. Ellenőrizd, hogy a backend fut-e.
   </div>
 
+  <!-- Action error message -->
+  <div *ngIf="actionError" class="alert alert-danger d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ actionError }}
+  </div>
+
   <!-- Shelf front view -->
   <div class="shelf-view-wrapper" *ngIf="!loading && !error && shelf">
     <p class="view-hint">

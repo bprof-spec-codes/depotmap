@@ -23,6 +23,7 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   shelf: ShelfDetailDto | null = null;
   loading = true;
   error = false;
+  actionError: string | null = null;
   actionLoading = false;
   returnTo: string | null = null;
 
@@ -92,6 +93,7 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   addCompartment(levelIndex: number): void {
     if (!this.shelf || this.actionLoading) return;
     this.actionLoading = true;
+    this.actionError = null;
     this.shelfApiService.addCompartment(this.shelfId, levelIndex).subscribe({
       next: (updated) => {
         this.shelf = updated;
@@ -100,6 +102,8 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('[ShelfDetail] Add compartment failed:', err);
         this.actionLoading = false;
+        this.actionError = err.error?.detail
+          || (err.status === 403 ? 'Nincs jogosultságod rekesz hozzáadásához!' : 'Nem sikerült hozzáadni a rekeszt.');
       }
     });
   }
@@ -107,6 +111,7 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
   removeCompartment(levelIndex: number): void {
     if (!this.shelf || this.actionLoading) return;
     this.actionLoading = true;
+    this.actionError = null;
     this.shelfApiService.removeCompartment(this.shelfId, levelIndex).subscribe({
       next: (updated) => {
         this.shelf = updated;
@@ -115,6 +120,8 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('[ShelfDetail] Remove compartment failed:', err);
         this.actionLoading = false;
+        this.actionError = err.error?.detail
+          || (err.status === 403 ? 'Nincs jogosultságod rekesz eltávolításához!' : 'Nem sikerült eltávolítani a rekeszt.');
       }
     });
   }
@@ -151,6 +158,7 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
     };
 
     this.saving = true;
+    this.actionError = null;
     this.shelfApiService.updateShelf(this.cellId, this.shelfId, dto).subscribe({
       next: () => {
         this.shelfApiService.getShelfDetail(this.cellId, this.shelfId).subscribe({
@@ -168,6 +176,8 @@ export class ShelfDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('[ShelfDetail] Update shelf failed:', err);
         this.saving = false;
+        this.actionError = err.error?.detail
+          || (err.status === 403 ? 'Nincs jogosultságod a polc módosításához!' : 'Nem sikerült menteni a polc beállításait.');
       }
     });
   }

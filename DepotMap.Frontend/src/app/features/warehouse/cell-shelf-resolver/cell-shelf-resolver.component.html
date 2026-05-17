@@ -9,7 +9,7 @@
   </div>
 
   <div *ngIf="error" class="state-msg">
-    <p class="text-danger mb-3">Nem sikerült betölteni a polcot.</p>
+    <p class="text-danger mb-3">{{ errorMessage || 'Nem sikerült betölteni a polcot.' }}</p>
     <button class="btn btn-outline-primary" (click)="goToWarehouse()">
       <i class="bi bi-arrow-left"></i> Vissza a raktárhoz
     </button>

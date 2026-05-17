@@ -2,6 +2,7 @@ using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
 using DepotMap.Entities.Models.DTOs.Products;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,10 +51,10 @@ namespace DepotMap.Logics.Logics
             var cell = await _context.WarehouseCells
                 .FirstOrDefaultAsync(c => c.Id == cellId);
 
-            if (cell == null) throw new ArgumentException("Cell not found.");
+            if (cell == null) throw new NotFoundException("A megadott cella nem található.");
 
             var alreadyHasShelf = await _context.Shelves.AnyAsync(s => s.WarehouseCellId == cellId);
-            if (alreadyHasShelf) throw new InvalidOperationException("A cellában már van polc.");
+            if (alreadyHasShelf) throw new ConflictException("A cellában már van polc.");
 
             var code = $"{cell.X}-{cell.Y}";
 
