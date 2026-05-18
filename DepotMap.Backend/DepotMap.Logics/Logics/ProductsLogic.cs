@@ -227,6 +227,15 @@ namespace DepotMap.Logics.Logics
                 throw new BadRequestException("A termék készleten van. Törlés előtt ürítsd ki a készletet.");
             }
 
+            var hasTransactions = await _ctx.TransactionItems
+                .AnyAsync(item => item.ProductId == id);
+            var hasMovements = await _ctx.StockMovements
+                .AnyAsync(movement => movement.ProductId == id);
+            if (hasTransactions || hasMovements)
+            {
+                throw new BadRequestException("A termékhez már tartozik beszerzés, rendelés vagy készletmozgás, ezért nem törölhető.");
+            }
+
             var historyEntry = _mapper.Map<ProductHistory>(product);
 
             historyEntry.ActionType = "delete";

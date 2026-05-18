@@ -26,6 +26,7 @@ export class ProductsListComponent implements OnInit {
   historySearch = new BehaviorSubject<string>('');
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
   canManageProducts = false;
+  errorText = '';
 
   private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
   private productsReload = new Subject<void>();
@@ -75,7 +76,7 @@ export class ProductsListComponent implements OnInit {
         return {
           ...productsVm,
           items: productsVm.items.filter(product =>
-            `${product.name ?? ''} ${product.sku ?? ''} ${product.description ?? ''} ${product.quantity ?? product.totalStock ?? 0} ${this.formatLocations(product)}`
+            `${product.name ?? ''} ${product.sku ?? ''} ${product.description ?? ''} ${product.price ?? ''} ${product.quantity ?? product.totalStock ?? 0} ${this.formatLocations(product)}`
               .toLowerCase()
               .includes(q)
           )
@@ -179,11 +180,12 @@ export class ProductsListComponent implements OnInit {
   }
 
   deleteProduct(id: string) {
+    this.errorText = '';
     if (!confirm('Biztosan törölni szeretnéd a terméket?')) return;
     this.productService.delete(id).subscribe({
       next: () => this.productsReload.next(),
-      error: () => {
-        // Error state is already represented by the list VM on reload attempt.
+      error: (err) => {
+        this.errorText = this.extractErrorMessage(err, 'A törlés sikertelen volt.');
       }
     });
   }
@@ -192,5 +194,28 @@ export class ProductsListComponent implements OnInit {
     this.router.navigate(['/products/edit', product.id], {
       state: { product }
     });
+  }
+
+  private extractErrorMessage(err: unknown, fallback: string): string {
+    const response = err as { status?: number; error?: { detail?: string } | string } | null;
+    if (typeof response?.error === 'string') {
+      try {
+        const parsed = JSON.parse(response.error) as { detail?: string } | null;
+        if (parsed?.detail) {
+          return parsed.detail;
+        }
+      } catch {
+        if (response.error.trim().length > 0) {
+          return response.error;
+        }
+      }
+    }
+    if (typeof response?.error === 'object' && response?.error?.detail) {
+      return response.error.detail;
+    }
+    if (response?.status === 403) {
+      return 'Nincs jogosultságod a művelet végrehajtásához!';
+    }
+    return fallback;
   }
 }

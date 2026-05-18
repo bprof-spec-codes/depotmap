@@ -26,13 +26,15 @@
           </div>
         </div>
 
+        <div class="app-error mb-3" *ngIf="errorText">{{ errorText }}</div>
+
         <div class="products-list-grid" *ngIf="productsVm.items.length">
           <div *ngFor="let p of productsVm.items" class="product-block">
             <div class="product-item" [class.product-item--highlight]="p.id === highlightedProductId">
               <div class="product-main">
                 <div class="product-title-row">{{p.name}} <span *ngIf="p.id === highlightedProductId"
                     class="product-badge">Frissítve</span></div>
-                <div class="product-meta">SKU: {{p.sku || '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}} •
+                <div class="product-meta">SKU: {{p.sku || '-' }} • Ár: {{ p.price != null ? (p.price | number:'1.0-0') + ' Ft' : '-' }} • Mennyiség: {{p.quantity ?? p.totalStock ?? 0}} •
                   Hely:
                   {{ formatLocations(p) }}</div>
                 <div class="product-description">Leírás: {{ p.description || '-' }}</div>
