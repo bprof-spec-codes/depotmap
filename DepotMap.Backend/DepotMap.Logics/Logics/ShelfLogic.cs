@@ -111,9 +111,38 @@ namespace DepotMap.Logics.Logics
             var shelf = await _context.Shelves.FindAsync(shelfId);
             if (shelf == null) return false;
 
+            var compartmentIds = await _context.Compartments
+                .Where(c => c.ShelfId == shelfId)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            await EnsureNoMovementReferencesAsync(compartmentIds, "A polc");
+
             _context.Shelves.Remove(shelf);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // A StockMovement / TransactionItem FK-k Restrict-ek, így a cascade-törlés
+        // (Warehouse→Cell→Shelf→Compartment) SQL szinten elhasalna, ha mozgás vagy
+        // tranzakció hivatkozik a rekeszre. Itt előre, érthető hibával jelezzük.
+        private async Task EnsureNoMovementReferencesAsync(List<string> compartmentIds, string entityLabel)
+        {
+            if (compartmentIds.Count == 0) return;
+
+            var hasStockMovement = await _context.StockMovements
+                .AnyAsync(sm => compartmentIds.Contains(sm.CompartmentId));
+
+            var hasTransactionItem = await _context.TransactionItems
+                .AnyAsync(ti =>
+                    (ti.FromCompartmentId != null && compartmentIds.Contains(ti.FromCompartmentId)) ||
+                    (ti.ToCompartmentId != null && compartmentIds.Contains(ti.ToCompartmentId)));
+
+            if (hasStockMovement || hasTransactionItem)
+            {
+                throw new ConflictException(
+                    $"{entityLabel} nem törölhető, mert már kapcsolódik hozzá készletmozgás vagy tranzakció.");
+            }
         }
 
         public async Task<ShelfDetailDto?> AddCompartmentToLevelAsync(string shelfId, int levelIndex)
@@ -175,6 +204,9 @@ namespace DepotMap.Logics.Logics
 
             // Remove the last compartment on this level
             var lastCompartment = levelCompartments.Last();
+
+            await EnsureNoMovementReferencesAsync(new List<string> { lastCompartment.Id }, "A rekesz");
+
             _context.Compartments.Remove(lastCompartment);
             await _context.SaveChangesAsync();
 
