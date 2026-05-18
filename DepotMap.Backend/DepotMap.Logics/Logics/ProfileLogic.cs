@@ -4,6 +4,7 @@ using DepotMap.Entities.Models.DTOs;
 using DepotMap.Logics.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using DepotMap.Logics.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,18 +24,18 @@ namespace DepotMap.Logics.Logics
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<string> ChangePasswordAsync(string userId, ChangePasswordDto dto)
+        public async Task ChangePasswordAsync(string userId, ChangePasswordDto dto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
             {
-                return "User not found!";
+                throw new NotFoundException("A felhasználó nem található.");
             }
 
             if (dto.NewPassword != dto.ConfirmNewPassword)
             {
-                return "New passwords do not match!";
+                throw new BadRequestException("Az új jelszavak nem egyeznek.");
             }
 
             var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(
@@ -45,7 +46,7 @@ namespace DepotMap.Logics.Logics
 
             if (passwordVerificationResult == PasswordVerificationResult.Failed)
             {
-                return "Current password is incorrect!";
+                throw new BadRequestException("A jelenlegi jelszó hibás.");
             }
 
             var samePasswordCheck = _passwordHasher.VerifyHashedPassword(
@@ -56,14 +57,12 @@ namespace DepotMap.Logics.Logics
 
             if (samePasswordCheck == PasswordVerificationResult.Success)
             {
-                return "New password cannot be the same as the old password!";
+                throw new ConflictException("Az új jelszó nem egyezhet meg a régi jelszóval.");
             }
 
             user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
 
             await _context.SaveChangesAsync();
-
-            return null;
         }
 
         public async Task<OwnProfileDto?> GetOwnProfileAsync(string userId)
@@ -71,7 +70,7 @@ namespace DepotMap.Logics.Logics
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
-                return null;
+                throw new NotFoundException("A felhasználó nem található.");
             }
             return new OwnProfileDto
             {

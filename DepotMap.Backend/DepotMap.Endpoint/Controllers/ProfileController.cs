@@ -1,4 +1,5 @@
 ﻿using DepotMap.Entities.Models.DTOs;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,17 +26,15 @@ namespace DepotMap.Endpoint.Controllers
 
             if (userId == null)
             {
-                return Unauthorized();
+                throw new ForbiddenException("A felhasználó azonosítása sikertelen.");
             }
 
-            var result = await _profileLogic.ChangePasswordAsync(userId, dto);
+            await _profileLogic.ChangePasswordAsync(userId, dto);
 
-            if (result != null)
+            return Ok(new
             {
-                return BadRequest(result);
-            }
-
-            return Ok("Password changed successfully!");
+                message = "A jelszó sikeresen módosítva."
+            });
         }
 
         [HttpGet("me")]
@@ -45,15 +44,10 @@ namespace DepotMap.Endpoint.Controllers
 
             if (userId == null)
             {
-                return Unauthorized();
+                throw new ForbiddenException("A felhasználó azonosítása sikertelen.");
             }
 
             var profile = await _profileLogic.GetOwnProfileAsync(userId);
-
-            if (profile == null)
-            {
-                return NotFound("User not found");
-            }
 
             return Ok(profile);
         }
