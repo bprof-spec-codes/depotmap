@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProductService, ProductShortDto, ProductHistoryDto } from '../../../core/services/product-service';
 import { CompartmentService, CompartmentOptionDto } from '../../../core/services/compartment-service';
+import { AuthService } from '../../../core/services/auth-service';
 import { BehaviorSubject, Observable, ReplaySubject, Subject, combineLatest, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
@@ -24,6 +25,7 @@ export class ProductsListComponent implements OnInit {
   productSearch = new BehaviorSubject<string>('');
   historySearch = new BehaviorSubject<string>('');
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
+  canManageProducts = false;
 
   private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
   private productsReload = new Subject<void>();
@@ -31,7 +33,8 @@ export class ProductsListComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private router: Router,
-    private compartmentService: CompartmentService
+    private compartmentService: CompartmentService,
+    private authService: AuthService
   ) {
     this.highlightedProductId = (history.state?.highlightProductId as string | undefined) ?? null;
 
@@ -114,6 +117,9 @@ export class ProductsListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const role = this.authService.getRole();
+    this.canManageProducts = role === 'Manager' || role === 'Officer';
+
     this.compartmentService.getAll().subscribe({
       next: items => {
         this.compartmentOptions = items;
