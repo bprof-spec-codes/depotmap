@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { WarehouseApiService } from '../../../core/services/warehouse-api-service';
 import { AuthService } from '../../../core/services/auth-service';
@@ -14,6 +14,9 @@ import { WarehouseListDto, CreateWarehouseDto } from '../../../core/models/wareh
 })
 export class WarehouseListComponent {
   warehousesVm$: Observable<{ items: WarehouseListDto[]; loading: boolean; error: boolean }>;
+  visibleWarehousesVm$: Observable<{ items: WarehouseListDto[]; loading: boolean; error: boolean }>;
+
+  search = new BehaviorSubject<string>('');
 
   showCreateForm = false;
   newName = '';
@@ -39,6 +42,28 @@ export class WarehouseListComponent {
       )),
       shareReplay(1)
     );
+
+    this.visibleWarehousesVm$ = combineLatest([
+      this.warehousesVm$,
+      this.search
+    ]).pipe(
+      map(([vm, search]) => {
+        const q = search.trim().toLowerCase();
+        if (!q) {
+          return vm;
+        }
+
+        return {
+          ...vm,
+          items: vm.items.filter(w => (w.name ?? '').toLowerCase().includes(q))
+        };
+      }),
+      shareReplay(1)
+    );
+  }
+
+  onSearchChange(value: string): void {
+    this.search.next(value ?? '');
   }
 
   openWarehouse(id: string): void {

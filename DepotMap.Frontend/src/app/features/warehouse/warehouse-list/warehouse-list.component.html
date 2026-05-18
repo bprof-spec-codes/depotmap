@@ -33,15 +33,32 @@
       </div>
     </div>
 
-    <ng-container *ngIf="warehousesVm$ | async as vm">
+    <ng-container *ngIf="visibleWarehousesVm$ | async as vm">
       <div *ngIf="vm.loading" class="app-loading">Betöltés...</div>
 
       <div *ngIf="!vm.loading && vm.error" class="app-error">
         A raktárak nem töltődtek be. Ellenőrizd, hogy a backend fut-e.
       </div>
 
-      <div *ngIf="!vm.loading && !vm.error && vm.items.length === 0" class="app-empty">
+      <div class="warehouse-toolbar" *ngIf="!vm.loading && !vm.error">
+        <div class="warehouse-search-wrap">
+          <div class="warehouse-search-box">
+            <span class="warehouse-search-icon">
+              <i class="bi bi-search"></i>
+            </span>
+
+            <input type="text" class="form-control warehouse-search-input" placeholder="Keresés név alapján..."
+              [ngModel]="search | async" (ngModelChange)="onSearchChange($event)" />
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!vm.loading && !vm.error && vm.items.length === 0 && !(search | async)" class="app-empty">
         Még nincs raktár. Hozz létre egyet az „Új raktár” gombbal.
+      </div>
+
+      <div *ngIf="!vm.loading && !vm.error && vm.items.length === 0 && (search | async)" class="app-empty">
+        Nincs a keresésnek megfelelő raktár.
       </div>
 
       <div class="warehouse-grid" *ngIf="!vm.loading && !vm.error && vm.items.length">
