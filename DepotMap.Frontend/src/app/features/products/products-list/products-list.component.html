@@ -2,7 +2,7 @@
   <app-page-header title="Termékek" subtitle="A rendszerben szereplő termékek áttekintése és kezelése"
     [hasActions]="true">
     <div header-actions>
-      <a routerLink="/products/create" class="btn btn-primary"> <i class="bi bi-plus-lg me-1"></i>Új termék</a>
+      <a *ngIf="canManageProducts" routerLink="/products/create" class="btn btn-primary"> <i class="bi bi-plus-lg me-1"></i>Új termék</a>
     </div>
   </app-page-header>
   <ng-container *ngIf="visibleProductsVm$ | async as productsVm">
@@ -40,8 +40,8 @@
 
               <div class="product-actions">
                 <button class="btn btn-sm btn-outline-secondary" (click)="showHistory(p.id, p.name)">Előzmények</button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="editProduct(p)">Szerkesztés</button>
-                <button class="btn btn-sm btn-danger" (click)="deleteProduct(p.id)">Törlés</button>
+                <button *ngIf="canManageProducts" class="btn btn-sm btn-outline-secondary" (click)="editProduct(p)">Szerkesztés</button>
+                <button *ngIf="canManageProducts" class="btn btn-sm btn-danger" (click)="deleteProduct(p.id)">Törlés</button>
               </div>
             </div>
 

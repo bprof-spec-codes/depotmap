@@ -4,6 +4,7 @@ import { Observable, defer, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay, startWith } from 'rxjs/operators';
 import { ProductService, ProductDetailDto } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { AuthService } from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-product-edit',
@@ -18,6 +19,7 @@ export class ProductEditComponent implements OnInit {
   saving = false;
   loading = false;
   errorText = '';
+  canManageProducts = false;
 
   compartmentOptions: CompartmentOptionDto[] = [];
 
@@ -36,8 +38,12 @@ export class ProductEditComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private compartmentService: CompartmentService
+    private compartmentService: CompartmentService,
+    private authService: AuthService
   ) {
+    const role = this.authService.getRole();
+    this.canManageProducts = role === 'Manager' || role === 'Officer';
+
     this.compartmentsVm$ = defer(() => this.compartmentService.getAll()).pipe(
       map(items => {
         this.compartmentOptions = items;
@@ -79,8 +85,8 @@ export class ProductEditComponent implements OnInit {
         next: (product: ProductDetailDto) => {
           this.fillForm(product);
         },
-        error: () => {
-          this.errorText = 'Nem sikerült betölteni a termék adatait.';
+        error: (err) => {
+          this.errorText = this.extractErrorMessage(err, 'Nem sikerült betölteni a termék adatait.');
         }
       });
   }
@@ -167,7 +173,6 @@ export class ProductEditComponent implements OnInit {
     if (
       !this.form.sku ||
       !this.form.name ||
-      !this.form.description ||
       this.form.price === null ||
       this.form.lowStockThreshold === null
     ) {
@@ -200,9 +205,20 @@ export class ProductEditComponent implements OnInit {
           this.router.navigate(['/products'], {
             state: { highlightProductId: this.id }
           }),
-        error: () => {
-          this.errorText = 'A mentés sikertelen volt.';
+        error: (err) => {
+          this.errorText = this.extractErrorMessage(err, 'A mentés sikertelen volt.');
         }
       });
+  }
+
+  private extractErrorMessage(err: unknown, fallback: string): string {
+    const response = err as { status?: number; error?: { detail?: string } } | null;
+    if (response?.error?.detail) {
+      return response.error.detail;
+    }
+    if (response?.status === 403) {
+      return 'Nincs jogosultságod a művelet végrehajtásához!';
+    }
+    return fallback;
   }
 }

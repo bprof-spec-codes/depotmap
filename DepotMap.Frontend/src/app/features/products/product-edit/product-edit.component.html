@@ -17,7 +17,7 @@
 
         <label class="field">
           <span>Leírás</span>
-          <input type="text" name="description" [(ngModel)]="form.description" required />
+          <input type="text" name="description" [(ngModel)]="form.description" />
         </label>
 
         <div class="row-2">
@@ -82,7 +82,7 @@
         </div>
       </ng-container>
 
-      <div class="storage-actions">
+      <div class="storage-actions" *ngIf="canManageProducts">
         <button type="button" class="link-btn storage-add-btn" (click)="addStorageSelection()">
           <i class="bi bi-plus-circle me-1"></i>
           Plusz tárolóhely hozzáadása
@@ -94,7 +94,7 @@
       <div class="app-form-actions">
         <a routerLink="/products" class="btn btn-outline-secondary">Mégse</a>
 
-        <button type="submit" class="btn btn-primary" [disabled]="saving">
+        <button *ngIf="canManageProducts" type="submit" class="btn btn-primary" [disabled]="saving">
           {{ saving ? 'Mentés...' : 'Mentés' }}
         </button>
       </div>
