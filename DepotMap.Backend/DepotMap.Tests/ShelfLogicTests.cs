@@ -1,5 +1,6 @@
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Logics;
 
 namespace DepotMap.Tests
@@ -80,7 +81,7 @@ namespace DepotMap.Tests
 
             await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<ConflictException>(() =>
                 shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 0, Y = 0, Levels = 2 }));
         }
 
