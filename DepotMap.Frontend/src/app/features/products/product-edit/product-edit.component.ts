@@ -211,6 +211,19 @@ export class ProductEditComponent implements OnInit {
       });
   }
 
+  clampNonNegative(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return null;
+    }
+
+    return Math.max(0, numeric);
+  }
+
   private extractErrorMessage(err: unknown, fallback: string): string {
     const response = err as { status?: number; error?: { detail?: string } } | null;
     if (response?.error?.detail) {

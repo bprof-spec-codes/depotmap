@@ -23,13 +23,14 @@
         <div class="row-2">
           <label class="field">
             <span>Ár (Ft)</span>
-            <input type="number" name="price" [(ngModel)]="form.price" placeholder="0" required min="0" />
+            <input type="number" name="price" [(ngModel)]="form.price" (ngModelChange)="form.price = clampNonNegative($event)"
+              placeholder="0" required min="0" />
           </label>
 
           <label class="field">
             <span>Alacsony készlet küszöb</span>
-            <input type="number" name="lowStockThreshold" [(ngModel)]="form.lowStockThreshold" placeholder="0" required
-              min="0" />
+            <input type="number" name="lowStockThreshold" [(ngModel)]="form.lowStockThreshold"
+              (ngModelChange)="form.lowStockThreshold = clampNonNegative($event)" placeholder="0" required min="0" />
           </label>
         </div>
       </div>
