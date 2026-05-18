@@ -55,10 +55,10 @@ export class OrderList implements OnInit {
           result = result.filter(order => {
             const translatedStatus = this.translateStatus(order.status).toLowerCase();
             const dateDotFormat = order.timestamp ? order.timestamp.replace(/-/g, '.') : '';
-            
+
             const itemCount = order.items?.length || 0;
             const itemCountStr = `${itemCount} tétel ${itemCount}tétel`;
-            
+
             const inMain =
               order.id?.toLowerCase().includes(s) ||
               order.status?.toLowerCase().includes(s) ||
@@ -85,7 +85,7 @@ export class OrderList implements OnInit {
         result.sort((a, b) => {
           let valA: any;
           let valB: any;
-          
+
           if (sortBy === 'itemCount') {
             valA = a.items?.length || 0;
             valB = b.items?.length || 0;
@@ -98,7 +98,7 @@ export class OrderList implements OnInit {
               valB = new Date(b.timestamp).getTime();
             }
           }
-          
+
 
           if (valA == null) valA = '';
           if (valB == null) valB = '';
@@ -112,22 +112,20 @@ export class OrderList implements OnInit {
 
         return { items: result, loading: false, error: false };
       }),
-      startWith({ items: [], loading: true, error: false }) 
+      startWith({ items: [], loading: true, error: false })
     );
   }
 
   downloadRoutePdf(orderId: string): void {
-    const route = this.getRouteForOrder(orderId).map(step => ({
-      shelfCode: step.shelfCode,
-      items: step.items ?? null
-    }));
+    this.orderService.getOptimizedRouteMap(orderId).subscribe(routeMap => {
+      if (!routeMap || !routeMap.route?.length) {
+        return;
+      }
 
-    if (!route.length) {
-      return;
-    }
-
-    this.routePdfService.generate(orderId, route, 'Fő raktár');
-  } onSearch(term: string) {
+      this.routePdfService.generateWithMap(orderId, routeMap);
+    });
+  }
+  onSearch(term: string) {
     this.searchTerm$.next(term);
   }
 
@@ -136,7 +134,7 @@ export class OrderList implements OnInit {
       this.sortDirection$.next(this.sortDirection$.value === 'asc' ? 'desc' : 'asc');
     } else {
       this.sortBy$.next(column);
-      this.sortDirection$.next('desc'); 
+      this.sortDirection$.next('desc');
     }
   }
 
@@ -179,7 +177,7 @@ export class OrderList implements OnInit {
       next: () => {
         this.refresh$.next();
       },
-      error: (err) => 
+      error: (err) =>
       {
         const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
       }
@@ -202,7 +200,7 @@ export class OrderList implements OnInit {
       next: () => {
         this.refresh$.next();
       },
-      error: (err) => 
+      error: (err) =>
       {
         const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
       }

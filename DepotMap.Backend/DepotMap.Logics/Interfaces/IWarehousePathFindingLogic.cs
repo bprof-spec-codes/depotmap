@@ -11,5 +11,6 @@ namespace DepotMap.Logics.Interfaces
     public interface IWarehousePathFindingLogic
     {
         Task<List<PickingTaskDto>> GetOrderPickingRouteAsync(string orderId);
+        Task<PickingRouteMapDto> GetOrderPickingRouteMapAsync(string orderId);
     }
 }
