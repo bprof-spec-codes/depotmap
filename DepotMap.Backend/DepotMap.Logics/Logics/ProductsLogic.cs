@@ -214,7 +214,10 @@ namespace DepotMap.Logics.Logics
         }
         public async Task DeleteProductAsync(string id, string userId)
         {
-            var product = await _ctx.Products.FindAsync(id);
+            var product = await _ctx.Products
+                .Include(p => p.ProductStocks)
+                    .ThenInclude(ps => ps.Compartment)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
                 throw new NotFoundException("A termék nem található.");
@@ -242,13 +245,32 @@ namespace DepotMap.Logics.Logics
             historyEntry.Timestamp = DateTime.Now;
             historyEntry.CreatedByUserId = userId;
 
-            
+            historyEntry.Description = AppendDeleteLocation(historyEntry.Description, product);
             historyEntry.ProductId = null;
 
             _ctx.ProductHistories.Add(historyEntry);
             _ctx.Products.Remove(product);
 
             await _ctx.SaveChangesAsync();
+        }
+
+        private static string? AppendDeleteLocation(string? description, Product product)
+        {
+            var locations = (product.ProductStocks ?? new List<ProductStock>())
+                .Select(stock => stock.Compartment?.Code ?? stock.CompartmentId)
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .Distinct()
+                .ToList();
+
+            var locationText = locations.Count > 0 ? string.Join(", ", locations) : "-";
+            var suffix = $"Hely: {locationText}";
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return suffix;
+            }
+
+            return $"{description} | {suffix}";
         }
 
         private async Task SyncInitialStocksAsync(string productId, List<InitialStockDto> initialStocks)

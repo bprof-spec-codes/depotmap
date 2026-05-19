@@ -17,19 +17,24 @@ export class ProductsListComponent implements OnInit {
   visibleProductsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
   historyVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
   visibleHistory$: Observable<ProductHistoryDto[]>;
+  deletedHistoryVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
+  visibleDeletedHistory$: Observable<ProductHistoryDto[]>;
 
   compartmentOptions: CompartmentOptionDto[] = [];
 
   openedHistoryProductId: string | null = null;
   highlightedProductId: string | null = null;
   productSearch = new BehaviorSubject<string>('');
+  deletedProductSearch = new BehaviorSubject<string>('');
   historySearch = new BehaviorSubject<string>('');
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
   canManageProducts = false;
   errorText = '';
+  showDeleted = false;
 
   private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
   private productsReload = new Subject<void>();
+  private deletedHistoryReload = new Subject<void>();
 
   constructor(
     private productService: ProductService,
@@ -63,6 +68,19 @@ export class ProductsListComponent implements OnInit {
       shareReplay(1)
     );
 
+    this.deletedHistoryVm$ = this.deletedHistoryReload.pipe(
+      startWith(void 0),
+      switchMap(() =>
+        this.productService.getHistory().pipe(
+          map(items => items.filter(item => item.actionType === 'delete')),
+          map(items => ({ items, loading: false, error: false })),
+          startWith({ items: [] as ProductHistoryDto[], loading: true, error: false }),
+          catchError(() => of({ items: [] as ProductHistoryDto[], loading: false, error: true }))
+        )
+      ),
+      shareReplay(1)
+    );
+
     this.visibleProductsVm$ = combineLatest([
       this.productsVm$,
       this.productSearch
@@ -81,6 +99,25 @@ export class ProductsListComponent implements OnInit {
               .includes(q)
           )
         };
+      }),
+      shareReplay(1)
+    );
+
+    this.visibleDeletedHistory$ = combineLatest([
+      this.deletedHistoryVm$,
+      this.deletedProductSearch
+    ]).pipe(
+      map(([historyVm, search]) => {
+        const q = search.trim().toLowerCase();
+        if (!q) {
+          return historyVm.items;
+        }
+
+        return historyVm.items.filter(item =>
+          `${item.name ?? ''} ${item.sku ?? ''} ${item.description ?? ''} ${item.price ?? ''} ${item.createdByUserId ?? ''}`
+            .toLowerCase()
+            .includes(q)
+        );
       }),
       shareReplay(1)
     );
@@ -153,6 +190,10 @@ export class ProductsListComponent implements OnInit {
     this.historySearch.next(value ?? '');
   }
 
+  onDeletedProductSearchChange(value: string): void {
+    this.deletedProductSearch.next(value ?? '');
+  }
+
   onHistorySortChange(value: 'newest' | 'oldest'): void {
     this.historySort.next(value ?? 'newest');
   }
@@ -183,17 +224,51 @@ export class ProductsListComponent implements OnInit {
     this.errorText = '';
     if (!confirm('Biztosan törölni szeretnéd a terméket?')) return;
     this.productService.delete(id).subscribe({
-      next: () => this.productsReload.next(),
+      next: () => {
+        this.productsReload.next();
+        this.deletedHistoryReload.next();
+      },
       error: (err) => {
         this.errorText = this.extractErrorMessage(err, 'A törlés sikertelen volt.');
       }
     });
   }
 
+  toggleDeletedList(): void {
+    this.showDeleted = !this.showDeleted;
+    if (this.showDeleted) {
+      this.deletedHistoryReload.next();
+    }
+  }
+
   editProduct(product: ProductShortDto) {
     this.router.navigate(['/products/edit', product.id], {
       state: { product }
     });
+  }
+
+  getDeletedLocation(item: ProductHistoryDto): string {
+    const description = item.description ?? '';
+    const marker = ' | Hely: ';
+    if (description.includes(marker)) {
+      return description.split(marker)[1] || '-';
+    }
+    if (description.startsWith('Hely: ')) {
+      return description.replace('Hely: ', '').trim() || '-';
+    }
+    return '-';
+  }
+
+  getDeletedDescription(item: ProductHistoryDto): string {
+    const description = item.description ?? '';
+    const marker = ' | Hely: ';
+    if (description.includes(marker)) {
+      return description.split(marker)[0] || '-';
+    }
+    if (description.startsWith('Hely: ')) {
+      return '-';
+    }
+    return description || '-';
   }
 
   private extractErrorMessage(err: unknown, fallback: string): string {
