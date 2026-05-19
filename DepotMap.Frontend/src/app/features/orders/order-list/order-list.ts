@@ -175,11 +175,22 @@ export class OrderList implements OnInit {
     this.errorMessage = '';
     this.orderService.deleteOrder(id).subscribe({
       next: () => {
-        this.refresh$.next();
       },
       error: (err) =>
       {
-        const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
+        let msg = 'Nem sikerült törölni a rendelést.';
+        
+        if (err.error?.detail) {
+          msg = err.error.detail;
+        } else if (err.error?.message) {
+          msg = err.error.message;
+        } else if (typeof err.error === 'string') {
+          msg = err.error;
+        } else if (err.status === 403) {
+          msg = 'Nincs jogosultságod a rendelés törléséhez!';
+        }
+
+        this.errorMessage = msg;
       }
     });
   }
@@ -198,11 +209,23 @@ export class OrderList implements OnInit {
     this.errorMessage = '';
     this.orderService.updateOrderStatus(order.id, { status: nextStatus }).subscribe({
       next: () => {
-        this.refresh$.next();
       },
       error: (err) =>
       {
-        const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
+        console.error('Szerver hiba:', err); 
+
+        let msg = 'Nem sikerült a státusz frissítése.';
+        if (err.error?.detail) {
+          msg = err.error.detail; 
+        } else if (err.error?.message) {
+          msg = err.error.message;
+        } else if (typeof err.error === 'string') {
+          msg = err.error; 
+        } else if (err.status === 403) {
+          msg = 'Nincs jogosultságod a művelet végrehajtásához!';
+        }
+
+        this.errorMessage = msg;
       }
     });
   }
