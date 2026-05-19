@@ -290,6 +290,25 @@ export class MovementsComponent implements OnInit {
     return compartment?.code || compartmentId || '-';
   }
 
+  private getDeleteConfirmationText(transaction: MovementTableTransaction): string {
+    const firstItem = transaction.items[0];
+    const timestamp = this.formatTimestamp(transaction.timestamp);
+    const productCode = firstItem?.productId || '-';
+    const quantity = firstItem ? `${firstItem.quantity} db` : '-';
+
+    return `Biztosan törlöd ezt a mozgatást? (${timestamp} | ${productCode} | ${quantity})`;
+  }
+
+  private formatTimestamp(timestampValue: string): string {
+    const timestamp = new Date(timestampValue);
+
+    if (Number.isNaN(timestamp.getTime())) {
+      return timestampValue || '-';
+    }
+
+    return `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}. ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
+  }
+
   private createEmptyItem(): MovementFormItem {
     return {
       productId: '',
@@ -709,7 +728,7 @@ export class MovementsComponent implements OnInit {
       return;
     }
 
-    const shouldDelete = confirm(`Biztosan törlöd ezt a mozgatást? (${transaction.id})`);
+    const shouldDelete = confirm(this.getDeleteConfirmationText(transaction));
     if (!shouldDelete) {
       return;
     }

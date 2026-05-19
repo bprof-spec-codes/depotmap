@@ -314,15 +314,18 @@ namespace DepotMap.Logics.Logics
 
         private async Task ApplyTransferAsync(Transaction transaction)
         {
-            foreach (var item in transaction.Items)
+            foreach (var itemGroup in transaction.Items.GroupBy(item => new { item.ProductId, item.FromCompartmentId }))
             {
-                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
+                var firstItem = itemGroup.First();
+                var requiredQuantity = itemGroup.Sum(item => item.Quantity);
+
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == firstItem.ProductId);
                 var fromStock = await _context.ProductStocks
-                    .FirstOrDefaultAsync(ps => ps.CompartmentId == item.FromCompartmentId && ps.ProductId == item.ProductId);
-                var productCode = product?.SKU ?? item.ProductId;
+                    .FirstOrDefaultAsync(ps => ps.CompartmentId == firstItem.FromCompartmentId && ps.ProductId == firstItem.ProductId);
+                var productCode = product?.SKU ?? firstItem.ProductId;
                 var availableQuantity = fromStock?.Quantity ?? 0;
 
-                if (fromStock == null || fromStock.Quantity < item.Quantity)
+                if (fromStock == null || fromStock.Quantity < requiredQuantity)
                 {
                     throw new InvalidOperationException($"Nincs elegendő készlet a(z) {productCode} termékből a forrás rekeszben. Jelenleg {availableQuantity} db érhető el.");
                 }
