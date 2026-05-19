@@ -9,6 +9,7 @@ export interface GroupedStockVm {
   sku: string;
   productName: string;
   totalQuantity: number;
+  lowStockThreshold: number;
   compartments: { compartmentId: string; compartmentCode: string; quantity: number }[];
 }
 
@@ -28,11 +29,11 @@ export class ProductStockListComponent implements OnInit {
 
   constructor(private stockService: ProductStockService, private router: Router) {
     const rawData$ = this.stockService.getAllStocks().pipe(
-      map((rawStocks: ProductStockViewDto[]) => {
+      map((rawStocks: any[]) => {
         const map = new Map<string, GroupedStockVm>();
         rawStocks.forEach(s => {
           if (!map.has(s.productId)) {
-            map.set(s.productId, { productId: s.productId, sku: s.sku, productName: s.productName, totalQuantity: 0, compartments: [] });
+            map.set(s.productId, { productId: s.productId, sku: s.sku, productName: s.productName, totalQuantity: 0, lowStockThreshold: s.lowStockThreshold || 0, compartments: [] });
           }
           const group = map.get(s.productId)!;
           group.totalQuantity += s.quantity;
@@ -136,5 +137,14 @@ export class ProductStockListComponent implements OnInit {
 
   goToHistory(productId: string) {
     this.router.navigate(['/stock-movements', productId]);
+  }
+
+  getStockBadgeClass(totalQuantity: number, threshold: number): string {
+    if (totalQuantity === 0) {
+      return 'stock-total-badge-danger';
+    } else if (totalQuantity <= threshold) {
+      return 'stock-total-badge-warning';
+    }
+    return '';
   }
 }
