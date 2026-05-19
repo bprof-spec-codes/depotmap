@@ -62,6 +62,15 @@ namespace DepotMap.Logics.Logics
 
             if (dto.Items != null && dto.Items.Any())
             {
+                var duplicate = dto.Items
+                    .GroupBy(i => new { SKU = i.ProductSKU, Compartment = i.FromCompartmentCode ?? "" })
+                    .FirstOrDefault(g => g.Count() > 1);
+
+                if (duplicate != null)
+                {
+                    throw new BadRequestException($"Nem adhatod hozzá a(z) {duplicate.Key.SKU} terméket ugyanabból a rekeszből ({duplicate.Key.Compartment}) többször! Kérlek, vond össze a darabszámokat egyetlen tételbe!");
+                }
+
                 foreach (var itemDto in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
@@ -134,6 +143,15 @@ namespace DepotMap.Logics.Logics
 
             if (dto.Items != null && dto.Items.Any())
             {
+                var duplicate = dto.Items
+                    .GroupBy(i => new { SKU = i.ProductSKU, Compartment = i.FromCompartmentCode ?? "" })
+                    .FirstOrDefault(g => g.Count() > 1);
+
+                if (duplicate != null)
+                {
+                    throw new BadRequestException($"Nem adhatod hozzá a(z) {duplicate.Key.SKU} terméket ugyanabból a rekeszből ({duplicate.Key.Compartment}) többször! Kérlek, vond össze a darabszámokat egyetlen tételbe!");
+                }
+
                 foreach (var itemDto in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
