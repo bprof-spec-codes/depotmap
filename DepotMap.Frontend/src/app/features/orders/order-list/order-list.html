@@ -1,7 +1,7 @@
 <div class="app-page app-page--full">
   <app-page-header title="Kimenő rendelések" subtitle="A rendelések áttekintése, szűrése és állapotkezelése"
-    [hasActions]="true">
-    <div header-actions>
+    [hasActions]="canCreateOrder()">
+    <div header-actions *ngIf="canCreateOrder()">
       <a routerLink="/orders/create" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>
         Új rendelés
@@ -11,6 +11,10 @@
 
   <div *ngIf="errorMessage" class="app-error mb-3" style="white-space: pre-wrap;">
       {{ errorMessage }}
+    </div>
+
+  <div *ngIf="userRole === 'Operator'" class="app-error mb-3">
+      Raktárosként csak a lista nézet és a státuszfrissítés érhető el.
     </div>
 
   <app-content-card title="Rendeléslista">
