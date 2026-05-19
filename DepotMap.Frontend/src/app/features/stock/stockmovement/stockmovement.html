@@ -1,10 +1,10 @@
 <div class="app-page app-page--full" *ngIf="movementsVm$ | async as vm">
 
   <app-page-header title="Készletmozgások"
-    [subtitle]="vm.productId ? ('Szűrve erre a termékre: ' + vm.productId) : 'Az összes készletmozgás áttekintése'">
+    [subtitle]="vm.productId ? '' : 'Az összes készletmozgás áttekintése'">
   </app-page-header>
 
-  <app-content-card title="Mozgáslista">
+  <app-content-card>
     <div class="movements-toolbar">
       <div class="movements-search-wrap">
         <div class="movements-search-box">
@@ -61,11 +61,11 @@
               <td [title]="'ID: ' + mov.compartmentId">{{ mov.compartmentCode || '-' }}</td>
               <td>
                 <span class="movement-type-badge"
-                  [ngClass]="mov.movementType === 'Inbound' ? 'movement-type-badge--in' : 'movement-type-badge--out'">
-                  {{ mov.movementType }}
+                  [ngClass]="getMovementBadgeClass(mov.movementType, mov.quantityChange)">
+                  {{ translateMovementType(mov.movementType) }}
                 </span>
               </td>
-              <td [ngClass]="getMovementColor(mov.quantityChange)">
+              <td [ngClass]="getMovementColor(mov.quantityChange, mov.movementType)">
                 <strong>{{ mov.quantityChange > 0 ? '+' : '' }}{{ mov.quantityChange }} db</strong>
               </td>
               <td>

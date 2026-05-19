@@ -84,7 +84,6 @@
                     <tr *ngFor="let comp of stock.compartments">
                       <td>
                         {{ comp.compartmentCode || 'Nincs kód' }}
-                        <small class="stock-compartment-id">({{ comp.compartmentId }})</small>
                       </td>
                       <td><strong>{{ comp.quantity }} db</strong></td>
                     </tr>
