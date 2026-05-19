@@ -18,6 +18,8 @@ export class WarehouseListComponent {
 
   search = new BehaviorSubject<string>('');
 
+  actionError: string | null = null;
+
   showCreateForm = false;
   newName = '';
   newGridWidth = 5;
@@ -73,7 +75,14 @@ export class WarehouseListComponent {
   deleteWarehouse(id: string, event: Event): void {
     event.stopPropagation();
     if (!confirm('Biztosan törölni szeretnéd a raktárat?')) return;
-    this.warehouseApiService.delete(id).subscribe(() => this.refresh$.next());
+    this.actionError = null;
+    this.warehouseApiService.delete(id).subscribe({
+      next: () => this.refresh$.next(),
+      error: (err) => {
+        this.actionError = err.error?.detail
+          || (err.status === 403 ? 'Nincs jogosultságod a raktár törléséhez!' : 'A raktár törlése nem sikerült.');
+      }
+    });
   }
 
   toggleCreateForm(): void {

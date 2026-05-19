@@ -33,6 +33,10 @@
       </div>
     </div>
 
+    <div *ngIf="actionError" class="app-error warehouse-action-error">
+      {{ actionError }}
+    </div>
+
     <ng-container *ngIf="visibleWarehousesVm$ | async as vm">
       <div *ngIf="vm.loading" class="app-loading">Betöltés...</div>
 
