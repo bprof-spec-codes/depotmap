@@ -14,5 +14,6 @@ namespace DepotMap.Entities.Models.DTOs.StockMovement
         public string CompartmentCode { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public string CompartmentId { get; set; } = string.Empty;
+        public int LowStockThreshold { get; set; }
     }
 }

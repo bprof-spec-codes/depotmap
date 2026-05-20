@@ -9,6 +9,7 @@ export interface GroupedStockVm {
   sku: string;
   productName: string;
   totalQuantity: number;
+  lowStockThreshold: number;
   compartments: { compartmentId: string; compartmentCode: string; quantity: number }[];
 }
 
@@ -28,12 +29,11 @@ export class ProductStockListComponent implements OnInit {
 
   constructor(private stockService: ProductStockService, private router: Router) {
     const rawData$ = this.stockService.getAllStocks().pipe(
-      map((rawStocks: ProductStockViewDto[]) => {
-        // ... Csoportosítás logikája (változatlan) ...
+      map((rawStocks: any[]) => {
         const map = new Map<string, GroupedStockVm>();
         rawStocks.forEach(s => {
           if (!map.has(s.productId)) {
-            map.set(s.productId, { productId: s.productId, sku: s.sku, productName: s.productName, totalQuantity: 0, compartments: [] });
+            map.set(s.productId, { productId: s.productId, sku: s.sku, productName: s.productName, totalQuantity: 0, lowStockThreshold: s.lowStockThreshold || 0, compartments: [] });
           }
           const group = map.get(s.productId)!;
           group.totalQuantity += s.quantity;
@@ -41,32 +41,43 @@ export class ProductStockListComponent implements OnInit {
         });
         return Array.from(map.values());
       }),
-      catchError(() => of(null)) // Ha hiba van, null-t adunk tovább
+      catchError(() => of(null)) 
     );
 
-    // 2. Összekötjük a csoportosított adatokat a keresővel és a rendezővel
     this.stocksVm$ = combineLatest([
       rawData$,
-      this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()), // Késleltetett keresés
+      this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()), 
       this.sortBy$,
       this.sortDirection$
     ]).pipe(
       map(([groupedData, search, sortBy, sortDirection]) => {
-        if (!groupedData) return { items: [], loading: false, error: true }; // Backend hiba esetén
+        if (!groupedData) return { items: [], loading: false, error: true }; 
 
         let result = [...groupedData];
 
-        // --- KERESÉS ---
         if (search) {
           const s = search.toLowerCase();
-          result = result.filter(item => 
-            item.productName.toLowerCase().includes(s) || // Keresés Névben
-            item.sku.toLowerCase().includes(s) ||         // Keresés Cikkszámban
-            item.compartments.some(c => c.compartmentCode?.toLowerCase().includes(s)) // Keresés a Rekesz kódok között!
-          );
-        }
+          result = result.filter(item => {
+            const totalQtyStr = `${item.totalQuantity} db ${item.totalQuantity}db`;
 
-        // --- RENDEZÉS ---
+            const inMain =
+              item.productName.toLowerCase().includes(s) || 
+              item.sku.toLowerCase().includes(s) ||         
+              item.compartments.some(c => c.compartmentCode?.toLowerCase().includes(s)) ||
+              totalQtyStr.includes(s);
+            
+              const inCompartments = item.compartments.some(c => {
+              const compQtyStr = `${c.quantity} db ${c.quantity}db`;
+              
+              return c.compartmentCode?.toLowerCase().includes(s) ||
+                     c.quantity.toString().includes(s) ||
+                     compQtyStr.includes(s);
+              
+          });
+          return inMain || inCompartments;
+        });
+      }
+
         result.sort((a, b) => {
           let valA: any, valB: any;
 
@@ -100,10 +111,8 @@ export class ProductStockListComponent implements OnInit {
 
   onSortChange(column: 'productName' | 'sku' | 'totalQuantity') {
     if (this.sortBy$.value === column) {
-      // Ha ugyanarra kattintunk, megfordítjuk az irányt
       this.sortDirection$.next(this.sortDirection$.value === 'asc' ? 'desc' : 'asc');
     } else {
-      // Ha újra kattintunk, alapértelmezetten növekvő
       this.sortBy$.next(column);
       this.sortDirection$.next('asc');
     }
@@ -114,7 +123,6 @@ export class ProductStockListComponent implements OnInit {
     return this.sortDirection$.value === 'asc' ? '↑' : '↓';
   }
 
-  // --- ÚJ RÉSZ: Lenyitó/Csukó függvények ---
   toggleStockDetails(productId: string): void {
     if (this.expandedStockIds.has(productId)) {
       this.expandedStockIds.delete(productId);
@@ -129,5 +137,14 @@ export class ProductStockListComponent implements OnInit {
 
   goToHistory(productId: string) {
     this.router.navigate(['/stock-movements', productId]);
+  }
+
+  getStockBadgeClass(totalQuantity: number, threshold: number): string {
+    if (totalQuantity === 0) {
+      return 'stock-total-badge-danger';
+    } else if (totalQuantity <= threshold) {
+      return 'stock-total-badge-warning';
+    }
+    return '';
   }
 }

@@ -4,8 +4,9 @@ import { OrderService, OrderViewDto, PickingTaskDto } from '../../../core/servic
 import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { RoutePdfService, RouteStep } from '../../../core/services/warehouse-route-pdf-service';
+import { AuthService } from '../../../core/services/auth-service';
 
-export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName';
+export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName' | 'itemCount';
 
 @Component({
   selector: 'app-order-list',
@@ -25,10 +26,14 @@ export class OrderList implements OnInit {
   routeErrorByOrderId: Record<string, string> = {};
   routeLoadingOrderId: string | null = null;
   routeLoadedOrderIds = new Set<string>();
+  errorMessage = '';
+  userRole: string | null = null;
 
-  constructor(private orderService: OrderService, private router: Router, private routePdfService: RoutePdfService) { }
+  constructor(private orderService: OrderService, private router: Router, private routePdfService: RoutePdfService, private authService: AuthService) { }
 
   ngOnInit(): void {
+    this.userRole = this.authService.getRole();
+
     const rawData$ = this.refresh$.pipe(
       switchMap(() => this.orderService.loadAllOrders()),
       catchError((err) => {
@@ -38,7 +43,6 @@ export class OrderList implements OnInit {
       shareReplay(1)
     );
 
-    // 2. Keresés és Rendezés összekötése a memóriában
     this.ordersVm$ = combineLatest([
       rawData$,
       this.searchTerm$.pipe(debounceTime(300), distinctUntilChanged()),
@@ -50,40 +54,55 @@ export class OrderList implements OnInit {
 
         let result = [...rawItems];
 
-        // --- KERESÉS ---
         if (search) {
           const s = search.toLowerCase();
           result = result.filter(order => {
-            // A. Fő rendelés adatokban keresés
+            const translatedStatus = this.translateStatus(order.status).toLowerCase();
+            const dateDotFormat = order.timestamp ? order.timestamp.replace(/-/g, '.') : '';
+
+            const itemCount = order.items?.length || 0;
+            const itemCountStr = `${itemCount} tétel ${itemCount}tétel`;
+
             const inMain =
               order.id?.toLowerCase().includes(s) ||
               order.status?.toLowerCase().includes(s) ||
+              translatedStatus.includes(s) ||
               order.userIdentifier?.toLowerCase().includes(s) ||
               order.userName?.toLowerCase().includes(s) ||
-              order.timestamp?.includes(s);
+              order.timestamp?.toLowerCase().includes(s) ||
+              dateDotFormat.toLowerCase().includes(s) ||
+              itemCount.toString().includes(s) ||
+              itemCountStr.includes(s);
 
-            // B. A rendelés BELSŐ TÉTELEIBEN (cikkszám, kód) való keresés!
             const inItems = order.items?.some(item =>
-              item.productSKU?.toLowerCase().includes(s) ||
+            {
+              const qtyStr = `${item.quantity} db ${item.quantity}db`;
+              return item.productSKU?.toLowerCase().includes(s) ||
               item.fromCompartmentCode?.toLowerCase().includes(s) ||
-              item.quantity.toString().includes(s)
-            );
-
-            // Ha bármelyikben benne van, a rendelés megjelenik!
+              item.quantity.toString().includes(s) ||
+              qtyStr.includes(s);
+            });
             return inMain || inItems;
           });
         }
 
-        // --- RENDEZÉS ---
         result.sort((a, b) => {
-          let valA: any = a[sortBy];
-          let valB: any = b[sortBy];
+          let valA: any;
+          let valB: any;
 
-          // Dátumok összehasonlítása
-          if (sortBy === 'timestamp') {
-            valA = new Date(a.timestamp).getTime();
-            valB = new Date(b.timestamp).getTime();
+          if (sortBy === 'itemCount') {
+            valA = a.items?.length || 0;
+            valB = b.items?.length || 0;
           }
+          else {
+            valA = (a as any)[sortBy];
+            valB = (b as any)[sortBy];
+            if (sortBy === 'timestamp') {
+              valA = new Date(a.timestamp).getTime();
+              valB = new Date(b.timestamp).getTime();
+            }
+          }
+
 
           if (valA == null) valA = '';
           if (valB == null) valB = '';
@@ -97,22 +116,44 @@ export class OrderList implements OnInit {
 
         return { items: result, loading: false, error: false };
       }),
-      startWith({ items: [], loading: true, error: false }) // Betöltés alatti állapot
+      startWith({ items: [], loading: true, error: false })
     );
   }
 
-  downloadRoutePdf(orderId: string): void {
-    const route = this.getRouteForOrder(orderId).map(step => ({
-      shelfCode: step.shelfCode,
-      items: step.items ?? null
-    }));
+  canCreateOrder(): boolean {
+    return this.userRole === 'Manager' || this.userRole === 'Officer';
+  }
 
-    if (!route.length) {
-      return;
+  canEdit(status: string): boolean {
+    if (this.userRole !== 'Manager' && this.userRole !== 'Officer') return false;
+    return status === 'Planning' || status === 'Processing';
+  }
+
+  canDelete(status: string): boolean {
+    if (this.userRole !== 'Manager' && this.userRole !== 'Officer') return false;
+    return status === 'Planning';
+  }
+
+  canAdvanceStatus(status: string): boolean {
+    if (status === 'Closed') return false;
+    
+    if (this.userRole === 'Operator') {
+      return status === 'Processing';
     }
+    
+    return status === 'Planning' || status === 'Processing';
+  }
 
-    this.routePdfService.generate(orderId, route, 'Fő raktár');
-  } onSearch(term: string) {
+  downloadRoutePdf(orderId: string): void {
+    this.orderService.getOptimizedRouteMap(orderId).subscribe(routeMap => {
+      if (!routeMap || !routeMap.route?.length) {
+        return;
+      }
+
+      this.routePdfService.generateWithMap(orderId, routeMap);
+    });
+  }
+  onSearch(term: string) {
     this.searchTerm$.next(term);
   }
 
@@ -121,21 +162,13 @@ export class OrderList implements OnInit {
       this.sortDirection$.next(this.sortDirection$.value === 'asc' ? 'desc' : 'asc');
     } else {
       this.sortBy$.next(column);
-      this.sortDirection$.next('desc'); // Új oszlopnál legyen csökkenő a kezdő (pl legújabb, vagy Z-A)
+      this.sortDirection$.next('desc');
     }
   }
 
   getSortIcon(column: OrderSortColumn): string {
     if (this.sortBy$.value !== column) return '↕';
     return this.sortDirection$.value === 'asc' ? '↑' : '↓';
-  }
-
-  canEdit(status: string): boolean {
-    return status === 'Planning' || status === 'Processing';
-  }
-
-  canDelete(status: string): boolean {
-    return status === 'Planning';
   }
 
   toggleOrderDetails(orderId: string): void {
@@ -159,12 +192,27 @@ export class OrderList implements OnInit {
   deleteOrder(id: string) {
     if (!confirm('Biztosan törölni szeretnéd a rendelést? Ezt nem lehet visszavonni!')) return;
 
+    this.errorMessage = '';
     this.orderService.deleteOrder(id).subscribe({
       next: () => {
-        console.log(`Order ${id} deleted.`);
         this.refresh$.next();
       },
-      error: (err) => alert('Nem sikerült törölni a rendelést.')
+      error: (err) =>
+      {
+        let msg = 'Nem sikerült törölni a rendelést.';
+
+        if (err.error?.detail) {
+          msg = err.error.detail;
+        } else if (err.error?.message) {
+          msg = err.error.message;
+        } else if (typeof err.error === 'string') {
+          msg = err.error;
+        } else if (err.status === 403) {
+          msg = 'Nincs jogosultságod a rendelés törléséhez!';
+        }
+
+        this.errorMessage = msg;
+      }
     });
   }
 
@@ -179,12 +227,28 @@ export class OrderList implements OnInit {
       if (!confirm('Biztosan lezárod a rendelést? Ezzel fizikailag levonjuk a termékeket a polcról!')) return;
     }
 
+    this.errorMessage = '';
     this.orderService.updateOrderStatus(order.id, { status: nextStatus }).subscribe({
       next: () => {
-        console.log(`Order ${order.id} advanced to ${nextStatus}.`);
         this.refresh$.next();
       },
-      error: (err) => alert('Nem sikerült a státusz frissítése.')
+      error: (err) =>
+      {
+        console.error('Szerver hiba:', err); 
+
+        let msg = 'Nem sikerült a státusz frissítése.';
+        if (err.error?.detail) {
+          msg = err.error.detail; 
+        } else if (err.error?.message) {
+          msg = err.error.message;
+        } else if (typeof err.error === 'string') {
+          msg = err.error; 
+        } else if (err.status === 403) {
+          msg = 'Nincs jogosultságod a művelet végrehajtásához!';
+        }
+
+        this.errorMessage = msg;
+      }
     });
   }
 

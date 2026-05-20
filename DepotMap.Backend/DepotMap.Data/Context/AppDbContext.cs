@@ -57,6 +57,7 @@ namespace DepotMap.Data.Context
             {
                 e.HasKey(x => x.Id);
                 e.HasIndex(x => new { x.WarehouseId, x.Code }).IsUnique();
+                e.HasIndex(x => x.WarehouseCellId).IsUnique();
                 e.HasOne(x => x.Warehouse)
                  .WithMany()
                  .HasForeignKey(x => x.WarehouseId)

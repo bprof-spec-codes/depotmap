@@ -1,0 +1,42 @@
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text);
+  margin-top: 0;
+}
+
+p {
+  margin-top: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

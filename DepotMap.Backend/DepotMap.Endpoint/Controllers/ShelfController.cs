@@ -7,7 +7,7 @@ namespace DepotMap.Endpoint.Controllers
 {
     [ApiController]
     [Route("api/cells/{cellId}/shelves")]
-    // [Authorize]
+    [Authorize]
     public class ShelfController : ControllerBase
     {
         private readonly IShelfLogic _shelfLogic;
@@ -18,6 +18,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<ActionResult<List<ShelfListDto>>> GetAll(string cellId)
         {
             var shelves = await _shelfLogic.GetShelvesByCellIdAsync(cellId);
@@ -25,6 +26,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{shelfId}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<ActionResult<ShelfDetailDto>> GetDetail(string cellId, string shelfId)
         {
             var shelf = await _shelfLogic.GetShelfDetailAsync(shelfId);
@@ -35,6 +37,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<ShelfListDto>> Create(string cellId, [FromBody] CreateShelfDto dto)
         {
             var shelf = await _shelfLogic.CreateShelfAsync(cellId, dto);
@@ -42,6 +45,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("{shelfId}")]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<ShelfListDto>> Update(string cellId, string shelfId, [FromBody] UpdateShelfDto dto)
         {
             var shelf = await _shelfLogic.UpdateShelfAsync(shelfId, dto);
@@ -52,6 +56,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpDelete("{shelfId}")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Delete(string cellId, string shelfId)
         {
             var result = await _shelfLogic.DeleteShelfAsync(shelfId);
@@ -62,6 +67,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPost("/api/shelves/{shelfId}/levels/{levelIndex}/compartments")]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<ShelfDetailDto>> AddCompartment(string shelfId, int levelIndex)
         {
             var shelf = await _shelfLogic.AddCompartmentToLevelAsync(shelfId, levelIndex);
@@ -72,6 +78,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpDelete("/api/shelves/{shelfId}/levels/{levelIndex}/compartments")]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<ShelfDetailDto>> RemoveCompartment(string shelfId, int levelIndex)
         {
             var shelf = await _shelfLogic.RemoveCompartmentFromLevelAsync(shelfId, levelIndex);

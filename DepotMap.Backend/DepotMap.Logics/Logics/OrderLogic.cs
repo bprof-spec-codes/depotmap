@@ -10,6 +10,7 @@ using DepotMap.Entities.Models.DTOs.StockMovement;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using DepotMap.Logics.Helpers;
 
 namespace DepotMap.Logics.Logics
 {
@@ -61,18 +62,27 @@ namespace DepotMap.Logics.Logics
 
             if (dto.Items != null && dto.Items.Any())
             {
+                var duplicate = dto.Items
+                    .GroupBy(i => new { SKU = i.ProductSKU, Compartment = i.FromCompartmentCode ?? "" })
+                    .FirstOrDefault(g => g.Count() > 1);
+
+                if (duplicate != null)
+                {
+                    throw new BadRequestException($"Nem adhatod hozzá a(z) {duplicate.Key.SKU} terméket ugyanabból a rekeszből ({duplicate.Key.Compartment}) többször! Kérlek, vond össze a darabszámokat egyetlen tételbe!");
+                }
+
                 foreach (var itemDto in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
                     if (product == null)
-                        throw new InvalidOperationException($"Nem található termék a következő cikkszámmal: {itemDto.ProductSKU}");
+                        throw new NotFoundException($"Nem található termék a következő cikkszámmal: {itemDto.ProductSKU}");
 
                     string? compartmentId = null;
                     if (!string.IsNullOrWhiteSpace(itemDto.FromCompartmentCode))
                     {
                         var comp = await _context.Compartments.FirstOrDefaultAsync(c => c.Code == itemDto.FromCompartmentCode);
                         if (comp == null)
-                            throw new InvalidOperationException($"Nem található rekesz a következő kóddal: {itemDto.FromCompartmentCode}");
+                            throw new NotFoundException($"Nem található rekesz a következő kóddal: {itemDto.FromCompartmentCode}");
                         compartmentId = comp.Id;
                     }
 
@@ -81,12 +91,8 @@ namespace DepotMap.Logics.Logics
 
                     if (stock == null)
                     {
-                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})!");
-                    }
-
-                    if (stock.Quantity < itemDto.Quantity)
-                    {
-                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                        throw new NotFoundException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})! " +
+                            $"Adja hozzá a {itemDto.ProductSKU} termékhez a {itemDto.FromCompartmentCode} rekeszt a Termékek oldalon ");
                     }
 
                     newItems.Add(new TransactionItem
@@ -126,25 +132,34 @@ namespace DepotMap.Logics.Logics
 
             if (order.Status == "Closed")
             {
-                throw new InvalidOperationException("Lezárt rendelés tételei már nem módosíthatók!");
+                throw new BadRequestException("Lezárt rendelés tételei már nem módosíthatók!");
             }
 
             var newItems = new List<TransactionItem>();
 
             if (dto.Items != null && dto.Items.Any())
             {
+                var duplicate = dto.Items
+                    .GroupBy(i => new { SKU = i.ProductSKU, Compartment = i.FromCompartmentCode ?? "" })
+                    .FirstOrDefault(g => g.Count() > 1);
+
+                if (duplicate != null)
+                {
+                    throw new BadRequestException($"Nem adhatod hozzá a(z) {duplicate.Key.SKU} terméket ugyanabból a rekeszből ({duplicate.Key.Compartment}) többször! Kérlek, vond össze a darabszámokat egyetlen tételbe!");
+                }
+
                 foreach (var itemDto in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
                     if (product == null)
-                        throw new InvalidOperationException($"Nem található termék a következő cikkszámmal: {itemDto.ProductSKU}");
+                        throw new NotFoundException($"Nem található termék a következő cikkszámmal: {itemDto.ProductSKU}");
 
                     string? compartmentId = null;
                     if (!string.IsNullOrWhiteSpace(itemDto.FromCompartmentCode))
                     {
                         var comp = await _context.Compartments.FirstOrDefaultAsync(c => c.Code == itemDto.FromCompartmentCode);
                         if (comp == null)
-                            throw new InvalidOperationException($"Nem található rekesz a következő kóddal: {itemDto.FromCompartmentCode}");
+                            throw new NotFoundException($"Nem található rekesz a következő kóddal: {itemDto.FromCompartmentCode}");
                         compartmentId = comp.Id;
                     }
 
@@ -153,12 +168,8 @@ namespace DepotMap.Logics.Logics
 
                     if (stock == null)
                     {
-                        throw new InvalidOperationException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})!");
-                    }
-
-                    if (stock.Quantity < itemDto.Quantity)
-                    {
-                        throw new InvalidOperationException($"Nincs elég készlet a(z) {itemDto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                        throw new NotFoundException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})! " +
+                                                    $"Adja hozzá a {itemDto.ProductSKU} termékhez a {itemDto.FromCompartmentCode} rekeszt a Termékek oldalon ");
                     }
 
                     newItems.Add(new TransactionItem
@@ -192,6 +203,9 @@ namespace DepotMap.Logics.Logics
         {
             var order = await _context.Transactions
                 .Include(t => t.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(t => t.Items)
+                    .ThenInclude(i => i.FromCompartment)
                 .Include(t => t.CreatedBy)
                 .FirstOrDefaultAsync(t => t.Id == id && t.Type == "Outbound");
 
@@ -206,28 +220,60 @@ namespace DepotMap.Logics.Logics
             {
                 if (!(currentStatus == "Processing" && newStatus == "Closed"))
                 {
-                    throw new UnauthorizedAccessException("Raktárosként csak folyamatban lévő rendelést zárhat le!");
+                    throw new ForbiddenException("Raktárosként csak folyamatban lévő rendelést zárhat le!");
                 }
             }
 
             if (currentStatus == "Planning" && newStatus != "Processing")
             {
-                throw new InvalidOperationException("Egy 'Planning' (Tervezés) állapotú rendelést először 'Processing' (Összekészítés) állapotba kell léptetni!");
+                throw new BadRequestException("Egy 'Planning' (Tervezés) állapotú rendelést először 'Processing' (Összekészítés) állapotba kell léptetni!");
             }
 
             if (currentStatus == "Processing" && newStatus != "Closed")
             {
-                throw new InvalidOperationException("Egy 'Processing' (Összekészítés) állapotú rendelést csak 'Closed' (Lezárva) állapotba lehet tenni!");
+                throw new BadRequestException("Egy 'Processing' (Összekészítés) állapotú rendelést csak 'Closed' (Lezárva) állapotba lehet tenni!");
             }
 
             if (currentStatus == "Closed")
             {
-                throw new InvalidOperationException("Egy már lezárt ('Closed') rendelés állapota utólag nem módosítható!");
+                throw new BadRequestException("Egy már lezárt ('Closed') rendelés állapota utólag nem módosítható!");
             }
 
             if ((newStatus == "Processing" || newStatus == "Closed") && !order.Items.Any())
             {
-                throw new InvalidOperationException("Egy rendelést nem lehet elindítani vagy lezárni úgy, hogy nincsenek benne tételek!");
+                throw new BadRequestException("Egy rendelést nem lehet elindítani vagy lezárni úgy, hogy nincsenek benne tételek!");
+            }
+            
+            if (currentStatus == "Planning" && newStatus == "Processing")
+            {
+                var errors = new List<string>();
+
+                foreach (var item in order.Items)
+                {
+                    var stock = await _context.ProductStocks
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == item.FromCompartmentId && ps.ProductId == item.ProductId);
+
+                    int availableQty = stock?.Quantity ?? 0;
+                    
+                    if (availableQty < item.Quantity)
+                    {
+                        string productSku = item.Product?.SKU ?? "Ismeretlen termék";
+                        string compCode = item.FromCompartment?.Code ?? "Ismeretlen rekesz";
+                        errors.Add($"• {productSku} termék a(z) {compCode} rekeszben (Kért: {item.Quantity} db, Elérhető: {availableQty} db)");
+                    }
+                    
+                }
+
+                if (errors.Any())
+                {
+                    var errorSb = new StringBuilder();
+                    errorSb.AppendLine("A rendelés nem indítható el összekészítésre, mert a következő tételeknél nincs elegendő készlet a rekeszben:");
+                    foreach (var error in errors)
+                    {
+                        errorSb.AppendLine(error);
+                    }
+                    throw new BadRequestException(errorSb.ToString());
+                }
             }
 
             if (newStatus == "Closed")
@@ -239,7 +285,7 @@ namespace DepotMap.Logics.Logics
 
                     if (stock == null || stock.Quantity < item.Quantity)
                     {
-                        throw new InvalidOperationException($"Nincs elegendő készlet a(z) {item.ProductId} azonosítójú termékből a kiválasztott rekeszben! A lezárás megszakítva.");
+                        throw new BadRequestException($"Nincs elegendő készlet a(z) {item.ProductId} azonosítójú termékből a kiválasztott rekeszben! A lezárás megszakítva.");
                     }
 
                     stock.Quantity -= item.Quantity;
@@ -277,7 +323,7 @@ namespace DepotMap.Logics.Logics
 
             if (order.Status != "Planning")
             {
-                throw new InvalidOperationException("Szigorúan tilos törölni egy olyan rendelést, ami már feldolgozás alatt van vagy le lett zárva. Csak 'Planning' állapotú rendelések törölhetők!");
+                throw new BadRequestException("Szigorúan tilos törölni egy olyan rendelést, ami már feldolgozás alatt van vagy le lett zárva. Csak 'Planning' állapotú rendelések törölhetők!");
             }
 
             _context.Transactions.Remove(order);

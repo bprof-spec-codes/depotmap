@@ -4,6 +4,7 @@ import { Observable, defer, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay, startWith } from 'rxjs/operators';
 import { ProductService } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { AuthService } from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-product-create',
@@ -27,17 +28,47 @@ export class ProductCreateComponent {
 
   saving = false;
   errorText = '';
+  canManageProducts = false;
 
   constructor(
     private productService: ProductService,
     private compartmentService: CompartmentService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
+    const role = this.authService.getRole();
+    this.canManageProducts = role === 'Manager' || role === 'Officer';
+
     this.compartmentsVm$ = defer(() => this.compartmentService.getAll()).pipe(
       map(items => ({ items, loading: false, error: false })),
       startWith({ items: [] as CompartmentOptionDto[], loading: true, error: false }),
       catchError(() => of({ items: [] as CompartmentOptionDto[], loading: false, error: true })),
       shareReplay(1)
+    );
+  }
+
+  onSkuChange(value: string): void {
+    this.form.sku = value ?? '';
+    this.pruneInvalidSelections();
+  }
+
+  getAvailableCompartments(compartments: CompartmentOptionDto[]): CompartmentOptionDto[] {
+    return compartments.filter(compartment => this.isCompartmentAllowed(compartment));
+  }
+
+  isCompartmentAllowed(compartment: CompartmentOptionDto): boolean {
+    const existingStocks = (compartment.productStocks ?? [])
+      .filter(stock => (stock.productId ?? '').trim().length > 0);
+    return existingStocks.length === 0;
+  }
+
+  private pruneInvalidSelections(): void {
+    if (this.primaryStorageSelection && !this.isCompartmentAllowed(this.primaryStorageSelection)) {
+      this.primaryStorageSelection = null;
+    }
+
+    this.secondaryStorageSelections = this.secondaryStorageSelections.map(selection =>
+      selection && this.isCompartmentAllowed(selection) ? selection : null
     );
   }
 
@@ -70,7 +101,7 @@ export class ProductCreateComponent {
   create(): void {
     this.errorText = '';
 
-    if (!this.form.sku || !this.form.name || !this.form.description || this.form.price === null || this.form.lowStockThreshold === null) {
+    if (!this.form.sku || !this.form.name || this.form.price === null || this.form.lowStockThreshold === null) {
       this.errorText = 'Minden kötelező mezőt tölts ki.';
       return;
     }
@@ -98,9 +129,33 @@ export class ProductCreateComponent {
         next: () => {
           this.router.navigate(['/products']);
         },
-        error: () => {
-          this.errorText = 'A létrehozás sikertelen volt.';
+        error: (err) => {
+          this.errorText = this.extractErrorMessage(err, 'A létrehozás sikertelen volt.');
         }
       });
+  }
+
+  clampNonNegative(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return null;
+    }
+
+    return Math.max(0, numeric);
+  }
+
+  private extractErrorMessage(err: unknown, fallback: string): string {
+    const response = err as { status?: number; error?: { detail?: string } } | null;
+    if (response?.error?.detail) {
+      return response.error.detail;
+    }
+    if (response?.status === 403) {
+      return 'Nincs jogosultságod a művelet végrehajtásához!';
+    }
+    return fallback;
   }
 }

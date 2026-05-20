@@ -76,7 +76,8 @@ namespace DepotMap.Logics
             CreateMap<ProductStock, ProductStockViewDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
                 .ForMember(dest => dest.SKU, opt => opt.MapFrom(src => src.Product.SKU))
-                .ForMember(dest => dest.CompartmentCode, opt => opt.MapFrom(src => src.Compartment.Code));
+                .ForMember(dest => dest.CompartmentCode, opt => opt.MapFrom(src => src.Compartment.Code))
+                .ForMember(dest => dest.LowStockThreshold, opt => opt.MapFrom(src => src.Product.LowStockThreshold));
         }
     }
 }

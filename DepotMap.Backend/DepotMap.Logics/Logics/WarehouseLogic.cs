@@ -1,6 +1,7 @@
 using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -113,6 +114,31 @@ namespace DepotMap.Logics.Logics
         {
             var warehouse = await _context.Warehouses.FindAsync(id);
             if (warehouse == null) return false;
+
+            // A StockMovement / TransactionItem FK-k Restrict-ek, ezért a teljes
+            // Warehouse→Cell→Shelf→Compartment cascade SQL szinten elhasalna, ha
+            // mozgás vagy tranzakció hivatkozik a raktár bármely rekeszére.
+            var compartmentIds = await _context.Compartments
+                .Where(c => c.Shelf.WarehouseId == id)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            if (compartmentIds.Count > 0)
+            {
+                var hasStockMovement = await _context.StockMovements
+                    .AnyAsync(sm => compartmentIds.Contains(sm.CompartmentId));
+
+                var hasTransactionItem = await _context.TransactionItems
+                    .AnyAsync(ti =>
+                        (ti.FromCompartmentId != null && compartmentIds.Contains(ti.FromCompartmentId)) ||
+                        (ti.ToCompartmentId != null && compartmentIds.Contains(ti.ToCompartmentId)));
+
+                if (hasStockMovement || hasTransactionItem)
+                {
+                    throw new ConflictException(
+                        "A raktár nem törölhető, mert már kapcsolódik hozzá készletmozgás vagy tranzakció.");
+                }
+            }
 
             _context.Warehouses.Remove(warehouse);
             await _context.SaveChangesAsync();

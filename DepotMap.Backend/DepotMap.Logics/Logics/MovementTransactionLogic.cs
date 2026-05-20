@@ -165,7 +165,7 @@ namespace DepotMap.Logics.Logics
             return _mapper.Map<MovementTransactionViewDto>(transaction);
         }
 
-        public async Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto)
+        public async Task<MovementTransactionViewDto?> UpdateAsync(string id, UpdateMovementTransactionDto dto, string userRole)
         {
             var transaction = await _context.Transactions
                 .Include(t => t.Items)
@@ -180,6 +180,19 @@ namespace DepotMap.Logics.Logics
             if (transaction.Status == "Closed")
             {
                 throw new InvalidOperationException("Lezárt mozgatás nem szerkeszthető.");
+            }
+
+            if (userRole == "Operator")
+            {
+                if (dto.Items != null)
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak a mozgatás státuszát zárhatod le.");
+                }
+
+                if (!(transaction.Status == "Active" && dto.Status == "Closed"))
+                {
+                    throw new UnauthorizedAccessException("Raktárosként csak összekészített mozgatást zárhatsz le.");
+                }
             }
 
             if (dto.Items == null && string.IsNullOrWhiteSpace(dto.Status))
@@ -301,14 +314,20 @@ namespace DepotMap.Logics.Logics
 
         private async Task ApplyTransferAsync(Transaction transaction)
         {
-            foreach (var item in transaction.Items)
+            foreach (var itemGroup in transaction.Items.GroupBy(item => new { item.ProductId, item.FromCompartmentId }))
             {
-                var fromStock = await _context.ProductStocks
-                    .FirstOrDefaultAsync(ps => ps.CompartmentId == item.FromCompartmentId && ps.ProductId == item.ProductId);
+                var firstItem = itemGroup.First();
+                var requiredQuantity = itemGroup.Sum(item => item.Quantity);
 
-                if (fromStock == null || fromStock.Quantity < item.Quantity)
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == firstItem.ProductId);
+                var fromStock = await _context.ProductStocks
+                    .FirstOrDefaultAsync(ps => ps.CompartmentId == firstItem.FromCompartmentId && ps.ProductId == firstItem.ProductId);
+                var productCode = product?.SKU ?? firstItem.ProductId;
+                var availableQuantity = fromStock?.Quantity ?? 0;
+
+                if (fromStock == null || fromStock.Quantity < requiredQuantity)
                 {
-                    throw new InvalidOperationException($"Nincs elegendő készlet a(z) {item.ProductId} termékből a forrás rekeszben.");
+                    throw new InvalidOperationException($"Nincs elegendő készlet a(z) {productCode} termékből a forrás rekeszben. Jelenleg {availableQuantity} db érhető el.");
                 }
             }
 

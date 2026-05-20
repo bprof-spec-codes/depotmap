@@ -2,6 +2,7 @@
 using DepotMap.Logics.Logics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DepotMap.Endpoint.Controllers
 {
@@ -53,7 +54,7 @@ namespace DepotMap.Endpoint.Controllers
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> UpdateProduct(string id, [FromBody] CreateProductDto dto)
         {
-            var userId = "seed-admin-001"; // User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
             await _productsLogic.UpdateProductAsync(id, dto, userId);
             return Ok("Product updated successfully.");
@@ -62,7 +63,7 @@ namespace DepotMap.Endpoint.Controllers
         [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> DeleteProduct(string id)
         {
-            var userId = "seed-admin-001"; //User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
             await _productsLogic.DeleteProductAsync(id, userId);
             return Ok("Product deleted successfully.");

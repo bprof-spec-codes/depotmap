@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProductService, ProductShortDto, ProductHistoryDto } from '../../../core/services/product-service';
 import { CompartmentService, CompartmentOptionDto } from '../../../core/services/compartment-service';
+import { AuthService } from '../../../core/services/auth-service';
 import { BehaviorSubject, Observable, ReplaySubject, Subject, combineLatest, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
@@ -16,22 +17,30 @@ export class ProductsListComponent implements OnInit {
   visibleProductsVm$: Observable<{ items: ProductShortDto[]; loading: boolean; error: boolean }>;
   historyVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
   visibleHistory$: Observable<ProductHistoryDto[]>;
+  deletedHistoryVm$: Observable<{ items: ProductHistoryDto[]; loading: boolean; error: boolean }>;
+  visibleDeletedHistory$: Observable<ProductHistoryDto[]>;
 
   compartmentOptions: CompartmentOptionDto[] = [];
 
   openedHistoryProductId: string | null = null;
   highlightedProductId: string | null = null;
   productSearch = new BehaviorSubject<string>('');
+  deletedProductSearch = new BehaviorSubject<string>('');
   historySearch = new BehaviorSubject<string>('');
   historySort = new BehaviorSubject<'newest' | 'oldest'>('newest');
+  canManageProducts = false;
+  errorText = '';
+  showDeleted = false;
 
   private historyRequest = new ReplaySubject<{ id: string; name: string }>(1);
   private productsReload = new Subject<void>();
+  private deletedHistoryReload = new Subject<void>();
 
   constructor(
     private productService: ProductService,
     private router: Router,
-    private compartmentService: CompartmentService
+    private compartmentService: CompartmentService,
+    private authService: AuthService
   ) {
     this.highlightedProductId = (history.state?.highlightProductId as string | undefined) ?? null;
 
@@ -59,6 +68,19 @@ export class ProductsListComponent implements OnInit {
       shareReplay(1)
     );
 
+    this.deletedHistoryVm$ = this.deletedHistoryReload.pipe(
+      startWith(void 0),
+      switchMap(() =>
+        this.productService.getHistory().pipe(
+          map(items => items.filter(item => item.actionType === 'delete')),
+          map(items => ({ items, loading: false, error: false })),
+          startWith({ items: [] as ProductHistoryDto[], loading: true, error: false }),
+          catchError(() => of({ items: [] as ProductHistoryDto[], loading: false, error: true }))
+        )
+      ),
+      shareReplay(1)
+    );
+
     this.visibleProductsVm$ = combineLatest([
       this.productsVm$,
       this.productSearch
@@ -72,9 +94,30 @@ export class ProductsListComponent implements OnInit {
         return {
           ...productsVm,
           items: productsVm.items.filter(product =>
-            (product.name ?? '').toLowerCase().includes(q)
+            `${product.name ?? ''} ${product.sku ?? ''} ${product.description ?? ''} ${product.price ?? ''} ${product.quantity ?? product.totalStock ?? 0} ${this.formatLocations(product)}`
+              .toLowerCase()
+              .includes(q)
           )
         };
+      }),
+      shareReplay(1)
+    );
+
+    this.visibleDeletedHistory$ = combineLatest([
+      this.deletedHistoryVm$,
+      this.deletedProductSearch
+    ]).pipe(
+      map(([historyVm, search]) => {
+        const q = search.trim().toLowerCase();
+        if (!q) {
+          return historyVm.items;
+        }
+
+        return historyVm.items.filter(item =>
+          `${item.name ?? ''} ${item.sku ?? ''} ${item.description ?? ''} ${item.price ?? ''} ${item.createdByUserId ?? ''}`
+            .toLowerCase()
+            .includes(q)
+        );
       }),
       shareReplay(1)
     );
@@ -112,6 +155,9 @@ export class ProductsListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const role = this.authService.getRole();
+    this.canManageProducts = role === 'Manager' || role === 'Officer';
+
     this.compartmentService.getAll().subscribe({
       next: items => {
         this.compartmentOptions = items;
@@ -144,6 +190,10 @@ export class ProductsListComponent implements OnInit {
     this.historySearch.next(value ?? '');
   }
 
+  onDeletedProductSearchChange(value: string): void {
+    this.deletedProductSearch.next(value ?? '');
+  }
+
   onHistorySortChange(value: 'newest' | 'oldest'): void {
     this.historySort.next(value ?? 'newest');
   }
@@ -171,18 +221,76 @@ export class ProductsListComponent implements OnInit {
   }
 
   deleteProduct(id: string) {
+    this.errorText = '';
     if (!confirm('Biztosan törölni szeretnéd a terméket?')) return;
     this.productService.delete(id).subscribe({
-      next: () => this.productsReload.next(),
-      error: () => {
-        // Error state is already represented by the list VM on reload attempt.
+      next: () => {
+        this.productsReload.next();
+        this.deletedHistoryReload.next();
+      },
+      error: (err) => {
+        this.errorText = this.extractErrorMessage(err, 'A törlés sikertelen volt.');
       }
     });
+  }
+
+  toggleDeletedList(): void {
+    this.showDeleted = !this.showDeleted;
+    if (this.showDeleted) {
+      this.deletedHistoryReload.next();
+    }
   }
 
   editProduct(product: ProductShortDto) {
     this.router.navigate(['/products/edit', product.id], {
       state: { product }
     });
+  }
+
+  getDeletedLocation(item: ProductHistoryDto): string {
+    const description = item.description ?? '';
+    const marker = ' | Hely: ';
+    if (description.includes(marker)) {
+      return description.split(marker)[1] || '-';
+    }
+    if (description.startsWith('Hely: ')) {
+      return description.replace('Hely: ', '').trim() || '-';
+    }
+    return '-';
+  }
+
+  getDeletedDescription(item: ProductHistoryDto): string {
+    const description = item.description ?? '';
+    const marker = ' | Hely: ';
+    if (description.includes(marker)) {
+      return description.split(marker)[0] || '-';
+    }
+    if (description.startsWith('Hely: ')) {
+      return '-';
+    }
+    return description || '-';
+  }
+
+  private extractErrorMessage(err: unknown, fallback: string): string {
+    const response = err as { status?: number; error?: { detail?: string } | string } | null;
+    if (typeof response?.error === 'string') {
+      try {
+        const parsed = JSON.parse(response.error) as { detail?: string } | null;
+        if (parsed?.detail) {
+          return parsed.detail;
+        }
+      } catch {
+        if (response.error.trim().length > 0) {
+          return response.error;
+        }
+      }
+    }
+    if (typeof response?.error === 'object' && response?.error?.detail) {
+      return response.error.detail;
+    }
+    if (response?.status === 403) {
+      return 'Nincs jogosultságod a művelet végrehajtásához!';
+    }
+    return fallback;
   }
 }

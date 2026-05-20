@@ -14,6 +14,7 @@ export class CellShelfResolverComponent implements OnInit {
   loading = true;
   creating = false;
   error = false;
+  errorMessage: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -46,6 +47,7 @@ export class CellShelfResolverComponent implements OnInit {
         console.error('[CellShelfResolver] Failed to load shelves:', err);
         this.loading = false;
         this.error = true;
+        this.errorMessage = err.error?.detail || null;
       }
     });
   }
@@ -68,6 +70,7 @@ export class CellShelfResolverComponent implements OnInit {
         this.creating = false;
         this.loading = false;
         this.error = true;
+        this.errorMessage = err.error?.detail || null;
       }
     });
   }

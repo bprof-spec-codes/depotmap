@@ -62,6 +62,26 @@ export interface PickingTaskDto {
   cellType: string;
   items: CompartmentTaskDto[] | null;
 }
+export interface WarehouseRouteCellDto {
+  id: string;
+  x: number;
+  y: number;
+  cellType: string;
+}
+export interface RoutePathPointDto {
+  x: number;
+  y: number;
+}
+
+export interface PickingRouteMapDto {
+  warehouseId: string;
+  warehouseName: string;
+  gridWidth: number;
+  gridHeight: number;
+  cells: WarehouseRouteCellDto[];
+  route: PickingTaskDto[];
+  routePath: RoutePathPointDto[];
+}
 
 interface ValuesWrapper<T> {
   $values?: T[];
@@ -137,7 +157,7 @@ export class OrderService {
     );
   }
 
-  
+
 
   getOrderItemById(orderId: string, itemId: string): Observable<OrderItemViewDto> {
     return this.http.get<OrderItemViewDto>(`${this.orderItemApiBase}/${orderId}/items/${itemId}`);
@@ -167,6 +187,14 @@ export class OrderService {
       timeout(5000),
       map(response => this.normalizeResponse<PickingTaskDto>(response)),
       catchError(() => of([]))
+    );
+  }
+  getOptimizedRouteMap(orderId: string): Observable<PickingRouteMapDto | null> {
+    return this.http.get<PickingRouteMapDto>(
+      `${this.pathFindingApiBase}/optimize-map/${orderId}`
+    ).pipe(
+      timeout(5000),
+      catchError(() => of(null))
     );
   }
 }

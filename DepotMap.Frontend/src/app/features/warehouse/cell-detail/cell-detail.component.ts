@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { CellApiService } from '../../../core/services/cell-api-service';
 import { ShelfApiService } from '../../../core/services/shelf-api-service';
+import { AuthService } from '../../../core/services/auth-service';
 import {
   CellDetailDto,
   ShelfListDto,
@@ -45,14 +46,19 @@ export class CellDetailComponent implements OnInit, OnDestroy {
 
   saving = false;
 
+  isManager = false;
+
   private subscription: Subscription | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private cellApiService: CellApiService,
-    private shelfApiService: ShelfApiService
-  ) {}
+    private shelfApiService: ShelfApiService,
+    authService: AuthService
+  ) {
+    this.isManager = authService.isManager();
+  }
 
   ngOnInit(): void {
     this.loadData();
@@ -87,8 +93,10 @@ export class CellDetailComponent implements OnInit, OnDestroy {
   onCellClick(x: number, y: number): void {
     const shelf = this.getShelfAt(x, y);
     if (shelf) {
+      if (!this.isManager) return;
       this.openEditModal(shelf);
     } else {
+      if (!this.isManager) return;
       this.openCreateModal(x, y);
     }
   }

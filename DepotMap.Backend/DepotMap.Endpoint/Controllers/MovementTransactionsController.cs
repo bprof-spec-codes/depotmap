@@ -1,9 +1,11 @@
 using DepotMap.Entities.Models.DTOs.Transaction.Movement;
 using DepotMap.Logics.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepotMap.Endpoint.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/movement/transactions")]
     public class MovementTransactionsController : ControllerBase
@@ -16,6 +18,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetAll()
         {
             var transactions = await _movementTransactionLogic.GetAllAsync();
@@ -23,6 +26,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("table")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetTable(
             [FromQuery] int skip = 0,
             [FromQuery] int take = 500,
@@ -48,6 +52,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> GetById(string id)
         {
             var transaction = await _movementTransactionLogic.GetByIdAsync(id);
@@ -61,6 +66,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> Create([FromBody] CreateMovementTransactionDto dto)
         {
             if (!ModelState.IsValid)
@@ -80,6 +86,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<IActionResult> Update(string id, [FromBody] UpdateMovementTransactionDto dto)
         {
             if (!ModelState.IsValid)
@@ -87,9 +94,11 @@ namespace DepotMap.Endpoint.Controllers
                 return BadRequest(ModelState);
             }
 
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+
             try
             {
-                var updated = await _movementTransactionLogic.UpdateAsync(id, dto);
+                var updated = await _movementTransactionLogic.UpdateAsync(id, dto, userRole!);
 
                 if (updated == null)
                 {
@@ -102,9 +111,14 @@ namespace DepotMap.Endpoint.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Manager,Officer")]
         public async Task<IActionResult> Delete(string id)
         {
             try

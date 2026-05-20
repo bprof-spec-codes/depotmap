@@ -1,5 +1,6 @@
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Logics;
 
 namespace DepotMap.Tests
@@ -7,6 +8,12 @@ namespace DepotMap.Tests
     public class ShelfLogicTests
     {
         private async Task<(ShelfLogic shelfLogic, string cellId)> SetupAsync()
+        {
+            var (shelfLogic, cells) = await SetupWithCellsAsync();
+            return (shelfLogic, cells[0]);
+        }
+
+        private async Task<(ShelfLogic shelfLogic, List<string> cellIds)> SetupWithCellsAsync()
         {
             var context = TestDbHelper.CreateContext();
             var warehouseLogic = new WarehouseLogic(context);
@@ -20,12 +27,17 @@ namespace DepotMap.Tests
                 GridHeight = 3
             });
 
-            // Change one cell to shelf_area
-            var cells = await cellLogic.GetCellsByWarehouseIdAsync(warehouse.Id);
-            var cell = cells.First();
-            await cellLogic.UpdateCellTypeAsync(cell.Id, new UpdateCellTypeDto { CellType = "shelf_area" });
+            var cells = (await cellLogic.GetCellsByWarehouseIdAsync(warehouse.Id))
+                .OrderBy(c => c.Y).ThenBy(c => c.X).ToList();
 
-            return (shelfLogic, cell.Id);
+            var ids = new List<string>();
+            for (int i = 0; i < 3; i++)
+            {
+                await cellLogic.UpdateCellTypeAsync(cells[i].Id, new UpdateCellTypeDto { CellType = "shelf_area" });
+                ids.Add(cells[i].Id);
+            }
+
+            return (shelfLogic, ids);
         }
 
         [Fact]
@@ -43,36 +55,46 @@ namespace DepotMap.Tests
             });
 
             Assert.NotNull(shelf);
-            Assert.Equal("A", shelf.Code);
+            Assert.Equal("0-0", shelf.Code);
             Assert.Equal(3, shelf.Levels);
             Assert.True(shelf.AccessibleFromBothSides);
         }
 
         [Fact]
-        public async Task CreateShelfAsync_ShouldAutoIncrementCode()
+        public async Task CreateShelfAsync_ShouldUseCellCoordinatesForCode()
         {
-            var (shelfLogic, cellId) = await SetupAsync();
+            var (shelfLogic, cellIds) = await SetupWithCellsAsync();
 
-            var shelf1 = await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
-            var shelf2 = await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 1, Y = 0, Levels = 2 });
-            var shelf3 = await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 2, Y = 0, Levels = 2 });
+            var shelf1 = await shelfLogic.CreateShelfAsync(cellIds[0], new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
+            var shelf2 = await shelfLogic.CreateShelfAsync(cellIds[1], new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
+            var shelf3 = await shelfLogic.CreateShelfAsync(cellIds[2], new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
 
-            Assert.Equal("A", shelf1.Code);
-            Assert.Equal("B", shelf2.Code);
-            Assert.Equal("C", shelf3.Code);
+            Assert.Equal("0-0", shelf1.Code);
+            Assert.Equal("1-0", shelf2.Code);
+            Assert.Equal("2-0", shelf3.Code);
         }
 
         [Fact]
-        public async Task GetShelvesByCellIdAsync_ShouldReturnShelves()
+        public async Task CreateShelfAsync_SecondShelfInSameCell_ShouldThrow()
         {
             var (shelfLogic, cellId) = await SetupAsync();
 
             await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
-            await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 1, Y = 0, Levels = 3 });
+
+            await Assert.ThrowsAsync<ConflictException>(() =>
+                shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 0, Y = 0, Levels = 2 }));
+        }
+
+        [Fact]
+        public async Task GetShelvesByCellIdAsync_ShouldReturnShelf()
+        {
+            var (shelfLogic, cellId) = await SetupAsync();
+
+            await shelfLogic.CreateShelfAsync(cellId, new CreateShelfDto { X = 0, Y = 0, Levels = 2 });
 
             var shelves = await shelfLogic.GetShelvesByCellIdAsync(cellId);
 
-            Assert.Equal(2, shelves.Count);
+            Assert.Single(shelves);
         }
 
         [Fact]
@@ -102,7 +124,7 @@ namespace DepotMap.Tests
             var compartment = result.Compartments.First();
             Assert.Equal(0, compartment.LevelIndex);
             Assert.Equal(0, compartment.SlotIndex);
-            Assert.Contains("A", compartment.Code); // Code should contain shelf code
+            Assert.Contains(shelf.Code, compartment.Code);
         }
 
         [Fact]

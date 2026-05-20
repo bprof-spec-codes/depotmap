@@ -7,7 +7,7 @@ namespace DepotMap.Endpoint.Controllers
 {
     [ApiController]
     [Route("api/warehouses")]
-    // [Authorize]
+    [Authorize]
     public class WarehouseController : ControllerBase
     {
         private readonly IWarehouseLogic _warehouseLogic;
@@ -18,6 +18,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<ActionResult<List<WarehouseListDto>>> GetAll()
         {
             var warehouses = await _warehouseLogic.GetAllAsync();
@@ -25,6 +26,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Manager,Officer,Operator")]
         public async Task<ActionResult<WarehouseDetailDto>> GetById(string id)
         {
             var warehouse = await _warehouseLogic.GetByIdAsync(id);
@@ -35,6 +37,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<WarehouseListDto>> Create([FromBody] CreateWarehouseDto dto)
         {
             var warehouse = await _warehouseLogic.CreateAsync(dto);
@@ -42,6 +45,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<WarehouseListDto>> Update(string id, [FromBody] UpdateWarehouseDto dto)
         {
             var warehouse = await _warehouseLogic.UpdateAsync(id, dto);
@@ -52,6 +56,7 @@ namespace DepotMap.Endpoint.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Delete(string id)
         {
             var result = await _warehouseLogic.DeleteAsync(id);

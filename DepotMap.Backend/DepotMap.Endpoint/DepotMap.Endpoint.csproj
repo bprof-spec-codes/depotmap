@@ -28,4 +28,8 @@
     <ProjectReference Include="..\DepotMap.Logics\DepotMap.Logics.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Filters\" />
+  </ItemGroup>
+
 </Project>

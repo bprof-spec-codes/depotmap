@@ -5,6 +5,7 @@ import { switchMap } from 'rxjs/operators';
 import Konva from 'konva';
 import { WarehouseApiService } from '../../../core/services/warehouse-api-service';
 import { CellApiService } from '../../../core/services/cell-api-service';
+import { AuthService } from '../../../core/services/auth-service';
 import {
   WarehouseDetailDto,
   WarehouseCellDto,
@@ -57,6 +58,11 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
   // Success feedback
   saveSuccess = false;
 
+  // User-visible action error (from backend ProblemDetails.detail)
+  actionError: string | null = null;
+
+  isManager = false;
+
   readonly cellTypes = ['corridor', 'shelf_area', 'wall', 'entrance'];
   readonly cellColors = CELL_COLORS;
   readonly cellTypeLabels = CELL_TYPE_LABELS;
@@ -83,8 +89,11 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
     private warehouseApiService: WarehouseApiService,
     private cellApiService: CellApiService,
     private cdr: ChangeDetectorRef,
-    private zone: NgZone
-  ) {}
+    private zone: NgZone,
+    authService: AuthService
+  ) {
+    this.isManager = authService.isManager();
+  }
 
   ngOnInit(): void {
     this.loadData();
@@ -100,6 +109,7 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
 
   enterEditMode(): void {
     this.isEditMode = true;
+    this.actionError = null;
     this.originalCellMap = new Map(this.cellMap);
     this.modifiedCells.clear();
     this.modifiedCount = 0;
@@ -121,6 +131,7 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
     }
 
     this.saving = true;
+    this.actionError = null;
     const dto: BatchUpdateCellsDto = {
       cells: Array.from(this.modifiedCells.values())
     };
@@ -138,6 +149,8 @@ export class WarehouseGridComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('[WarehouseGrid] Batch update failed:', err);
         this.saving = false;
+        this.actionError = err.error?.detail
+          || (err.status === 403 ? 'Nincs jogosultságod a változások mentéséhez!' : 'Nem sikerült elmenteni a változásokat.');
       }
     });
   }

@@ -1,4 +1,4 @@
-<div class="warehouse-grid-page">
+<div class="app-page app-page--full">
   <!-- Header -->
   <div class="grid-header">
     <div class="grid-header-left">
@@ -8,7 +8,7 @@
       <h2>{{ warehouseName }}</h2>
     </div>
     <div class="grid-header-right">
-      <ng-container *ngIf="!isEditMode">
+      <ng-container *ngIf="!isEditMode && isManager">
         <button class="btn btn-primary" (click)="enterEditMode()" [disabled]="loading || error">
           <i class="bi bi-pencil"></i> Szerkesztés
         </button>
@@ -42,6 +42,12 @@
   <div *ngIf="saveSuccess" class="alert alert-success d-flex align-items-center" role="alert">
     <i class="bi bi-check-circle-fill me-2"></i>
     Változások sikeresen elmentve.
+  </div>
+
+  <!-- Action error message -->
+  <div *ngIf="actionError" class="alert alert-danger d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ actionError }}
   </div>
 
   <!-- Loading / Error states -->

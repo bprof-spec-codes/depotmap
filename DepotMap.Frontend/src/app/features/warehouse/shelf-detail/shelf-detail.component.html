@@ -1,11 +1,11 @@
-<div class="shelf-detail-page">
+<div class="app-page app-page--full">
   <!-- Header -->
   <div class="shelf-header">
     <div class="shelf-header-left">
       <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
         <i class="bi bi-arrow-left"></i> Vissza
       </button>
-      <button class="btn btn-sm btn-outline-primary" *ngIf="shelf" (click)="openSettingsModal()">
+      <button class="btn btn-sm btn-outline-primary" *ngIf="shelf && isManager" (click)="openSettingsModal()">
         <i class="bi bi-gear"></i> Beállítások
       </button>
       <h2 *ngIf="shelf">
@@ -25,6 +25,12 @@
   <div *ngIf="loading" class="state-msg">Betöltés...</div>
   <div *ngIf="error" class="state-msg error-text">
     A polc nem tölthető be. Ellenőrizd, hogy a backend fut-e.
+  </div>
+
+  <!-- Action error message -->
+  <div *ngIf="actionError" class="alert alert-danger d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ actionError }}
   </div>
 
   <!-- Shelf front view -->
@@ -68,7 +74,7 @@
         </div>
 
         <!-- Add / Remove buttons -->
-        <div class="level-actions">
+        <div class="level-actions" *ngIf="isManager">
           <button class="btn btn-sm btn-outline-primary"
                   (click)="addCompartment(level)"
                   [disabled]="actionLoading"

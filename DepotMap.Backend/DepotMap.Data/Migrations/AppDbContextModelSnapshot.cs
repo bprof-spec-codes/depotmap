@@ -187,7 +187,8 @@ namespace DepotMap.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WarehouseCellId");
+                    b.HasIndex("WarehouseCellId")
+                        .IsUnique();
 
                     b.HasIndex("WarehouseId", "Code")
                         .IsUnique();

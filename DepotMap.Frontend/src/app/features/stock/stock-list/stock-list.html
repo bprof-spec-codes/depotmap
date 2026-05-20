@@ -1,88 +1,99 @@
-<div class="products-list">
-  <div class="header">
-    <h2>Raktárkészlet</h2>
-    <a routerLink="/stock-movements" class="btn btn-primary">Összes készlet mozgás előzmény</a>
-  </div>
-
-  <div class="row align-items-center mb-4 bg-white p-3 rounded shadow-sm border">
-    <div class="col-md-5 mb-2 mb-md-0">
-      <div class="input-group">
-        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-        <input 
-          type="text" 
-          class="form-control" 
-          placeholder="Keresés..."
-          [ngModel]="searchTerm$ | async"
-          (ngModelChange)="onSearch($event)">
-      </div>
+<div class="app-page app-page--full">
+  <app-page-header title="Raktárkészlet" subtitle="A termékek aktuális készletszintje és lelőhelyeinek áttekintése"
+    [hasActions]="true">
+    <div header-actions>
+      <a routerLink="/stock-movements" class="btn btn-primary">
+        Összes készletmozgás előzmény
+      </a>
     </div>
-    
-    <div class="col-md-7 d-flex justify-content-md-end gap-2 flex-wrap">
-      <span class="text-muted d-flex align-items-center me-2">Rendezés:</span>
-      <button class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'productName'" (click)="onSortChange('productName')">
-        Név {{ getSortIcon('productName') }}
-      </button>
-      <button class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'sku'" (click)="onSortChange('sku')">
-        Cikkszám {{ getSortIcon('sku') }}
-      </button>
-      <button class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'totalQuantity'" (click)="onSortChange('totalQuantity')">
-        Mennyiség {{ getSortIcon('totalQuantity') }}
-      </button>
-    </div>
-  </div>
+  </app-page-header>
 
-  <ng-container *ngIf="stocksVm$ | async as vm">
-    <div *ngIf="vm.loading" class="spinner">Készlet betöltése...</div>
-    <div *ngIf="!vm.loading && vm.error" class="error-text">Hiba történt az adatok lekérésekor.</div>
-
-    <div class="list">
-      <div *ngIf="!vm.loading && !vm.error && !vm.items.length" class="empty-text">
-        Nincs megjeleníthető készlet.
+  <app-content-card title="Készletlista">
+    <div class="stock-toolbar">
+      <div class="stock-search-wrap">
+        <div class="stock-search-box">
+          <span class="stock-search-icon"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control stock-search-input" placeholder="Keresés..."
+            [ngModel]="searchTerm$ | async" (ngModelChange)="onSearch($event)">
+        </div>
       </div>
 
-      <div *ngFor="let stock of vm.items" class="product-block mb-3">
-        
-        <div class="item cursor-pointer" (click)="toggleStockDetails(stock.productId)">
-          <div class="left">
-            <div class="title">
-              {{ stock.productName }} <span class="text-secondary ms-2">({{ stock.sku }})</span>
-            </div>
-            <div class="meta text-success mt-1" style="font-size: 15px; font-weight: 600;">
-              Raktáron összesen: {{ stock.totalQuantity }} db
-            </div>
-          </div>
-          
-          <div class="actions" (click)="$event.stopPropagation()">
-            <button class="btn btn-sm btn-outline-primary" (click)="goToHistory(stock.productId)">
-              Készlet mozgás előzmények
-            </button>
-          </div>
+      <div class="stock-sort-wrap">
+        <span class="stock-sort-label">Rendezés:</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [class.active]="(sortBy$ | async) === 'productName'" (click)="onSortChange('productName')">
+          Név {{ getSortIcon('productName') }}
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" [class.active]="(sortBy$ | async) === 'sku'"
+          (click)="onSortChange('sku')">
+          Cikkszám {{ getSortIcon('sku') }}
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [class.active]="(sortBy$ | async) === 'totalQuantity'" (click)="onSortChange('totalQuantity')">
+          Mennyiség {{ getSortIcon('totalQuantity') }}
+        </button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="stocksVm$ | async as vm">
+      <div *ngIf="vm.loading" class="app-loading">Készlet betöltése...</div>
+      <div *ngIf="!vm.loading && vm.error" class="app-error">Hiba történt az adatok lekérésekor.</div>
+
+      <div class="list">
+        <div *ngIf="!vm.loading && !vm.error && !vm.items.length" class="app-empty">
+          Nincs megjeleníthető készlet.
         </div>
 
-        <div class="history-panel" *ngIf="isStockExpanded(stock.productId)">
-          <h4 class="mb-2 text-secondary" style="font-size: 13px;">Lelőhelyek (Rekeszek)</h4>
-          <div class="history-table-wrap">
-            <table class="history-table">
-              <thead>
-                <tr>
-                  <th>Rekesz Kódja</th>
-                  <th>Mennyiség</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let comp of stock.compartments">
-                  <td>
-                    {{ comp.compartmentCode || 'Nincs kód' }}
-                    <small class="text-muted ms-1">({{ comp.compartmentId }})</small>
-                  </td>
-                  <td><strong>{{ comp.quantity }} db</strong></td>
-                </tr>
-              </tbody>
-            </table>
+        <div class="stock-list-grid" *ngIf="vm.items.length">
+          <div *ngFor="let stock of vm.items" class="stock-card">
+
+            <div class="stock-card-main" (click)="toggleStockDetails(stock.productId)">
+              <div class="stock-main-info">
+                <div class="stock-title-row">
+                  <div class="stock-title">
+                    {{ stock.productName }} <span class="stock-sku">({{ stock.sku }})</span>
+                  </div>
+                </div>
+                <div class="stock-total-row">
+                  <div class="stock-total-badge" [ngClass]="getStockBadgeClass(stock.totalQuantity, stock.lowStockThreshold)">
+                    Raktáron összesen: {{ stock.totalQuantity }} db
+                  </div>
+                </div>
+              </div>
+
+              <div class="stock-actions" (click)="$event.stopPropagation()">
+                <button class="btn btn-sm btn-outline-secondary" (click)="goToHistory(stock.productId)">
+                  Készlet mozgás előzmények
+                </button>
+              </div>
+            </div>
+
+            <div class="stock-details-panel" *ngIf="isStockExpanded(stock.productId)">
+              <div class="stock-details-header">
+                <h3 class="stock-details-title">Lelőhelyek (rekeszek)</h3>
+              </div>
+              <div class="app-table-wrap">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th>Rekesz Kódja</th>
+                      <th>Mennyiség</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let comp of stock.compartments">
+                      <td>
+                        {{ comp.compartmentCode || 'Nincs kód' }}
+                      </td>
+                      <td><strong>{{ comp.quantity }} db</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
-
       </div>
-    </div>
-  </ng-container>
+    </ng-container>
+  </app-content-card>
 </div>

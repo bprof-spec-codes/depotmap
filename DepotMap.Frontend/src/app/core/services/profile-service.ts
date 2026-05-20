@@ -27,11 +27,10 @@ export class ProfileService {
     this.ownProfile$ = undefined;
   }
 
-  changePassword(data: ChangePasswordModel): Observable<string> {
-    return this.http.put(
-      environment.apiUrl + '/profile/updatePassword',
-      data,
-      { responseType: 'text' }
+  changePassword(data: ChangePasswordModel): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${environment.apiUrl}/Profile/updatePassword`,
+      data
     );
   }
 }

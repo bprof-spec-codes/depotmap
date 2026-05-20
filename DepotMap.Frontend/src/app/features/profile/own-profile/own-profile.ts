@@ -50,10 +50,13 @@ export class OwnProfile {
     };
 
     this.profileService.changePassword(data).subscribe({
-      next: (res: string) => {
+      next: (res) => {
         this.isSaving = false;
         this.feedbackType = 'success';
-        this.feedbackMessage = res?.trim() || 'A jelszó sikeresen módosítva.';
+
+        this.feedbackMessage =
+          res?.message ||
+          'A jelszó sikeresen módosítva.';
 
         form.resetForm();
         this.currentPassword = '';
@@ -63,13 +66,27 @@ export class OwnProfile {
       error: (err) => {
         this.isSaving = false;
         this.feedbackType = 'error';
-
-        if (typeof err?.error === 'string' && err.error.trim()) {
-          this.feedbackMessage = err.error;
-        } else {
-          this.feedbackMessage = 'Hiba történt a jelszó módosítása közben.';
-        }
+        this.feedbackMessage = this.getErrorMessage(err);
       }
     });
+  }
+  private getErrorMessage(err: any): string {
+    if (err?.error?.detail) {
+      return err.error.detail;
+    }
+
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      return err.error;
+    }
+
+    if (err?.message) {
+      return err.message;
+    }
+
+    return 'Hiba történt a jelszó módosítása közben.';
   }
 }

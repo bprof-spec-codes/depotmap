@@ -1,6 +1,7 @@
 ﻿using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs.Admin;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -26,12 +27,24 @@ namespace DepotMap.Logics.Logics
         public async Task<List<UserAdminDto>> GetUsersAsync(UserQueryParameters queryParams)
         {
             IQueryable<User> query = _context.Users;
+
             if (!string.IsNullOrWhiteSpace(queryParams.Search))
             {
-                var search = queryParams.Search.ToLower();
+                var search = queryParams.Search.Trim().ToLower();
+
                 query = query.Where(u =>
-                    u.Identifier.ToLower().Contains(search) ||
-                    (u.FirstName + " " + u.LastName).ToLower().Contains(search));
+                    (u.Identifier ?? "").ToLower().Contains(search) ||
+                    (u.FirstName ?? "").ToLower().Contains(search) ||
+                    (u.LastName ?? "").ToLower().Contains(search) ||
+                    ((u.FirstName ?? "") + " " + (u.LastName ?? "")).ToLower().Contains(search) ||
+                    (u.Position ?? "").ToLower().Contains(search) ||
+
+                    (u.Role ?? "").ToLower().Contains(search) ||
+
+                    (u.Role == "Manager" && "raktárvezető".Contains(search)) ||
+                    (u.Role == "Officer" && "irodista".Contains(search)) ||
+                    (u.Role == "Operator" && "raktáros".Contains(search))
+                );
             }
 
             query = (queryParams.SortBy?.ToLower(), queryParams.SortDirection?.ToLower()) switch
@@ -47,23 +60,24 @@ namespace DepotMap.Logics.Logics
             };
 
             return await query
-            .Select(u => new UserAdminDto
-            {
-                Id = u.Id,
-                FullName = u.FirstName + " " + u.LastName,
-                Identifier = u.Identifier,
-                Role = u.Role,
-                Position = u.Position
-            })
-            .ToListAsync();
+                .Select(u => new UserAdminDto
+                {
+                    Id = u.Id,
+                    FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""),
+                    Identifier = u.Identifier,
+                    Role = u.Role,
+                    Position = u.Position
+                })
+                .ToListAsync();
         }
 
         public async Task<UserAdminDto?> CreateUserAsync(UserCreateDto dto)
         {
             var existingUser = await _context.Users
                 .AnyAsync(u => u.Identifier == dto.Identifier);
-            if (existingUser) return null;
 
+            if (existingUser)
+                throw new ConflictException("Ez az azonosító már használatban van!");
             var user = new User
             {
                 Id = Guid.NewGuid().ToString(),

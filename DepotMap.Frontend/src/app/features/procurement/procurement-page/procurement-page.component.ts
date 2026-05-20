@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, finalize } from 'rxjs';
+import { AuthService } from '../../../core/services/auth-service';
 import {
 	CreatePurchasingTransactionDto,
 	CreatePurchasingTransactionItemDto,
@@ -10,6 +11,7 @@ import {
 } from '../../../core/services/purchasing-transactions-service';
 import { ProductService, ProductShortDto } from '../../../core/services/product-service';
 import { CompartmentOptionDto, CompartmentService } from '../../../core/services/compartment-service';
+import { UserAdminService } from '../../../core/services/user-admin-service';
 import { ProcurementFormItem, ProcurementSortColumn, ProcurementTableItem, ProcurementTableTransaction } from '../../../core/models/procurements.models';
 
 
@@ -20,7 +22,7 @@ import { ProcurementFormItem, ProcurementSortColumn, ProcurementTableItem, Procu
 	styleUrls: ['./procurement-page.component.scss']
 })
 export class ProcurementPageComponent implements OnInit {
-	private readonly seedUserId = 'seed-admin-001';
+	private currentUserId = '';
 	private readonly pageSize = 500;
 	private readonly firstLoadRetryDelayMs = 1000;
 	private readonly maxInitialLoadRetries = 1;
@@ -33,15 +35,19 @@ export class ProcurementPageComponent implements OnInit {
 	sortColumn: ProcurementSortColumn | null = 'timestamp';
 	sortDirection: 'desc' | 'asc' = 'desc';
 
+	showProcurementModal = false;
 	saving = false;
 	loading = false;
 	errorText = '';
 	//async pipe 
 	transactions$ = new BehaviorSubject<ProcurementTableTransaction[]>([]);
+	userDisplayNames: Record<string, string> = {};
 	availableProducts: ProductShortDto[] = [];
 	productsLoading = false;
 	editingTransactionId: string | null = null;
 	statusUpdatingId: string | null = null;
+	userRole: string | null = null;
+	searchTerm = '';
 	tableFilters = {
 		date: '',
 		status: '',
@@ -52,7 +58,7 @@ export class ProcurementPageComponent implements OnInit {
 	};
 
 	form = {
-		createdByUserId: this.seedUserId,
+		createdByUserId: this.currentUserId,
 		status: 'Planning',
 		items: [this.createEmptyItem()] as ProcurementFormItem[]
 	};
@@ -60,15 +66,35 @@ export class ProcurementPageComponent implements OnInit {
 	constructor(
 		private purchasingService: PurchasingTransactionsService,
 		private productService: ProductService,
-		private compartmentService: CompartmentService
+		private compartmentService: CompartmentService,
+		private userAdminService: UserAdminService,
+		private authService: AuthService
 	) { }
 
 	ngOnInit(): void {
+		this.userRole = this.authService.getRole();
+		this.currentUserId = this.authService.getUserId() ?? '';
 		// oldal indulaskor termeklista + elso tabla lekeres
+		this.loadUserDisplayNames();
 		this.loadCompartments();
 		this.loadAvailableProducts();
 		this.loadTransactions(true);
 	}
+
+	canManagePurchasing(): boolean {
+		return this.userRole === 'Manager' || this.userRole === 'Officer';
+	}
+
+	openCreateProcurementModal(): void {
+		this.resetToCreateMode();
+		this.showProcurementModal = true;
+	}
+
+	closeProcurementModal(): void {
+		this.showProcurementModal = false;
+		this.resetToCreateMode();
+	}
+
 	private loadCompartments(): void {
 		this.compartmentsLoading = true;
 		this.compartmentService.getAll().subscribe({
@@ -76,6 +102,17 @@ export class ProcurementPageComponent implements OnInit {
 			error: () => { this.compartmentsLoading = false; }
 		});
 	}
+
+	onSearchChange(value: string): void {
+		this.searchTerm = value ?? '';
+		this.currentPage = 1;
+		this.ensureCurrentPageInRange();
+	}
+
+	clearSearch(): void {
+		this.onSearchChange('');
+	}
+
 	private loadAvailableProducts(): void {
 		this.productsLoading = true;
 
@@ -85,6 +122,71 @@ export class ProcurementPageComponent implements OnInit {
 			.subscribe(items => {
 				this.availableProducts = items;
 			});
+	}
+
+	private loadUserDisplayNames(): void {
+		this.userAdminService.getUsers().subscribe({
+			next: users => {
+				const map: Record<string, string> = {};
+
+				for (const user of users) {
+					map[user.id] = user.fullName || user.identifier || user.id;
+				}
+
+				this.userDisplayNames = map;
+			},
+			error: () => {
+				this.userDisplayNames = {};
+			}
+		});
+	}
+
+	getUserDisplayName(userId: string): string {
+		return this.userDisplayNames[userId] || userId || '-';
+	}
+
+	onProductChange(item: ProcurementFormItem): void {
+		// ha a termek valtozott, akkor nezzuk meg, a regi rekesz meg jo-e
+		const compartments = this.getCompartmentsForProduct(item.productId);
+		let found = false;
+
+		for (const compartment of compartments) {
+			if (compartment.id === item.toCompartmentId) {
+				found = true;
+				break;
+			}
+		}
+
+		if (item.toCompartmentId && !found) {
+			item.toCompartmentId = '';
+		}
+	}
+
+	getCompartmentsForProduct(productId: string): CompartmentOptionDto[] {
+		// ha nincs termek kivalasztva
+		if (!productId) {
+			return [];
+		}
+
+		const product = this.availableProducts.find(p => p.id === productId);
+		// ha nincs ilyen termek vagy nincs hozza rekesz, akkor ures lista
+		if (!product || !product.productStocks || product.productStocks.length === 0) {
+			return [];
+		}
+
+		const allowedCompartments: CompartmentOptionDto[] = [];
+
+		// itt most csak azt gyujtjuk ossze, ami a termekhez tenyleg tartozik
+		for (const compartment of this.compartments) {
+			for (const stock of product.productStocks) {
+				if (stock.compartmentId === compartment.id) {
+					allowedCompartments.push(compartment);
+					break;
+				}
+			}
+		}
+
+		return allowedCompartments;
 	}
 
 	private createEmptyItem(): ProcurementFormItem {
@@ -112,7 +214,7 @@ export class ProcurementPageComponent implements OnInit {
 		this.editingTransactionId = null;
 		this.errorText = '';
 		this.form = {
-			createdByUserId: this.seedUserId,
+			createdByUserId: this.currentUserId,
 			status: 'Planning',
 			items: [this.createEmptyItem()]
 		};
@@ -182,8 +284,24 @@ export class ProcurementPageComponent implements OnInit {
 
 	get pagedTransactions(): ProcurementTableTransaction[] {
 		const start = (this.currentPage - 1) * this.tablePageSize;
-		const sorted = this.getSortedTransactions(this.transactions$.value);
+		const sorted = this.getSortedTransactions(this.filteredTransactions);
 		return sorted.slice(start, start + this.tablePageSize);
+	}
+
+	get filteredTransactions(): ProcurementTableTransaction[] {
+		const query = this.searchTerm.trim().toLowerCase();
+		const sorted = this.getSortedTransactions(this.transactions$.value);
+
+		if (!query) {
+			return sorted;
+		}
+
+		return sorted
+			.map(transaction => ({
+				...transaction,
+				items: transaction.items.filter(item => this.matchesSearch(transaction, item, query))
+			}))
+			.filter(transaction => transaction.items.length > 0);
 	}
 
 	toggleSort(column: ProcurementSortColumn): void {
@@ -198,14 +316,14 @@ export class ProcurementPageComponent implements OnInit {
 
 	getSortIndicator(column: ProcurementSortColumn): string {
 		if (this.sortColumn !== column) {
-			return '';
+			return '↕';
 		}
 
 		return this.sortDirection === 'desc' ? '↓' : '↑';
 	}
 
 	get totalPages(): number {
-		const total = this.transactions$.value.length;
+		const total = this.filteredTransactions.length;
 		return total > 0 ? Math.ceil(total / this.tablePageSize) : 1;
 	}
 
@@ -273,6 +391,35 @@ export class ProcurementPageComponent implements OnInit {
 			toCompartmentId: this.tableFilters.toCompartmentId.trim() || undefined,
 			quantity: typeof quantity === 'number' && Number.isFinite(quantity) ? quantity : undefined
 		};
+	}
+
+	private matchesSearch(transaction: ProcurementTableTransaction, item: ProcurementTableItem, query: string): boolean {
+		const timestamp = new Date(transaction.timestamp);
+		const isoDate = Number.isNaN(timestamp.getTime())
+			? ''
+			: `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}`;
+		const formattedDateTime = Number.isNaN(timestamp.getTime())
+			? ''
+			: `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}. ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
+		const yearOnly = Number.isNaN(timestamp.getTime()) ? '' : String(timestamp.getFullYear());
+
+		const haystack = [
+			transaction.timestamp,
+			timestamp.toLocaleString('hu-HU'),
+			isoDate,
+			formattedDateTime,
+			yearOnly,
+			transaction.status,
+			transaction.statusLabel,
+			transaction.createdByUserId,
+			item.productId,
+			this.getProductLabel(item.productId),
+			item.toCompartmentId,
+			this.getCompartmentCode(item.toCompartmentId),
+			String(item.quantity)
+		].join(' ').toLowerCase();
+
+		return haystack.includes(query);
 	}
 
 	private ensureCurrentPageInRange(): void {
@@ -346,22 +493,15 @@ export class ProcurementPageComponent implements OnInit {
 		this.errorText = '';
 
 		this.purchasingService
-			.getTableRows(0, this.pageSize, this.buildTableFilters())
+			.getTableRows(0, this.pageSize)
 			.pipe(finalize(() => (this.loading = false)))
 			.subscribe({
 				next: rows => {
-					const mapStart = performance.now();
 					const mapped = this.mapTableRowsToTransactions(rows);
 					this.transactions$.next(mapped);
 					this.initialLoadRetryCount = 0;
 
 					this.ensureCurrentPageInRange();
-
-					const elapsedMs = Math.round(performance.now() - mapStart);
-					console.log(
-						`[Procurement] Table mapped in ${elapsedMs} ms (apiRows=${rows.length}, transactions=${this.transactions$.value.length})`
-					);
-					console.log('[Procurement] First transaction preview:', this.transactions$.value[0]);
 				},
 				error: (err: unknown) => {
 					if (reset && this.initialLoadRetryCount < this.maxInitialLoadRetries) {
@@ -407,6 +547,7 @@ export class ProcurementPageComponent implements OnInit {
 				next: detail => {
 					this.fillFormFromTransaction(detail);
 					this.editingTransactionId = transaction.id;
+					this.showProcurementModal = true;
 				},
 				error: (err: unknown) => {
 					this.errorText = this.extractErrorMessage(err, 'A szerkesztéshez tartozó adatok nem tölthetők be.');
@@ -473,7 +614,7 @@ export class ProcurementPageComponent implements OnInit {
 			return;
 		}
 
-		const shouldDelete = confirm(`Biztosan törlöd ezt a beszerzést? (${transaction.id})`);
+		const shouldDelete = confirm(this.getDeleteConfirmationText(transaction));
 		if (!shouldDelete) {
 			return;
 		}
@@ -602,7 +743,7 @@ export class ProcurementPageComponent implements OnInit {
 		}));
 
 		this.form = {
-			createdByUserId: transaction.createdByUserId || this.seedUserId,
+			createdByUserId: transaction.createdByUserId || this.currentUserId,
 			status: this.normalizeStatus(transaction.status),
 			items: items.length ? items : [this.createEmptyItem()]
 		};
@@ -672,5 +813,28 @@ export class ProcurementPageComponent implements OnInit {
 		const product = this.availableProducts.find(p => p.id === productId);
 		if (!product) return productId; // fallback: ID ha még nem töltött be
 		return product.sku ? `${product.sku} - ${product.name}` : product.name;
+	}
+
+	private getDeleteConfirmationText(transaction: ProcurementTableTransaction): string {
+		const firstItem = transaction.items[0];
+		const timestamp = this.formatTimestamp(transaction.timestamp);
+		const productSku = firstItem ? this.getProductSku(firstItem.productId) : '-';
+		const quantity = firstItem ? `${firstItem.quantity} db` : '-';
+
+		return `Biztosan törlöd ezt a beszerzést? (${timestamp} | ${productSku} | ${quantity})`;
+	}
+
+	private getProductSku(productId: string): string {
+		const product = this.availableProducts.find(p => p.id === productId);
+		return product?.sku || productId || '-';
+	}
+
+	private formatTimestamp(timestampValue: string): string {
+		const timestamp = new Date(timestampValue);
+		if (Number.isNaN(timestamp.getTime())) {
+			return timestampValue || '-';
+		}
+
+		return `${timestamp.getFullYear()}.${String(timestamp.getMonth() + 1).padStart(2, '0')}.${String(timestamp.getDate()).padStart(2, '0')}. ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
 	}
 }

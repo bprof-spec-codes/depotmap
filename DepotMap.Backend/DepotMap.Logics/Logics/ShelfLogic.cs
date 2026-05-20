@@ -2,6 +2,7 @@ using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs;
 using DepotMap.Entities.Models.DTOs.Products;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,17 +51,12 @@ namespace DepotMap.Logics.Logics
             var cell = await _context.WarehouseCells
                 .FirstOrDefaultAsync(c => c.Id == cellId);
 
-            if (cell == null) throw new ArgumentException("Cell not found.");
+            if (cell == null) throw new NotFoundException("A megadott cella nem található.");
 
-            // Auto-generate Code: "{cellX}-{cellY}{letter}", letter unique within the cell.
-            // Collision scope is the warehouse (unique index on WarehouseId + Code).
-            var existingLettersInCell = await _context.Shelves
-                .Where(s => s.WarehouseCellId == cellId)
-                .Select(s => s.Code)
-                .ToListAsync();
+            var alreadyHasShelf = await _context.Shelves.AnyAsync(s => s.WarehouseCellId == cellId);
+            if (alreadyHasShelf) throw new ConflictException("A cellában már van polc.");
 
-            var letter = GenerateNextLetterForCell(cell.X, cell.Y, existingLettersInCell);
-            var code = $"{cell.X}-{cell.Y}{letter}";
+            var code = $"{cell.X}-{cell.Y}";
 
             var shelf = new Shelf
             {
@@ -115,9 +111,38 @@ namespace DepotMap.Logics.Logics
             var shelf = await _context.Shelves.FindAsync(shelfId);
             if (shelf == null) return false;
 
+            var compartmentIds = await _context.Compartments
+                .Where(c => c.ShelfId == shelfId)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            await EnsureNoMovementReferencesAsync(compartmentIds, "A polc");
+
             _context.Shelves.Remove(shelf);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // A StockMovement / TransactionItem FK-k Restrict-ek, így a cascade-törlés
+        // (Warehouse→Cell→Shelf→Compartment) SQL szinten elhasalna, ha mozgás vagy
+        // tranzakció hivatkozik a rekeszre. Itt előre, érthető hibával jelezzük.
+        private async Task EnsureNoMovementReferencesAsync(List<string> compartmentIds, string entityLabel)
+        {
+            if (compartmentIds.Count == 0) return;
+
+            var hasStockMovement = await _context.StockMovements
+                .AnyAsync(sm => compartmentIds.Contains(sm.CompartmentId));
+
+            var hasTransactionItem = await _context.TransactionItems
+                .AnyAsync(ti =>
+                    (ti.FromCompartmentId != null && compartmentIds.Contains(ti.FromCompartmentId)) ||
+                    (ti.ToCompartmentId != null && compartmentIds.Contains(ti.ToCompartmentId)));
+
+            if (hasStockMovement || hasTransactionItem)
+            {
+                throw new ConflictException(
+                    $"{entityLabel} nem törölhető, mert már kapcsolódik hozzá készletmozgás vagy tranzakció.");
+            }
         }
 
         public async Task<ShelfDetailDto?> AddCompartmentToLevelAsync(string shelfId, int levelIndex)
@@ -179,6 +204,9 @@ namespace DepotMap.Logics.Logics
 
             // Remove the last compartment on this level
             var lastCompartment = levelCompartments.Last();
+
+            await EnsureNoMovementReferencesAsync(new List<string> { lastCompartment.Id }, "A rekesz");
+
             _context.Compartments.Remove(lastCompartment);
             await _context.SaveChangesAsync();
 
@@ -221,36 +249,6 @@ namespace DepotMap.Logics.Logics
                         }).ToList()
                     }).ToList()
             };
-        }
-
-        private static string GenerateNextLetterForCell(int cellX, int cellY, List<string> existingCodesInCell)
-        {
-            // Existing codes are full "{x}-{y}{letters}". Extract the letter suffix.
-            var prefix = $"{cellX}-{cellY}";
-            var usedLetters = new HashSet<string>();
-            foreach (var full in existingCodesInCell)
-            {
-                if (full.StartsWith(prefix))
-                    usedLetters.Add(full.Substring(prefix.Length));
-            }
-
-            for (int i = 0; ; i++)
-            {
-                var letter = ToLetterCode(i);
-                if (!usedLetters.Contains(letter))
-                    return letter;
-            }
-        }
-
-        private static string ToLetterCode(int index)
-        {
-            var result = "";
-            do
-            {
-                result = (char)('A' + index % 26) + result;
-                index = index / 26 - 1;
-            } while (index >= 0);
-            return result;
         }
 
         // Format: [WarehouseName first char].[ShelfCode].[Level].[Slot]

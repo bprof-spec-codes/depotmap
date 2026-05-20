@@ -7,6 +7,7 @@ using AutoMapper;
 using DepotMap.Data.Context;
 using DepotMap.Entities.Models;
 using DepotMap.Entities.Models.DTOs.Transaction.Order;
+using DepotMap.Logics.Helpers;
 using DepotMap.Logics.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,19 +34,19 @@ namespace DepotMap.Logics.Logics
 
             if (order.Status != "Planning")
             {
-                throw new InvalidOperationException("Csak 'Planning' státuszú rendelés módosítható!");
+                throw new BadRequestException("Csak 'Planning' státuszú rendelés módosítható!");
             }
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == dto.ProductSKU);
             if (product == null)
-                throw new InvalidOperationException($"Nem található termék a következő cikkszámmal: {dto.ProductSKU}");
+                throw new NotFoundException($"Nem található termék a következő cikkszámmal: {dto.ProductSKU}");
 
             string? compartmentId = null;
             if (!string.IsNullOrWhiteSpace(dto.FromCompartmentCode))
             {
                 var comp = await _context.Compartments.FirstOrDefaultAsync(c => c.Code == dto.FromCompartmentCode);
                 if (comp == null)
-                    throw new InvalidOperationException($"Nem található rekesz a következő kóddal: {dto.FromCompartmentCode}");
+                    throw new NotFoundException($"Nem található rekesz a következő kóddal: {dto.FromCompartmentCode}");
                 compartmentId = comp.Id;
             }
 
@@ -54,12 +55,12 @@ namespace DepotMap.Logics.Logics
 
             if (stock == null)
             {
-                throw new InvalidOperationException($"A megadott termék ({dto.ProductSKU}) nem található a kiválasztott rekeszben ({dto.FromCompartmentCode ?? "Nincs megadva"})!");
+                throw new NotFoundException($"A megadott termék ({dto.ProductSKU}) nem található a kiválasztott rekeszben ({dto.FromCompartmentCode ?? "Nincs megadva"})!");
             }
 
             if (stock.Quantity < dto.Quantity)
             {
-                throw new InvalidOperationException($"Nincs elég készlet a(z) {dto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {dto.Quantity} db.");
+                throw new BadRequestException($"Nincs elég készlet a(z) {dto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {dto.Quantity} db.");
             }
 
             var newItem = new TransactionItem
@@ -96,7 +97,7 @@ namespace DepotMap.Logics.Logics
 
             if (order.Status != "Planning")
             {
-                throw new InvalidOperationException("Tételt törölni csak 'Planning' (Tervezés) állapotú rendelésből szabad!");
+                throw new BadRequestException("Tételt törölni csak 'Planning' (Tervezés) állapotú rendelésből szabad!");
             }
 
             var item = order.Items.FirstOrDefault(i => i.Id == itemId);
@@ -130,7 +131,7 @@ namespace DepotMap.Logics.Logics
 
             if (order.Status != "Planning")
             {
-                throw new InvalidOperationException("Tételt módosítani csak 'Planning' (Tervezés) állapotú rendelésben szabad!");
+                throw new BadRequestException("Tételt módosítani csak 'Planning' (Tervezés) állapotú rendelésben szabad!");
             }
 
             var item = order.Items.FirstOrDefault(i => i.Id == itemId);
@@ -138,14 +139,14 @@ namespace DepotMap.Logics.Logics
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == dto.ProductSKU);
             if (product == null)
-                throw new InvalidOperationException($"Nem található termék a következő cikkszámmal: {dto.ProductSKU}");
+                throw new NotFoundException($"Nem található termék a következő cikkszámmal: {dto.ProductSKU}");
 
             string? compartmentId = null;
             if (!string.IsNullOrWhiteSpace(dto.FromCompartmentCode))
             {
                 var comp = await _context.Compartments.FirstOrDefaultAsync(c => c.Code == dto.FromCompartmentCode);
                 if (comp == null)
-                    throw new InvalidOperationException($"Nem található rekesz a következő kóddal: {dto.FromCompartmentCode}");
+                    throw new NotFoundException($"Nem található rekesz a következő kóddal: {dto.FromCompartmentCode}");
                 compartmentId = comp.Id;
             }
 
@@ -154,12 +155,12 @@ namespace DepotMap.Logics.Logics
 
             if (stock == null)
             {
-                throw new InvalidOperationException($"A megadott termék ({dto.ProductSKU}) nem található a kiválasztott rekeszben ({dto.FromCompartmentCode ?? "Nincs megadva"})!");
+                throw new NotFoundException($"A megadott termék ({dto.ProductSKU}) nem található a kiválasztott rekeszben ({dto.FromCompartmentCode ?? "Nincs megadva"})!");
             }
 
             if (stock.Quantity < dto.Quantity)
             {
-                throw new InvalidOperationException($"Nincs elég készlet a(z) {dto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {dto.Quantity} db.");
+                throw new BadRequestException($"Nincs elég készlet a(z) {dto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {dto.Quantity} db.");
             }
 
             item.ProductId = product.Id;

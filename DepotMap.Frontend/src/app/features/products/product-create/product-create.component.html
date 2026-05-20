@@ -1,93 +1,107 @@
-<div class="create-page">
-  <div class="create-wrapper">
-    <h2>Termék létrehozása</h2>
-    <p class="subtitle">Add meg a termék alapadatait, majd mentsd el.</p>
+<div class="app-page product-create-page">
+  <app-page-header title="Termék létrehozása" subtitle="Add meg a termék alapadatait és tárolóhelyeit, majd mentsd el.">
+  </app-page-header>
 
+  <app-content-card title="Létrehozási adatok" [soft]="true">
     <form (ngSubmit)="create()" #createForm="ngForm" class="create-form">
-      <label class="field">
-        <span>Cikkszám</span>
-        <input type="text" name="sku" [(ngModel)]="form.sku" placeholder="Pl. MON-042" required />
-      </label>
-
-      <label class="field">
-        <span>Név</span>
-        <input type="text" name="name" [(ngModel)]="form.name" placeholder="Pl. LG 27 monitor" required />
-      </label>
-
-      <label class="field">
-        <span>Leírás</span>
-        <input type="text" name="description" [(ngModel)]="form.description" placeholder="Rövid leírás" required />
-      </label>
-
-      <div class="row-2">
+      <div class="app-form-grid">
         <label class="field">
-          <span>Ár (Ft)</span>
-          <input type="number" name="price" [(ngModel)]="form.price" placeholder="0" required min="0" />
+          <span>Cikkszám</span>
+          <input type="text" name="sku" [ngModel]="form.sku" (ngModelChange)="onSkuChange($event)" placeholder="Pl. MON-042" required />
         </label>
 
         <label class="field">
-          <span>Alacsony készlet küszöb</span>
-          <input type="number" name="lowStockThreshold" [(ngModel)]="form.lowStockThreshold" placeholder="0" required
-            min="0" />
+          <span>Név</span>
+          <input type="text" name="name" [(ngModel)]="form.name" placeholder="Pl. LG 27 monitor" required />
         </label>
+
+        <label class="field">
+          <span>Leírás</span>
+          <input type="text" name="description" [(ngModel)]="form.description" placeholder="Rövid leírás" />
+        </label>
+
+        <div class="row-2">
+          <label class="field">
+            <span>Ár (Ft)</span>
+            <input type="number" name="price" [(ngModel)]="form.price" (ngModelChange)="form.price = clampNonNegative($event)"
+              placeholder="0" required min="0" />
+          </label>
+
+          <label class="field">
+            <span>Alacsony készlet küszöb</span>
+            <input type="number" name="lowStockThreshold" [(ngModel)]="form.lowStockThreshold"
+              (ngModelChange)="form.lowStockThreshold = clampNonNegative($event)" placeholder="0" required min="0" />
+          </label>
+        </div>
       </div>
 
       <ng-container *ngIf="compartmentsVm$ | async as compartmentsVm">
-        <div class="storage-block">
-          <label class="field">
-            <span>Elsődleges tárolóhely</span>
-            <select name="primaryStorageSelection" [(ngModel)]="primaryStorageSelection"
-              [disabled]="compartmentsVm.loading" required>
-              <option value="">-- Válassz tárolóhelyet --</option>
-              <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp">
-                {{ comp.code }}
-              </option>
-            </select>
-          </label>
+        <div class="storage-section">
+          <div class="storage-card">
+            <label class="field">
+              <span>Elsődleges tárolóhely</span>
+              <select name="primaryStorageSelection" [(ngModel)]="primaryStorageSelection"
+                [disabled]="compartmentsVm.loading" required>
+                <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
+                <option *ngFor="let comp of getAvailableCompartments(compartmentsVm.items)" [ngValue]="comp">
+                  {{ comp.code }}
+                </option>
+              </select>
+            </label>
 
-          <div class="selected-id" *ngIf="primaryStorageSelection">
-            Kiválasztott tárolóhely: {{ primaryStorageSelection.code || '-' }}
-          </div>
-        </div>
-
-        <div class="storage-block" *ngFor="let storageId of secondaryStorageSelections; let i = index">
-          <label class="field">
-            <span>Másodlagos tárolóhely {{ i + 1 }}</span>
-            <select [name]="'secondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
-              [disabled]="compartmentsVm.loading">
-              <option value="">-- Válassz tárolóhelyet --</option>
-              <option *ngFor="let comp of compartmentsVm.items" [ngValue]="comp">
-                {{ comp.code }}
-              </option>
-            </select>
-          </label>
-
-          <div class="selected-id" *ngIf="secondaryStorageSelections[i]">
-            Kiválasztott tárolóhely: {{ secondaryStorageSelections[i]?.code || '-' }}
+            <div class="selected-id" *ngIf="primaryStorageSelection">
+              Kiválasztott tárolóhely: {{ primaryStorageSelection.code || '-' }}
+            </div>
           </div>
 
-          <button type="button" class="link-btn remove-btn danger" (click)="removeStorageSelection(i)">
-            Tárolóhely törlése
-          </button>
-        </div>
+          <div class="storage-card" *ngFor="let storageId of secondaryStorageSelections; let i = index">
+            <label class="field">
+              <span>Másodlagos tárolóhely {{ i + 1 }}</span>
+              <select [name]="'secondaryStorageSelection' + i" [(ngModel)]="secondaryStorageSelections[i]"
+                [disabled]="compartmentsVm.loading">
+                <option [ngValue]="null">-- Válassz tárolóhelyet --</option>
+                <option *ngFor="let comp of getAvailableCompartments(compartmentsVm.items)" [ngValue]="comp">
+                  {{ comp.code }}
+                </option>
+              </select>
+            </label>
 
-        <div class="error-text" *ngIf="compartmentsVm.error">
-          A tárolóhelyek betöltése nem sikerült.
+            <div class="selected-id" *ngIf="secondaryStorageSelections[i]">
+              Kiválasztott tárolóhely: {{ secondaryStorageSelections[i]?.code || '-' }}
+            </div>
+
+            <button type="button" class="btn btn-outline-danger btn-sm storage-remove-btn"
+              (click)="removeStorageSelection(i)">
+              Tárolóhely törlése
+            </button>
+          </div>
+
+          <div class="app-loading" *ngIf="compartmentsVm.loading">
+            Tárolóhelyek betöltése...
+          </div>
+
+          <div class="app-error" *ngIf="compartmentsVm.error">
+            A tárolóhelyek betöltése nem sikerült.
+          </div>
         </div>
       </ng-container>
 
-      <div class="storage-actions">
-        <button type="button" class="link-btn" (click)="addStorageSelection()">+ Plusz tárolóhely hozzáadása</button>
+      <div class="storage-actions" *ngIf="canManageProducts">
+        <button type="button" class="link-btn storage-add-btn" (click)="addStorageSelection()">
+          <i class="bi bi-plus-circle me-1"></i>
+          Plusz tárolóhely hozzáadása
+        </button>
       </div>
 
-      <div class="error-text" *ngIf="errorText">{{ errorText }}</div>
+      <div class="app-error" *ngIf="errorText">{{ errorText }}</div>
 
-      <div class="form-actions">
-        <a routerLink="/products" class="back-btn">Vissza</a>
-        <button type="submit" class="create-btn" [disabled]="saving">
+      <div class="app-form-actions">
+        <a routerLink="/products" class="btn btn-outline-secondary">Vissza</a>
+
+        <button *ngIf="canManageProducts" type="submit" class="btn btn-primary" [disabled]="saving">
           {{ saving ? 'Létrehozás folyamatban...' : 'Létrehozás' }}
         </button>
       </div>
     </form>
-  </div>
+  </app-content-card>
 </div>

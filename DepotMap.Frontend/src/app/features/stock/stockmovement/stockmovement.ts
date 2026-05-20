@@ -13,7 +13,7 @@ export type StockSortColumn = 'timestamp' | 'productSKU' | 'compartmentCode' | '
   styleUrls: ['./stockmovement.scss']
 })
 export class StockMovementListComponent implements OnInit {
-  movementsVm$!: Observable<{ items: StockMovementViewDto[]; loading: boolean; error: boolean; productId: string | null}>;
+  movementsVm$!: Observable<{ items: StockMovementViewDto[]; loading: boolean; error: boolean; productId: string | null; }>;
   targetProductId: string | null = null;
   searchTerm$ = new BehaviorSubject<string>('');
   sortBy$ = new BehaviorSubject<StockSortColumn>('timestamp');
@@ -55,15 +55,25 @@ export class StockMovementListComponent implements OnInit {
 
         if (search) {
           const s = search.toLowerCase();
-          result = result.filter(item => 
-            item.productSKU?.toLowerCase().includes(s) ||
+          result = result.filter(item => {
+            const dateDotFormat = item.timestamp ? item.timestamp.replace(/-/g, '.') : '';
+            const translatedType = this.translateMovementType(item.movementType).toLowerCase();
+
+            const sign = item.quantityChange > 0 ? '+' : '';
+            const qtyStr = `${sign}${item.quantityChange} db ${sign}${item.quantityChange}db ${item.quantityChange} db ${item.quantityChange}db`;
+            
+            return item.productSKU?.toLowerCase().includes(s) ||
             item.productId?.toLowerCase().includes(s) ||
             item.compartmentCode?.toLowerCase().includes(s) ||
             item.movementType?.toLowerCase().includes(s) ||
+            translatedType.includes(s) ||
             item.userName?.toLowerCase().includes(s) ||
             item.transactionId?.toLowerCase().includes(s) ||
-            item.quantityChange.toString().includes(s)
-          );
+            item.quantityChange.toString().includes(s)||
+            item.timestamp?.toLowerCase().includes(s) || 
+            dateDotFormat.toLowerCase().includes(s) ||
+            qtyStr.includes(s);
+          });
         }
 
         result.sort((a, b) => {
@@ -73,6 +83,11 @@ export class StockMovementListComponent implements OnInit {
           if (sortBy === 'timestamp') {
             valA = new Date(a.timestamp).getTime();
             valB = new Date(b.timestamp).getTime();
+          }
+
+          if (sortBy === 'movementType') {
+            valA = this.translateMovementType(a.movementType);
+            valB = this.translateMovementType(b.movementType);
           }
 
           if (valA == null) valA = '';
@@ -89,6 +104,16 @@ export class StockMovementListComponent implements OnInit {
       }),
       startWith({ items: [], loading: true, error: false, productId: this.targetProductId })
     );
+  }
+
+  translateMovementType(type: string): string {
+    if (!type) return '-';
+    const t = type.toLowerCase();
+    
+    if (t === 'inbound') return 'Beszerzés';
+    if (t === 'outbound') return 'Rendelés';
+    if (t.includes('transfer')) return 'Mozgatás';    
+    return type;
   }
 
   onSearch(term: string) {
@@ -113,7 +138,24 @@ export class StockMovementListComponent implements OnInit {
     this.router.navigate(['/inventory']); 
   }
 
-  getMovementColor(qtyChange: number): string {
+  getMovementColor(qtyChange: number, movementType: string): string {
+    if (!movementType) return qtyChange > 0 ? 'text-success' : 'text-danger';
+    
+    if (movementType.toLowerCase().includes('transfer')) {
+      return 'text-transfer'; 
+    }
+    
     return qtyChange > 0 ? 'text-success' : 'text-danger';
+  }
+
+  getMovementBadgeClass(movementType: string, qtyChange: number): string {
+    if (!movementType) return qtyChange > 0 ? 'movement-type-badge--in' : 'movement-type-badge--out';
+    
+    const t = movementType.toLowerCase();
+    if (t.includes('transfer')) {
+      return 'movement-type-badge--transfer'; 
+    }
+    
+    return t === 'inbound' ? 'movement-type-badge--in' : 'movement-type-badge--out';
   }
 }

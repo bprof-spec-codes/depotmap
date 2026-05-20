@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { WarehouseApiService } from '../../../core/services/warehouse-api-service';
+import { AuthService } from '../../../core/services/auth-service';
 import { WarehouseListDto, CreateWarehouseDto } from '../../../core/models/warehouse.models';
 
 @Component({
@@ -13,6 +14,11 @@ import { WarehouseListDto, CreateWarehouseDto } from '../../../core/models/wareh
 })
 export class WarehouseListComponent {
   warehousesVm$: Observable<{ items: WarehouseListDto[]; loading: boolean; error: boolean }>;
+  visibleWarehousesVm$: Observable<{ items: WarehouseListDto[]; loading: boolean; error: boolean }>;
+
+  search = new BehaviorSubject<string>('');
+
+  actionError: string | null = null;
 
   showCreateForm = false;
   newName = '';
@@ -22,10 +28,14 @@ export class WarehouseListComponent {
 
   private refresh$ = new BehaviorSubject<void>(undefined);
 
+  isManager = false;
+
   constructor(
     private warehouseApiService: WarehouseApiService,
-    private router: Router
+    private router: Router,
+    authService: AuthService
   ) {
+    this.isManager = authService.isManager();
     this.warehousesVm$ = this.refresh$.pipe(
       switchMap(() => this.warehouseApiService.getAll().pipe(
         map(items => ({ items, loading: false, error: false })),
@@ -34,6 +44,28 @@ export class WarehouseListComponent {
       )),
       shareReplay(1)
     );
+
+    this.visibleWarehousesVm$ = combineLatest([
+      this.warehousesVm$,
+      this.search
+    ]).pipe(
+      map(([vm, search]) => {
+        const q = search.trim().toLowerCase();
+        if (!q) {
+          return vm;
+        }
+
+        return {
+          ...vm,
+          items: vm.items.filter(w => (w.name ?? '').toLowerCase().includes(q))
+        };
+      }),
+      shareReplay(1)
+    );
+  }
+
+  onSearchChange(value: string): void {
+    this.search.next(value ?? '');
   }
 
   openWarehouse(id: string): void {
@@ -43,7 +75,14 @@ export class WarehouseListComponent {
   deleteWarehouse(id: string, event: Event): void {
     event.stopPropagation();
     if (!confirm('Biztosan törölni szeretnéd a raktárat?')) return;
-    this.warehouseApiService.delete(id).subscribe(() => this.refresh$.next());
+    this.actionError = null;
+    this.warehouseApiService.delete(id).subscribe({
+      next: () => this.refresh$.next(),
+      error: (err) => {
+        this.actionError = err.error?.detail
+          || (err.status === 403 ? 'Nincs jogosultságod a raktár törléséhez!' : 'A raktár törlése nem sikerült.');
+      }
+    });
   }
 
   toggleCreateForm(): void {

@@ -2,6 +2,9 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { OrderService, CreateOrderItemDto } from '../../../core/services/order-service';
 import { AuthService } from '../../../core/services/auth-service';
+import { ProductService, ProductShortDto } from '../../../core/services/product-service';
+import { CompartmentService, CompartmentOptionDto } from '../../../core/services/compartment-service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-order-create',
@@ -13,10 +16,15 @@ export class OrderCreate implements OnInit {
   isSaving = false;
   isSavedOrDiscarded = false;
 
-  // Itt gyűjtjük a tételeket a memóriában (nem küldjük el rögtön!)
+  errorMessage = '';
+
+  availableProducts: ProductShortDto[] = [];
+  compartments: CompartmentOptionDto[] = [];
+  productsLoading = false;
+  compartmentsLoading = false;
+
   addedItems: CreateOrderItemDto[] = [];
 
-  // Az aktuálisan kitöltendő (üres) sor
   currentRow: CreateOrderItemDto = {
     productSKU: '',
     quantity: 1,
@@ -26,11 +34,32 @@ export class OrderCreate implements OnInit {
   constructor(
     private orderService: OrderService, 
     private router: Router,
-    private authService: AuthService 
+    private authService: AuthService,
+    private productService: ProductService,
+    private compartmentService: CompartmentService 
   ) {}
 
   ngOnInit(): void {
-    // Nincs több backend hívás és várakozás betöltéskor! Azonnal használható a felület.
+    this.loadAvailableProducts();
+    this.loadCompartments();
+  }
+
+  private loadAvailableProducts(): void {
+    this.productsLoading = true;
+    this.productService.loadAll()
+      .pipe(finalize(() => this.productsLoading = false))
+      .subscribe(items => {
+        this.availableProducts = items.filter(p => p.sku); 
+      });
+  }
+
+  private loadCompartments(): void {
+    this.compartmentsLoading = true;
+    this.compartmentService.getAll()
+      .pipe(finalize(() => this.compartmentsLoading = false))
+      .subscribe(data => {
+        this.compartments = data;
+      });
   }
 
   // Böngésző fül bezárásának/frissítésének blokkolása, ha van már felvitt tétel
@@ -41,35 +70,82 @@ export class OrderCreate implements OnInit {
     }
   }
 
+  // --- LEGÖRDÜLŐ LOGIKA ---
+  onProductChange(): void {
+    // Ha a termék változott, megnézzük, hogy a korábban kiválasztott rekesz még érvényes-e hozzá
+    const validCompartments = this.getCompartmentsForProductSKU(this.currentRow.productSKU);
+    const stillValid = validCompartments.some(c => c.code === this.currentRow.fromCompartmentCode);
+
+    if (!stillValid) {
+      this.currentRow.fromCompartmentCode = ''; // Töröljük a rekeszt, ha már nem érvényes
+    }
+  }
+
+  getCompartmentsForProductSKU(sku: string): CompartmentOptionDto[] {
+    if (!sku) return [];
+
+    const product = this.availableProducts.find(p => p.sku === sku);
+    if (!product || !product.productStocks || product.productStocks.length === 0) {
+      return []; // Ha nincs ilyen termék vagy nincs készleten, üres a lista
+    }
+
+    const allowedCompartments: CompartmentOptionDto[] = [];
+
+    // Összegyűjtjük azokat a rekeszeket, amikben van az adott termékből
+    for (const compartment of this.compartments) {
+      for (const stock of product.productStocks) {
+        if (stock.compartmentId === compartment.id) {
+          allowedCompartments.push(compartment);
+          break;
+        }
+      }
+    }
+
+    return allowedCompartments;
+  }
+
   // --- ÚJ TÉTEL HOZZÁADÁSA (CSAK MEMÓRIÁBA!) ---
   addNewItem() {
-    if (!this.currentRow.productSKU) return alert('Kérlek, add meg a Termék ID-t!');
-    if (!this.currentRow.quantity || this.currentRow.quantity < 1) return alert('A darabszám legalább 1 kell legyen!');
+    this.errorMessage = '';
+    if (!this.currentRow.productSKU)
+    {
+      this.errorMessage = 'Kérlek, válassz egy terméket!';
+      return;
+    }
+    if (!this.currentRow.quantity || this.currentRow.quantity < 1) {
+      this.errorMessage = 'A darabszám legalább 1 kell legyen!';
+      return;
+    }
+    if (!this.currentRow.fromCompartmentCode){
+      this.errorMessage = 'Kérlek, válassz forrás rekeszt!';
+      return;
+    }
 
-    // Lemásoljuk a sort és betesszük a listába
     this.addedItems.push({ ...this.currentRow });
     
-    // Kiürítjük a beviteli mezőket a következő tételnek
     this.currentRow = { productSKU: '', quantity: 1, fromCompartmentCode: '' };
   }
 
-  // --- TÉTEL TÖRLÉSE A LISTÁBÓL ---
   removeItem(index: number) {
     this.addedItems.splice(index, 1);
   }
 
   saveOrder() {
+    this.errorMessage = '';
     if (this.currentRow.productSKU) {
       this.addNewItem();
+      if (this.errorMessage) return;
     }
 
     if (this.addedItems.length === 0) {
-      return alert('Nem menthetsz el egy rendelést tételek nélkül!');
+      this.errorMessage = 'Nem menthetsz el egy rendelést tételek nélkül!';
+      return;
     }
 
     const currentUserId = this.authService.getUserId();
     if (!currentUserId) {
-      return alert('Hiba: Nem található a felhasználó azonosítója. Kérlek jelentkezz be újra!');
+      this.errorMessage = 'Hiba: Nem található a felhasználó azonosítója. Kérlek jelentkezz be újra!';
+      return;    
     }
 
     this.isSaving = true;
@@ -85,17 +161,13 @@ export class OrderCreate implements OnInit {
         this.router.navigate(['/orders']);
       },
       error: (err) => {
-        alert('Hiba a rendelés mentésekor: ' + (err.error?.message || err.message));
+        this.errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod új rendelés rögzítéséhez!' : 'Ismeretlen hiba történt a rendelés mentésekor.');
         this.isSaving = false;
       }
     });
   }
 
   discardOrder() {
-    if (this.addedItems.length > 0 || this.currentRow.productSKU) {
-      if (!confirm('Biztosan elveted a rendelést? Minden megadott adat elvész!')) return;
-    }
-    
     this.isSavedOrDiscarded = true;
     this.router.navigate(['/orders']);
   }
