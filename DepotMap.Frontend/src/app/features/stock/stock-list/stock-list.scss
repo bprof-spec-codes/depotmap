@@ -138,6 +138,18 @@
   font-weight: 700;
 }
 
+.stock-total-badge-warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning-dark);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.stock-total-badge-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid rgba(220, 38, 38, 0.16);
+}
+
 .stock-actions {
   display: flex;
   flex-wrap: wrap;

@@ -55,7 +55,7 @@
                   </div>
                 </div>
                 <div class="stock-total-row">
-                  <div class="stock-total-badge">
+                  <div class="stock-total-badge" [ngClass]="getStockBadgeClass(stock.totalQuantity, stock.lowStockThreshold)">
                     Raktáron összesen: {{ stock.totalQuantity }} db
                   </div>
                 </div>
@@ -84,7 +84,6 @@
                     <tr *ngFor="let comp of stock.compartments">
                       <td>
                         {{ comp.compartmentCode || 'Nincs kód' }}
-                        <small class="stock-compartment-id">({{ comp.compartmentId }})</small>
                       </td>
                       <td><strong>{{ comp.quantity }} db</strong></td>
                     </tr>

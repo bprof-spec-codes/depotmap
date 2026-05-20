@@ -9,6 +9,17 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.movement-type-badge--transfer {
+  background-color: #e0f2fe !important; 
+  color: #0369a1 !important;            
+  border: 1px solid rgba(3, 105, 161, 0.16) !important;
+}
+
+
+.text-transfer {
+  color: #0284c7 !important;
+}
+
 .movements-search-wrap {
   flex: 1 1 420px;
   min-width: 280px;
