@@ -4,6 +4,7 @@ import { OrderService, OrderViewDto, PickingTaskDto } from '../../../core/servic
 import { BehaviorSubject, combineLatest, Observable, defer, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { RoutePdfService, RouteStep } from '../../../core/services/warehouse-route-pdf-service';
+import { AuthService } from '../../../core/services/auth-service';
 
 export type OrderSortColumn = 'timestamp' | 'status' | 'id' | 'userName' | 'itemCount';
 
@@ -26,10 +27,13 @@ export class OrderList implements OnInit {
   routeLoadingOrderId: string | null = null;
   routeLoadedOrderIds = new Set<string>();
   errorMessage = '';
+  userRole: string | null = null;
 
-  constructor(private orderService: OrderService, private router: Router, private routePdfService: RoutePdfService) { }
+  constructor(private orderService: OrderService, private router: Router, private routePdfService: RoutePdfService, private authService: AuthService) { }
 
   ngOnInit(): void {
+    this.userRole = this.authService.getRole();
+
     const rawData$ = this.refresh$.pipe(
       switchMap(() => this.orderService.loadAllOrders()),
       catchError((err) => {
@@ -116,6 +120,30 @@ export class OrderList implements OnInit {
     );
   }
 
+  canCreateOrder(): boolean {
+    return this.userRole === 'Manager' || this.userRole === 'Officer';
+  }
+
+  canEdit(status: string): boolean {
+    if (this.userRole !== 'Manager' && this.userRole !== 'Officer') return false;
+    return status === 'Planning' || status === 'Processing';
+  }
+
+  canDelete(status: string): boolean {
+    if (this.userRole !== 'Manager' && this.userRole !== 'Officer') return false;
+    return status === 'Planning';
+  }
+
+  canAdvanceStatus(status: string): boolean {
+    if (status === 'Closed') return false;
+    
+    if (this.userRole === 'Operator') {
+      return status === 'Processing';
+    }
+    
+    return status === 'Planning' || status === 'Processing';
+  }
+
   downloadRoutePdf(orderId: string): void {
     this.orderService.getOptimizedRouteMap(orderId).subscribe(routeMap => {
       if (!routeMap || !routeMap.route?.length) {
@@ -141,14 +169,6 @@ export class OrderList implements OnInit {
   getSortIcon(column: OrderSortColumn): string {
     if (this.sortBy$.value !== column) return '↕';
     return this.sortDirection$.value === 'asc' ? '↑' : '↓';
-  }
-
-  canEdit(status: string): boolean {
-    return status === 'Planning' || status === 'Processing';
-  }
-
-  canDelete(status: string): boolean {
-    return status === 'Planning';
   }
 
   toggleOrderDetails(orderId: string): void {
@@ -179,7 +199,19 @@ export class OrderList implements OnInit {
       },
       error: (err) =>
       {
-        const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
+        let msg = 'Nem sikerült törölni a rendelést.';
+
+        if (err.error?.detail) {
+          msg = err.error.detail;
+        } else if (err.error?.message) {
+          msg = err.error.message;
+        } else if (typeof err.error === 'string') {
+          msg = err.error;
+        } else if (err.status === 403) {
+          msg = 'Nincs jogosultságod a rendelés törléséhez!';
+        }
+
+        this.errorMessage = msg;
       }
     });
   }
@@ -202,7 +234,20 @@ export class OrderList implements OnInit {
       },
       error: (err) =>
       {
-        const errorMessage = err.error?.detail || (err.status === 403 ? 'Nincs jogosultságod a művelet végrehajtásához!' : 'Nem sikerült törölni a rendelést.');
+        console.error('Szerver hiba:', err); 
+
+        let msg = 'Nem sikerült a státusz frissítése.';
+        if (err.error?.detail) {
+          msg = err.error.detail; 
+        } else if (err.error?.message) {
+          msg = err.error.message;
+        } else if (typeof err.error === 'string') {
+          msg = err.error; 
+        } else if (err.status === 403) {
+          msg = 'Nincs jogosultságod a művelet végrehajtásához!';
+        }
+
+        this.errorMessage = msg;
       }
     });
   }

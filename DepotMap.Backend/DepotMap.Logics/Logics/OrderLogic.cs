@@ -62,6 +62,15 @@ namespace DepotMap.Logics.Logics
 
             if (dto.Items != null && dto.Items.Any())
             {
+                var duplicate = dto.Items
+                    .GroupBy(i => new { SKU = i.ProductSKU, Compartment = i.FromCompartmentCode ?? "" })
+                    .FirstOrDefault(g => g.Count() > 1);
+
+                if (duplicate != null)
+                {
+                    throw new BadRequestException($"Nem adhatod hozzá a(z) {duplicate.Key.SKU} terméket ugyanabból a rekeszből ({duplicate.Key.Compartment}) többször! Kérlek, vond össze a darabszámokat egyetlen tételbe!");
+                }
+
                 foreach (var itemDto in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
@@ -82,12 +91,8 @@ namespace DepotMap.Logics.Logics
 
                     if (stock == null)
                     {
-                        throw new NotFoundException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})!");
-                    }
-
-                    if (stock.Quantity < itemDto.Quantity)
-                    {
-                        throw new BadRequestException($"Nincs elég készlet a(z) {itemDto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                        throw new NotFoundException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})! " +
+                            $"Adja hozzá a {itemDto.ProductSKU} termékhez a {itemDto.FromCompartmentCode} rekeszt a Termékek oldalon ");
                     }
 
                     newItems.Add(new TransactionItem
@@ -134,6 +139,15 @@ namespace DepotMap.Logics.Logics
 
             if (dto.Items != null && dto.Items.Any())
             {
+                var duplicate = dto.Items
+                    .GroupBy(i => new { SKU = i.ProductSKU, Compartment = i.FromCompartmentCode ?? "" })
+                    .FirstOrDefault(g => g.Count() > 1);
+
+                if (duplicate != null)
+                {
+                    throw new BadRequestException($"Nem adhatod hozzá a(z) {duplicate.Key.SKU} terméket ugyanabból a rekeszből ({duplicate.Key.Compartment}) többször! Kérlek, vond össze a darabszámokat egyetlen tételbe!");
+                }
+
                 foreach (var itemDto in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.SKU == itemDto.ProductSKU);
@@ -154,12 +168,8 @@ namespace DepotMap.Logics.Logics
 
                     if (stock == null)
                     {
-                        throw new NotFoundException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})!");
-                    }
-
-                    if (stock.Quantity < itemDto.Quantity)
-                    {
-                        throw new BadRequestException($"Nincs elég készlet a(z) {itemDto.ProductSKU} termékből! Elérhető: {stock.Quantity} db, kért mennyiség: {itemDto.Quantity} db.");
+                        throw new NotFoundException($"A megadott termék ({itemDto.ProductSKU}) nem található a kiválasztott rekeszben ({itemDto.FromCompartmentCode ?? "Nincs megadva"})! " +
+                                                    $"Adja hozzá a {itemDto.ProductSKU} termékhez a {itemDto.FromCompartmentCode} rekeszt a Termékek oldalon ");
                     }
 
                     newItems.Add(new TransactionItem
@@ -193,6 +203,9 @@ namespace DepotMap.Logics.Logics
         {
             var order = await _context.Transactions
                 .Include(t => t.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(t => t.Items)
+                    .ThenInclude(i => i.FromCompartment)
                 .Include(t => t.CreatedBy)
                 .FirstOrDefaultAsync(t => t.Id == id && t.Type == "Outbound");
 
@@ -229,6 +242,38 @@ namespace DepotMap.Logics.Logics
             if ((newStatus == "Processing" || newStatus == "Closed") && !order.Items.Any())
             {
                 throw new BadRequestException("Egy rendelést nem lehet elindítani vagy lezárni úgy, hogy nincsenek benne tételek!");
+            }
+            
+            if (currentStatus == "Planning" && newStatus == "Processing")
+            {
+                var errors = new List<string>();
+
+                foreach (var item in order.Items)
+                {
+                    var stock = await _context.ProductStocks
+                        .FirstOrDefaultAsync(ps => ps.CompartmentId == item.FromCompartmentId && ps.ProductId == item.ProductId);
+
+                    int availableQty = stock?.Quantity ?? 0;
+                    
+                    if (availableQty < item.Quantity)
+                    {
+                        string productSku = item.Product?.SKU ?? "Ismeretlen termék";
+                        string compCode = item.FromCompartment?.Code ?? "Ismeretlen rekesz";
+                        errors.Add($"• {productSku} termék a(z) {compCode} rekeszben (Kért: {item.Quantity} db, Elérhető: {availableQty} db)");
+                    }
+                    
+                }
+
+                if (errors.Any())
+                {
+                    var errorSb = new StringBuilder();
+                    errorSb.AppendLine("A rendelés nem indítható el összekészítésre, mert a következő tételeknél nincs elegendő készlet a rekeszben:");
+                    foreach (var error in errors)
+                    {
+                        errorSb.AppendLine(error);
+                    }
+                    throw new BadRequestException(errorSb.ToString());
+                }
             }
 
             if (newStatus == "Closed")
